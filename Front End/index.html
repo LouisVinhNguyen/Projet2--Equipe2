@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des Dossiers - Avocat</title>
+  <!-- Bulma CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar is-dark">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="#" style="color: grey;">
+        <strong>Gestion Dossiers Avocat</strong>
+      </a>
+      <a href="connexion.html" class="navbar-item button is-dark" style="margin-top: 5px; background-color: brown;">Se connecter</a>
+    </div>
+
+
+  <!-- Hero Section -->
+  <section class="hero is-info is-medium">
+    <div class="hero-body">
+      <div class="container has-text-centered">
+        <h1 class="title has-text-white">Bienvenue sur la Gestion des Dossiers</h1>
+        <p class="subtitle has-text-white">Suivez, gérez et archivez vos dossiers juridiques en toute simplicité.</p>
+        <a href="connexion.html" class="button is-medium">Accéder à la plateforme</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer has-background-dark">
+    <div class="content has-text-centered has-text-white">
+      <p>&copy; 2025 Gestion Dossiers Avocat. Tous droits réservés.</p>
+    </div>
+  </footer>
+
+  <!-- Bulma JS (pour la fonctionnalité du menu burger) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const burger = document.querySelector('.navbar-burger');
+      const menu = document.querySelector('.navbar-menu');
+      burger.addEventListener('click', () => {
+        burger.classList.toggle('is-active');
+        menu.classList.toggle('is-active');
+      });
+    });
+  </script>
+
+</body>
+</html>
