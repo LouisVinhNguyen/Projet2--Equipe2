@@ -1,0 +1,20 @@
+import { initSidebar } from './sidebar.js'
+import { renderDossierForm } from './dossierForm.js'
+import { renderClientForm } from './clientForm.js'
+import { initTimeTracker } from './timeTracker.js'
+import { renderEventSection } from './eventManager.js'
+import { renderBillingSection } from './billing.js'
+
+document.addEventListener('DOMContentLoaded', () => {
+  initSidebar({
+    onSectionChange: (key) => {
+      if (key === 'dossiers') renderDossierForm()
+      if (key === 'clients') renderClientForm()
+      if (key === 'temps') initTimeTracker()
+      if (['agenda', 'rappels', 'planification'].includes(key)) {
+        renderEventSection(key)
+      }
+      if (key === 'facturation') renderBillingSection()
+    }
+  })
+})

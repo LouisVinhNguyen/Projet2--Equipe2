@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tableau de bord - LegalConnect</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <nav class="navbar is-black">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="/">LegalConnect</a>
+    </div>
+    <div class="navbar-end">
+      <a class="navbar-item" href="#">Déconnexion</a>
+    </div>
+  </nav>
+
+  <div class="columns is-gapless">
+    <!-- Sidebar -->
+    <aside class="column is-2 has-background-light sidebar">
+      <ul class="menu-list p-4">
+        <li><a href="#" data-section="agenda"><i class="fas fa-calendar-alt"></i> Agenda</a></li>
+        <li><a href="#" data-section="rappels"><i class="fas fa-bell"></i> Rappels</a></li>
+        <li><a href="#" data-section="planification"><i class="fas fa-tasks"></i> Planification</a></li>
+        <li><a href="#" data-section="facturation"><i class="fas fa-euro-sign"></i> Facturation & Paiements</a></li>
+        <li><a href="#" data-section="dossiers"><i class="fas fa-folder-open"></i> Gestion des Dossiers</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="column is-10 p-5" id="mainContent">
+      <h1 class="title has-text-centered">Tableau de bord Client</h1>
+      <section id="dashboard-sections">
+        <!-- Content will be dynamically swapped here -->
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div class="content has-text-centered">
+      <p>&copy; 2025 LegalConnect. Tous droits réservés.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

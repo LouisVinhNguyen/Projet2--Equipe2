@@ -1,0 +1,39 @@
+const contentMap = {
+  agenda: { title: 'Agenda', description: 'Planifiez vos rendez-vous.' },
+  rappels: { title: 'Rappels', description: 'Tâches et rappels importants.' },
+  temps: { title: 'Suivi du Temps', description: '' }, // handled in module
+  depenses: { title: 'Dépenses', description: 'Suivi des dépenses par affaire.' },
+  dossiers: { title: 'Gestion des Dossiers', description: '' },
+  clients: { title: 'Gestion des Clients', description: '' },
+  facturation: { title: 'Facturation & Paiements', description: '' } // ✅ MANQUAIT
+
+}
+
+export const initSidebar = ({ onSectionChange }) => {
+  const links = document.querySelectorAll('.menu-list a')
+  const container = document.getElementById('dashboard-sections')
+
+  const renderSection = (key) => {
+    const { title, description } = contentMap[key]
+    container.innerHTML = description ? `
+      <div class="box">
+        <h2 class="title is-4">${title}</h2>
+        <p>${description}</p>
+      </div>
+    ` : ''
+    if (onSectionChange) onSectionChange(key)
+  }
+
+  links.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault()
+      const sectionKey = link.dataset.section
+      renderSection(sectionKey)
+
+      links.forEach(l => l.classList.remove('is-active'))
+      link.classList.add('is-active')
+    })
+  })
+
+  renderSection('agenda')
+}

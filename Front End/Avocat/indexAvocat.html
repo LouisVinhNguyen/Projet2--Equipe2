@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tableau de bord Avocat - LegalConnect</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+</head>
+<body>
+  <nav class="navbar is-black">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="/">LegalConnect</a>
+    </div>
+    <div class="navbar-end">
+      <a class="navbar-item" href="#">Déconnexion</a>
+    </div>
+  </nav>
+
+  <div class="columns is-gapless">
+    <!-- Sidebar -->
+    <aside class="column is-2 has-background-light sidebar">
+      <ul class="menu-list p-4">
+        <li><a href="#" data-section="agenda"><i class="fas fa-calendar-alt"></i> Agenda</a></li>
+        <li><a href="#" data-section="rappels"><i class="fas fa-bell"></i> Rappels</a></li>
+        <li><a href="#" data-section="temps"><i class="fas fa-stopwatch"></i> Suivi du Temps</a></li>
+        <li><a href="#" data-section="depenses"><i class="fas fa-coins"></i> Dépenses</a></li>
+        <li><a href="#" data-section="dossiers"><i class="fas fa-folder"></i> Dossiers</a></li>
+        <li><a href="#" data-section="facturation"><i class="fas fa-euro-sign"></i> Facturation & Paiements</a></li>
+        <li><a href="#" data-section="clients"><i class="fas fa-users"></i> Clients</a></li>
+
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="column is-10 p-5" id="mainContent">
+      <h1 class="title has-text-centered">Tableau de bord Avocat</h1>
+      <section id="dashboard-sections">
+        <!-- Content dynamique -->
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <div class="content has-text-centered">
+      <p>&copy; 2025 LegalConnect. Tous droits réservés.</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
