@@ -4,6 +4,7 @@ import { renderClientForm } from './clientForm.js'
 import { initTimeTracker } from './timeTracker.js'
 import { renderEventSection } from './eventManager.js'
 import { renderBillingSection } from './billing.js'
+import { renderReceivedDocuments } from './documents.js'
 
 document.addEventListener('DOMContentLoaded', () => {
   initSidebar({
@@ -11,10 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (key === 'dossiers') renderDossierForm()
       if (key === 'clients') renderClientForm()
       if (key === 'temps') initTimeTracker()
-      if (['agenda', 'rappels', 'planification'].includes(key)) {
-        renderEventSection(key)
-      }
+      if (['agenda', 'rappels', 'planification'].includes(key)) {renderEventSection(key)}
       if (key === 'facturation') renderBillingSection()
+      if (key === 'documents') renderReceivedDocuments()
     }
   })
 })

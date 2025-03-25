@@ -5,7 +5,8 @@ const contentMap = {
   depenses: { title: 'Dépenses', description: 'Suivi des dépenses par affaire.' },
   dossiers: { title: 'Gestion des Dossiers', description: '' },
   clients: { title: 'Gestion des Clients', description: '' },
-  facturation: { title: 'Facturation & Paiements', description: '' } // ✅ MANQUAIT
+  facturation: { title: 'Facturation & Paiements', description: '' }, // ✅ MANQUAIT
+  documents: { title: 'Documents Reçus', description: '' }
 
 }
 
