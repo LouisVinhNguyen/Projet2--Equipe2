@@ -54,11 +54,79 @@ export const renderDocumentUploader = () => {
         docs.push(doc)
         localStorage.setItem('legalconnect_documents', JSON.stringify(docs))
   
-        alert('📄 Document envoyé avec succès.')
+        alert('📄 Document envoyé avec succès.') 
         renderDocumentUploader()
       }
   
       reader.readAsDataURL(file)
     }
   }
-  
+
+
+
+  async function envoyerDocument(documents) {
+    try {
+      const response = await fetch('/api/documents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(documents),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Document ajouté:", data);
+        alert("Document ajouté avec succès.");
+        renderDocumentUploader(); 
+      } else {
+        console.error("Erreur lors de l'ajout du document:", response.statusText);
+        alert("Erreur lors de l'ajout du document. Veuillez réessayer.");
+      }
+    } catch (error) {
+      console.error("Erreur réseau:", error);
+      alert("Une erreur réseau s'est produite. Veuillez réessayer.");
+    }
+    
+  }
+
+  async function getDocument() {
+    try {
+      const response = await fetch('/api/documents', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Documents récupérés:", data);
+        return data;
+      } else {
+        console.error("Erreur lors de la récupération des documents:", response.statusText);
+        alert("Erreur lors de la récupération des documents. Veuillez réessayer.");
+      }
+    } catch (error) {
+      console.error("Erreur réseau:", error);
+      alert("Une erreur réseau s'est produite. Veuillez réessayer.");
+    }
+  }
+
+  async function supprimerDocument(id) {
+    try {
+      const response = await fetch(`/api/documents/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Document supprimé:", data);
+        alert("Document supprimé avec succès.");
+        renderDocumentUploader(); 
+      } else {
+        console.error("Erreur lors de la suppression du document:", response.statusText);
+        alert("Erreur lors de la suppression du document. Veuillez réessayer.");
+      }
+    } catch (error) {
+      console.error("Erreur réseau:", error);
+      alert("Une erreur réseau s'est produite. Veuillez réessayer.");
+    }
+  }

@@ -17,9 +17,18 @@
       <a class="navbar-item" href="#" style="color: grey;">
         <strong>Gestion Dossiers Avocat</strong>
       </a>
-      <a href="connexion.html" class="navbar-item button is-dark" style="margin-top: 5px; background-color: brown;">Se connecter</a>
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
     </div>
-
+    <div id="navbarBasicExample" class="navbar-menu">
+      <div class="navbar-end">
+        <a href="connexion.html.html" class="navbar-item">Connexion</a>
+      </div>
+    </div>
+  </nav>
 
   <!-- Hero Section -->
   <section class="hero is-info is-medium">
@@ -27,7 +36,7 @@
       <div class="container has-text-centered">
         <h1 class="title has-text-white">Bienvenue sur la Gestion des Dossiers</h1>
         <p class="subtitle has-text-white">Suivez, gérez et archivez vos dossiers juridiques en toute simplicité.</p>
-        <a href="connexion.html" class="button is-medium">Accéder à la plateforme</a>
+        <a href="choixconnexion.html" class="button is-medium">Accéder à la plateforme</a>
       </div>
     </div>
   </section>
@@ -44,10 +53,12 @@
     document.addEventListener('DOMContentLoaded', () => {
       const burger = document.querySelector('.navbar-burger');
       const menu = document.querySelector('.navbar-menu');
-      burger.addEventListener('click', () => {
-        burger.classList.toggle('is-active');
-        menu.classList.toggle('is-active');
-      });
+      if (burger && menu) {
+        burger.addEventListener('click', () => {
+          burger.classList.toggle('is-active');
+          menu.classList.toggle('is-active');
+        });
+      }
     });
   </script>
 

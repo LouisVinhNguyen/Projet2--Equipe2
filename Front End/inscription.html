@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription</title>
+    <!-- Bulma CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar is-dark">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="index.html">
+                <strong>Gestion Dossiers Avocat</strong>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Inscription Form Section -->
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-5">
+                    <h1 class="title has-text-centered">Inscription</h1>
+                    <form id="form-inscription" class="box">
+                        <div class="field">
+                            <label class="label">Nom</label>
+                            <div class="control has-icons-left">
+                                <input class="input" type="text" id="nom" placeholder="Entrez votre nom" required>
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Prénom</label>
+                            <div class="control has-icons-left">
+                                <input class="input" type="text" id="prenom" placeholder="Entrez votre prénom" required>
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Adresse Email</label>
+                            <div class="control has-icons-left">
+                                <input class="input" type="email" id="email" placeholder="Entrez votre email" required>
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Téléphone</label>
+                            <div class="control has-icons-left">
+                                <input class="input" type="tel" id="telephone" placeholder="Entrez votre numéro de téléphone" required>
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-phone"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Mot de Passe</label>
+                            <div class="control has-icons-left">
+                                <input class="input" type="password" id="password" placeholder="Entrez votre mot de passe" required>
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Confirmez le Mot de Passe</label>
+                            <div class="control has-icons-left">
+                                <input class="input" type="password" id="confirm_password" placeholder="Confirmez votre mot de passe" required>
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Type d'utilisateur</label>
+                            <div class="control">
+                                <label class="radio">
+                                    <input type="radio" name="role" id="avocat" value="admin">
+                                    Avocat
+                                </label>
+                                <label class="radio">
+                                    <input type="radio" name="role" id="user" value="user">
+                                    Utilisateur
+                                </label>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <button type="button" id="bouton-connexion" class="button is-primary is-fullwidth">S'inscrire</button>
+                        </div>
+                    </form>
+                    <p class="has-text-centered">
+                        <a href="connexion.html">Déjà un compte ? Connectez-vous</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer has-background-dark">
+        <div class="content has-text-centered has-text-white">
+            <p>&copy; 2025 Gestion Dossiers Avocat. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <!-- Font Awesome for icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <script src="inscription.js"></script>
+</body>
+</html>

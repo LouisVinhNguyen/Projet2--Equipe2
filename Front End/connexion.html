@@ -1,50 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LegalConnect</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <title>Connexion</title>
+    <!-- Bulma CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
 </head>
 <body>
-    <nav class="navbar is-black" role="navigation" aria-label="main navigation">
+    <!-- Navbar -->
+    <nav class="navbar is-dark">
         <div class="navbar-brand">
-            <a class="navbar-item" href="/">
-                LegalConnect
+            <a class="navbar-item" href="index.html">
+                <strong>Gestion Dossiers Avocat</strong>
             </a>
-        </div>
-        <div class="navbar-menu">
-            <div class="navbar-start">
-                <a class="navbar-item" href="#">Home</a>
-                <a class="navbar-item" href="#">About</a>
-                <a class="navbar-item" href="#">Contact</a>
-            </div>
         </div>
     </nav>
 
+    <!-- Connexion Form Section -->
     <section class="section">
         <div class="container">
-            <div class="columns">
-                <div class="column">
-                    <div class="box">
-                        <h2 class="title">Portail Client</h2>
-                        <a href="user.html" class="button is-link is-fullwidth">Connexion</a>
-                    </div>
-                </div>
-                <div class="column">
-                    <div class="box">
-                        <h2 class="title">Portail Avocat</h2>
-                        <a href="lawyer.html" class="button is-info is-fullwidth">Connexion</a>
-                    </div>
+            <div class="columns is-centered">
+                <div class="column is-5">
+                    <h1 class="title has-text-centered">Connexion</h1>
+                    <form action="dashboard.html" method="POST" class="box">
+                        <div class="field">
+                            <label class="label">Adresse Email</label>
+                            <div class="control has-icons-left">
+                                <input class="input" type="email" name="email" placeholder="Entrez votre email" required>
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Mot de Passe</label>
+                            <div class="control has-icons-left">
+                                <input class="input" type="password" name="password" placeholder="Entrez votre mot de passe" required>
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <button class="button is-primary is-fullwidth">Se connecter</button>
+                        </div>
+                    </form>
+                    <p class="has-text-centered">
+                        <a href="inscription.html">Créer un compte</a>
+                    </p>
                 </div>
             </div>
         </div>
     </section>
 
-    <footer class="footer">
-        <div class="content has-text-centered">
-            <p>&copy; 2025 LegalConnect. All rights reserved.</p>
+    <!-- Footer -->
+    <footer class="footer has-background-dark">
+        <div class="content has-text-centered has-text-white">
+            <p>&copy; 2025 Gestion Dossiers Avocat. Tous droits réservés.</p>
         </div>
     </footer>
+
+    <!-- Font Awesome for icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
 </body>
 </html>
