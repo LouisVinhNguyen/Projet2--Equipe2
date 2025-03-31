@@ -1,3 +1,8 @@
+const urlParams = new URLSearchParams(window.location.search);
+const token = urlParams.get("token");
+
+
+
 export const renderDocumentUploader = async () => {
   const container = document.getElementById('dashboard-sections');
   
@@ -77,7 +82,9 @@ export async function getDocuments() {
   try {
     const response = await fetch('/api/documents', {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        "Authorization": `Bearer ${token}` 
+    },
     });
 
     if (response.ok) {
@@ -101,7 +108,9 @@ export async function envoyerDocument(document) {
   try {
     const response = await fetch('/api/documents', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        "Authorization": `Bearer ${token}` 
+    },
       body: JSON.stringify(document),
     });
 

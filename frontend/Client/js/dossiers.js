@@ -1,3 +1,7 @@
+const urlParams = new URLSearchParams(window.location.search);
+const token = urlParams.get("token");
+
+
 export const renderDossiers = async () => {
   const section = document.getElementById('dashboard-sections');
   section.innerHTML = '<div id="dossierContainer" class="mb-5"></div>';
@@ -6,7 +10,10 @@ export const renderDossiers = async () => {
   try {
     const response = await fetch('/dossier', {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        "Authorization": `Bearer ${token}` 
+    },
+      
     });
 
     if (response.ok) {
