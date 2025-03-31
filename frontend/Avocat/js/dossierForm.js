@@ -1,32 +1,159 @@
-export const renderDossierForm = () => {
-    const container = document.getElementById('dashboard-sections')
-    container.innerHTML = `
-      <div class="box">
-        <h2 class="title is-4">Créer un Dossier</h2>
-        <form id="dossierForm">
-          <div class="field">
-            <label class="label">Nom du dossier</label>
-            <input class="input" name="nom" required />
-          </div>
-          <div class="field">
-            <label class="label">Client concerné</label>
-            <input class="input" name="client" required />
-          </div>
-          <div class="field">
-            <label class="label">Description</label>
-            <textarea class="textarea" name="description"></textarea>
-          </div>
-          <button class="button is-primary" type="submit">Créer</button>
-        </form>
-      </div>
-    `
-  
-    document.getElementById('dossierForm').onsubmit = (e) => {
-      e.preventDefault()
-      const data = Object.fromEntries(new FormData(e.target))
-      console.log('📁 Dossier créé :', data)
-      alert('Dossier créé !')
-      e.target.reset()
-    }
+export const renderDossierForm = async () => {
+  const container = document.getElementById('dashboard-sections')
+  container.innerHTML = `
+    <div class="box">
+      <h2 class="title is-4">Créer un Dossier</h2>
+      <form id="dossierForm">
+        <div class="field">
+          <label class="label">Nom du dossier</label>
+          <input class="input" name="dossierNom" required />
+        </div>
+        <div class="field">
+          <label class="label">Type de dossier</label>
+          <input class="input" name="dossierType" required />
+        </div>
+        <div class="field">
+          <label class="label">Client ID</label>
+          <select class="input" id="clientSelect" name="clientID" required>
+            <option value="">Sélectionnez un client</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label">Description</label>
+          <textarea class="textarea" name="description"></textarea>
+        </div>
+        <button class="button is-primary" type="submit">Créer</button>
+      </form>
+      <hr />
+      <h3 class="title is-5">Liste des Dossiers</h3>
+      <table class="table is-fullwidth is-striped">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Description</th>
+            <th>Date Création</th>
+            <th>Date Fermeture</th>
+          </tr>
+        </thead>
+        <tbody id="dossierTableBody">
+          <!-- Les dossiers seront insérés ici -->
+        </tbody>
+      </table>
+    </div>
+  `
+
+  // Extract token from URL and store it in localStorage
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  if (token) {
+    localStorage.setItem('token', token);
   }
-  
+
+  // Fetch and populate client dropdown
+  const fetchClients = async () => {
+    try {
+      const storedToken = localStorage.getItem('token');
+      if (!storedToken) return;
+      const response = await fetch('/client', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${storedToken}`
+        },
+      });
+      if (response.ok) {
+        const clients = await response.json();
+        const clientSelect = document.getElementById('clientSelect');
+        clientSelect.innerHTML = `<option value="">Sélectionnez un client</option>` +
+          clients.map(client => `
+            <option value="${client.clientID}">${client.clientID} - ${client.prenom} ${client.nom}</option>
+          `).join('');
+      } else {
+        console.error('Erreur lors de la récupération des clients:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Erreur réseau:', error);
+    }
+  };
+
+  // Fetch and display dossiers
+  const fetchDossiers = async () => {
+    try {
+      const storedToken = localStorage.getItem('token');
+      if (!storedToken) {
+        alert('Vous devez être connecté pour voir les dossiers.');
+        return;
+      }
+      const response = await fetch('/dossier', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${storedToken}`
+        },
+      });
+      if (response.ok) {
+        const dossiers = await response.json();
+        const tableBody = document.getElementById('dossierTableBody');
+        tableBody.innerHTML = dossiers.map(dossier => `
+          <tr>
+            <td>${dossier.dossierNom}</td>
+            <td>${dossier.dossierType}</td>
+            <td>${dossier.status}</td>
+            <td>${dossier.description}</td>
+            <td>${new Date(dossier.dateCreated).toLocaleDateString()}</td>
+            <td>${dossier.dateClosed ? new Date(dossier.dateClosed).toLocaleDateString() : 'N/A'}</td>
+          </tr>
+        `).join('');
+      } else {
+        console.error('Erreur lors de la récupération des dossiers:', response.statusText);
+        alert('Erreur lors de la récupération des dossiers. Veuillez réessayer.');
+      }
+    } catch (error) {
+      console.error('Erreur réseau:', error);
+      alert('Une erreur réseau s\'est produite. Veuillez réessayer.');
+    }
+  };
+
+  // Handle form submission for creating a new dossier
+  document.getElementById('dossierForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const storedToken = localStorage.getItem('token');
+    if (!storedToken) {
+      alert('Vous devez être connecté pour créer un dossier.');
+      return;
+    }
+    const formData = new FormData(e.target);
+    const dossierData = Object.fromEntries(formData.entries());
+    dossierData.avocatID = 1; // Set avocatID (can be dynamic if needed)
+    // If no client is selected, remove clientID so backend sets it to null
+    if (!dossierData.clientID) {
+      delete dossierData.clientID;
+    }
+    try {
+      const response = await fetch('/dossier', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${storedToken}`
+        },
+        body: JSON.stringify(dossierData),
+      });
+      if (response.ok) {
+        alert('Dossier créé avec succès.');
+        e.target.reset();
+        await fetchDossiers();
+      } else {
+        console.error('Erreur lors de la création du dossier:', response.statusText);
+        alert('Erreur lors de la création du dossier. Veuillez réessayer.');
+      }
+    } catch (error) {
+      console.error('Erreur réseau:', error);
+      alert('Une erreur réseau s\'est produite. Veuillez réessayer.');
+    }
+  };
+
+  await fetchClients();
+  await fetchDossiers();
+};

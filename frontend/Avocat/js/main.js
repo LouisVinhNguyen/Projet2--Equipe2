@@ -12,9 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (key === 'dossiers') renderDossierForm()
       if (key === 'clients') renderClientForm()
       if (key === 'temps') initTimeTracker()
-      if (['agenda', 'rappels', 'planification'].includes(key)) {renderEventSection(key)}
+      if (['agenda', 'rappels', 'planification'].includes(key)) renderEventSection(key)
       if (key === 'facturation') renderBillingSection()
       if (key === 'documents') renderReceivedDocuments()
     }
   })
 })
+
+export { initSidebar, renderDossierForm, renderClientForm, initTimeTracker, renderEventSection, renderBillingSection, renderReceivedDocuments }

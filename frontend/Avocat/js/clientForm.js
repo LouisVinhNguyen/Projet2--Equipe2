@@ -20,109 +20,72 @@ export const renderClientForm = () => {
         </div>
         <button class="button is-success" type="submit">Ajouter</button>
       </form>
+      <hr />
+      <h3 class="title is-5">Liste des Clients</h3>
+      <table class="table is-fullwidth is-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Prénom</th>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Téléphone</th>
+          </tr>
+        </thead>
+        <tbody id="clientTableBody">
+          <!-- Les clients seront insérés ici -->
+        </tbody>
+      </table>
     </div>
   `
 
- document.getElementById('clientForm').onsubmit = (e) => {
+  // Handle client form submission
+  document.getElementById('clientForm').onsubmit = async (e) => {
     e.preventDefault()
     const data = Object.fromEntries(new FormData(e.target))
-    addClient(data)
+    await addClient(data)
     alert('Client ajouté !')
     e.target.reset()
+    await fetchClientsList()
   }
 
+  // Fetch and display clients
+  const fetchClientsList = async () => {
+    try {
+      const storedToken = localStorage.getItem('token')
+      if (!storedToken) {
+        alert('Vous devez être connecté pour voir les clients.')
+        return
+      }
+      const response = await fetch('/client', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${storedToken}`
+        }
+      })
 
-}
-
-
-
-
-
-// Les fetches
-
-async function getClients() {
-  try {
-    const response = await fetch('/client', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    })
-
-    if (response.ok) {
-      const data = await response.json()
-      console.log("Clients récupérés:", data)
-      return data
-    } else {
-      console.error("Erreur lors de la récupération des clients:", response.statusText)
-      alert("Erreur lors de la récupération des clients. Veuillez réessayer.")
+      if (response.ok) {
+        const clients = await response.json()
+        const tableBody = document.getElementById('clientTableBody')
+        tableBody.innerHTML = clients.map(client => `
+          <tr>
+            <td>${client.clientID}</td>
+            <td>${client.prenom}</td>
+            <td>${client.nom}</td>
+            <td>${client.email}</td>
+            <td>${client.telephone}</td>
+          </tr>
+        `).join('')
+      } else {
+        console.error('Erreur lors de la récupération des clients:', response.statusText)
+        alert("Erreur lors de la récupération des clients. Veuillez réessayer.")
+      }
+    } catch (error) {
+      console.error("Erreur réseau:", error)
+      alert("Une erreur réseau s'est produite. Veuillez réessayer.")
     }
-  } catch (error) {
-    console.error("Erreur réseau:", error)
-    alert("Une erreur réseau s'est produite. Veuillez réessayer.")
   }
-}
 
-async function postClient(client) {
-  try {
-    const response = await fetch('/register/client', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(client),
-    })
-
-    if (response.ok) {
-      const data = await response.json()
-      console.log("Client ajouté:", data)
-      alert("Client ajouté avec succès.")
-    } else {
-      console.error("Erreur lors de l'ajout du client:", response.statusText)
-      alert("Erreur lors de l'ajout du client. Veuillez réessayer.")
-    }
-  } catch (error) {
-    console.error("Erreur réseau:", error)
-    alert("Une erreur réseau s'est produite. Veuillez réessayer.")
-  }
-}
-
-async function deleteClient(id) {
-  try {
-    const response = await fetch(`/client/${id}`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-    })
-
-    if (response.ok) {
-      const data = await response.json()
-      console.log("Client supprimé:", data)
-      alert("Client supprimé avec succès.")
-    } else {
-      console.error("Erreur lors de la suppression du client:", response.statusText)
-      alert("Erreur lors de la suppression du client. Veuillez réessayer.")
-    }
-  } catch (error) {
-    console.error("Erreur réseau:", error)
-    alert("Une erreur réseau s'est produite. Veuillez réessayer.")
-  }
-}
-
-
-async function updateClient(id, client) {
-  try {
-    const response = await fetch(`/client/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(client),
-    })
-
-    if (response.ok) {
-      const data = await response.json()
-      console.log("Client mis à jour:", data)
-      alert("Client mis à jour avec succès.")
-    } else {
-      console.error("Erreur lors de la mise à jour du client:", response.statusText)
-      alert("Erreur lors de la mise à jour du client. Veuillez réessayer.")
-    }
-  } catch (error) {
-    console.error("Erreur réseau:", error)
-    alert("Une erreur réseau s'est produite. Veuillez réessayer.")
-  }
+  fetchClientsList()
 }
