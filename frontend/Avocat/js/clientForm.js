@@ -42,7 +42,7 @@ export const renderClientForm = () => {
 
 async function getClients() {
   try {
-    const response = await fetch('/api/clients', {
+    const response = await fetch('/client', {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     })
@@ -63,7 +63,7 @@ async function getClients() {
 
 async function postClient(client) {
   try {
-    const response = await fetch('/api/clients', {
+    const response = await fetch('/register/client', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(client),
@@ -85,7 +85,7 @@ async function postClient(client) {
 
 async function deleteClient(id) {
   try {
-    const response = await fetch(`/api/clients/${id}`, {
+    const response = await fetch(`/client/${id}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
     })
@@ -107,7 +107,7 @@ async function deleteClient(id) {
 
 async function updateClient(id, client) {
   try {
-    const response = await fetch(`/api/clients/${id}`, {
+    const response = await fetch(`/client/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(client),

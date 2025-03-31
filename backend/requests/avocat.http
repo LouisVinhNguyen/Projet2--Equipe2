@@ -1,0 +1,117 @@
+### Test for avocat registration
+# Description: Registers a new avocat with valid data.
+# Expected Result: A 201 status code and a success message.
+POST http://localhost:3000/register/avocat
+Content-Type: application/json
+
+{
+    "prenom": "Mark",
+    "nom": "Henry",
+    "email": "markhenry@example.com",
+    "telephone": "1234567890",
+    "password": "securePassword123"
+}
+
+### Test for missing fields in avocat registration
+# Description: Attempts to register an avocat with missing required fields.
+# Expected Result: A 400 status code with an error message.
+POST http://localhost:3000/register/avocat
+Content-Type: application/json
+
+{
+    "prenom": "John",
+    "nom": "Doe",
+    "email": "john.doe@example.com",
+    "telephone": "1234567890"
+}
+
+### Test for invalid email format in avocat registration
+# Description: Attempts to register an avocat with an invalid email format.
+# Expected Result: A 400 status code with an error message.
+POST http://localhost:3000/register/avocat
+Content-Type: application/json
+
+{
+    "prenom": "John",
+    "nom": "Doe",
+    "email": "john.doe@invalid",
+    "telephone": "1234567890",
+    "password": "securePassword123"
+}
+
+### Test for existing email in avocat registration
+# Description: Attempts to register an avocat with an email that already exists.
+# Expected Result: A 400 status code with an error message.
+POST http://localhost:3000/register/avocat
+Content-Type: application/json
+
+{
+    "prenom": "Mark",
+    "nom": "Henry",
+    "email": "markhenry@example.com",
+    "telephone": "1234567890",
+    "password": "securePassword123"
+}
+
+### Login to obtain JWT token for avocat
+# Description: Logs in an avocat with valid credentials to obtain a JWT token.
+# Expected Result: A 200 status code and a token in the response body.
+# @name avocatLogin
+POST http://localhost:3000/login/avocat
+Content-Type: application/json
+
+{
+    "email": "markhenry@example.com",
+    "password": "securePassword123"
+}
+
+### Save the token to be used in other requests
+@avocatToken = {{avocatLogin.response.body.token}}
+
+### Test for avocat login with incorrect password
+# Description: Attempts to log in an avocat with an incorrect password.
+# Expected Result: A 401 status code with an error message.
+POST http://localhost:3000/login/avocat
+Content-Type: application/json
+
+{
+    "email": "markhenry@example.com",
+    "password": "wrongPassword"
+}
+
+### Test for avocat login with non-existent email
+# Description: Attempts to log in an avocat with an email that does not exist.
+# Expected Result: A 404 status code with an error message.
+POST http://localhost:3000/login/avocat
+Content-Type: application/json
+
+{
+    "email": "nonexistent@example.com",
+    "password": "securePassword123"
+}
+
+### Test for retrieving all avocats
+# Description: Retrieves all avocats in the system.
+# Expected Result: A 200 status code and a list of avocats.
+GET http://localhost:3000/avocat
+Authorization: Bearer {{avocatToken}}
+
+### Test for updating an avocat
+# Description: Updates an existing avocat with valid data.
+# Expected Result: A 200 status code and a success message.
+PUT http://localhost:3000/avocat/1
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "prenom": "Updated",
+    "nom": "Avocat",
+    "email": "updatedavocat@example.com",
+    "telephone": "9876543210"
+}
+
+### Test for deleting an avocat
+# Description: Deletes an existing avocat by ID.
+# Expected Result: A 200 status code and a success message.
+DELETE http://localhost:3000/avocat/1
+Authorization: Bearer {{avocatToken}}

@@ -1,0 +1,52 @@
+### Login to obtain JWT token for avocat
+# @name avocatLogin
+POST http://localhost:3000/login/avocat
+Content-Type: application/json
+
+{
+    "email": "markhenry@example.com",
+    "password": "securePassword123"
+}
+
+### Save the token to be used in other requests
+@avocatToken = {{avocatLogin.response.body.token}}
+
+### Test for retrieving all taches
+# Description: Retrieves all taches for the authenticated avocat.
+# Expected Result: A list of taches with their details.
+GET http://localhost:3000/tache
+Authorization: Bearer {{avocatToken}}
+
+### Test for creating a tache with valid data
+# Description: Creates a new tache with valid data.
+# Expected Result: A 201 status code and the ID of the created tache.
+POST http://localhost:3000/tache
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierID": 1,
+    "documentNom": "Tâche Importante",
+    "description": "Description de la tâche importante."
+}
+
+### Test for updating a tache with valid data
+# Description: Updates an existing tache with valid data.
+# Expected Result: A 200 status code and a success message.
+PUT http://localhost:3000/tache/6
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierID": 1,
+    "documentNom": "Tâche Modifiée",
+    "description": "Description modifiée de la tâche."
+}
+
+### Test for deleting a tache
+# Description: Deletes an existing tache by ID.
+# Expected Result: A 200 status code and a success message.
+DELETE http://localhost:3000/tache/6
+Authorization: Bearer {{avocatToken}}

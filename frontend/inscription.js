@@ -36,36 +36,35 @@ function inscription() {
             return;
         }
 
-        const inscriptionData = { prenom, nom, email, password, telephone, role };
+        const inscriptionData = { prenom, nom, email, password, telephone};
+
+        // Determine the route based on the role
+        const route = role === "avocat" ? '/register/avocat' : '/register/client';
 
         // Send the data to the server
-        fetch('/inscription', {
+        fetch(route, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(inscriptionData),
         })
             .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        throw new Error(err.message || "Erreur lors de l'enregistrement");
-                    });
-                }
-                return response.json();
+            if (!response.ok) {
+                return response.json().then(err => {
+                throw new Error(err.message || "Erreur lors de l'enregistrement");
+                });
+            }
+            return response.json();
             })
             .then(data => {
-                console.log("Inscription réussie:", data);
-                setCookie('prenom', prenom); // Save the prenom in a cookie
+            console.log("Inscription réussie:", data);
+            setCookie('prenom', prenom); // Save the prenom in a cookie
 
-                // Redirect based on role
-                if (role === "avocat") {
-                    window.location.href = "indexavocat.html";
-                } else if (role === "user") {
-                    window.location.href = "indexClient.html";
-                }
+            // Redirect to connexion.html for both roles
+            window.location.href = "connexion.html";
             })
             .catch(error => {
-                console.error("Erreur lors de l'enregistrement d'inscription:", error.message);
-                alert("Erreur lors de l'enregistrement: " + error.message); // Notify the user
+            console.error("Erreur lors de l'enregistrement d'inscription:", error.message);
+            alert("Erreur lors de l'enregistrement: " + error.message); // Notify the user
             });
     });
 }
