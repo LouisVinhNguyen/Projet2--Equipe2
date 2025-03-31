@@ -23,11 +23,12 @@
             <div class="columns is-centered">
                 <div class="column is-5">
                     <h1 class="title has-text-centered">Connexion</h1>
-                    <form action="dashboard.html" method="POST" class="box">
+                    <!-- Removed action attribute -->
+                    <form id="form-connexion" class="box">
                         <div class="field">
                             <label class="label">Adresse Email</label>
                             <div class="control has-icons-left">
-                                <input class="input" type="email" name="email" placeholder="Entrez votre email" required>
+                                <input class="input" type="email" id="email" placeholder="Entrez votre email" required>
                                 <span class="icon is-small is-left">
                                     <i class="fas fa-envelope"></i>
                                 </span>
@@ -36,14 +37,28 @@
                         <div class="field">
                             <label class="label">Mot de Passe</label>
                             <div class="control has-icons-left">
-                                <input class="input" type="password" name="password" placeholder="Entrez votre mot de passe" required>
+                                <input class="input" type="password" id="password" placeholder="Entrez votre mot de passe" required>
                                 <span class="icon is-small is-left">
                                     <i class="fas fa-lock"></i>
                                 </span>
                             </div>
                         </div>
                         <div class="field">
-                            <button class="button is-primary is-fullwidth">Se connecter</button>
+                            <label class="label">Type d'utilisateur</label>
+                            <div class="control">
+                                <label class="radio">
+                                    <input type="radio" name="role" value="avocat" checked>
+                                    Avocat
+                                </label>
+                                <label class="radio">
+                                    <input type="radio" name="role" value="client">
+                                    Client
+                                </label>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <!-- Changed button type to "button" to prevent default form submission -->
+                            <button type="button" id="connexion" class="button is-primary is-fullwidth">Se connecter</button>
                         </div>
                     </form>
                     <p class="has-text-centered">
@@ -61,6 +76,7 @@
         </div>
     </footer>
 
+    <script src="connexion.js"></script>
     <!-- Font Awesome for icons -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
 </body>

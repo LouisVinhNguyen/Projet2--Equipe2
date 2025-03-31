@@ -1,0 +1,181 @@
+### Test for avocat registration
+# Description: Registers a new avocat with valid data.
+# Expected Result: A 201 status code and a success message.
+POST http://localhost:3000/register/avocat
+Content-Type: application/json
+
+{
+    "prenom": "Mark",
+    "nom": "Henry",
+    "email": "markhenry@example.com",
+    "telephone": "1234567890",
+    "password": "securePassword123"
+}
+
+### Login to obtain JWT token for avocat
+# @name avocatLogin
+POST http://localhost:3000/login/avocat
+Content-Type: application/json
+
+{
+    "email": "markhenry@example.com",
+    "password": "securePassword123"
+}
+
+### Save the token to be used in other requests
+@avocatToken = {{avocatLogin.response.body.token}}
+
+### Test for retrieving all dossiers
+# Description: Retrieves all dossiers for the authenticated avocat.
+# Expected Result: A list of dossiers with their details.
+GET http://localhost:3000/dossier
+Authorization: Bearer {{avocatToken}}
+
+### Test for creating a dossier with valid data
+# Description: Creates a new dossier with valid data.
+# Expected Result: A 201 status code and the ID of the created dossier.
+POST http://localhost:3000/dossier
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierNom": "Litige Commercial",
+    "dossierType": "Litige",
+    "description": "Litige concernant un contrat commercial.",
+    "clientID": 2
+}
+
+### Test for creating a dossier with missing required fields
+# Description: Attempts to create a dossier with missing required fields.
+# Expected Result: A 400 status code with an error message.
+POST http://localhost:3000/dossier
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierType": "Litige",
+    "description": "Litige concernant un contrat commercial."
+}
+
+### Test for creating a dossier with non-existent avocatID
+# Description: Attempts to create a dossier with a non-existent avocatID.
+# Expected Result: A 400 or 404 status code with an error message.
+POST http://localhost:3000/dossier
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 999,
+    "dossierNom": "Litige Inexistant",
+    "dossierType": "Litige",
+    "description": "Litige concernant un avocat inexistant."
+}
+
+### Test for creating a dossier with non-existent clientID
+# Description: Attempts to create a dossier with a non-existent clientID.
+# Expected Result: A 400 or 404 status code with an error message.
+POST http://localhost:3000/dossier
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierNom": "Litige Client Inexistant",
+    "dossierType": "Litige",
+    "description": "Litige concernant un client inexistant.",
+    "clientID": 999
+}
+
+### Test for creating a dossier with duplicate dossierNom
+# Description: Attempts to create a dossier with a duplicate dossierNom.
+# Expected Result: A 400 status code with an error message.
+POST http://localhost:3000/dossier
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierNom": "Litige Commercial",
+    "dossierType": "Litige",
+    "description": "Litige avec un nom déjà existant.",
+    "clientID": 2
+}
+
+### Test for updating a dossier with valid data
+# Description: Updates an existing dossier with valid data.
+# Expected Result: A 200 status code and a success message.
+PUT http://localhost:3000/dossier/1
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierNom": "Litige Commercial Modifié",
+    "dossierType": "Litige",
+    "description": "Litige modifié avec succès.",
+    "status": "Terminé"
+}
+
+### Test for updating a dossier with missing required fields
+# Description: Attempts to update a dossier with missing required fields.
+# Expected Result: A 400 status code with an error message.
+PUT http://localhost:3000/dossier/1
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierType": "Litige",
+    "description": "Litige modifié avec des champs manquants.",
+    "status": "Terminé"
+}
+
+### Test for updating a non-existent dossier
+# Description: Attempts to update a dossier that does not exist.
+# Expected Result: A 404 status code with an error message.
+PUT http://localhost:3000/dossier/999
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierNom": "Litige Inexistant",
+    "dossierType": "Litige",
+    "description": "Tentative de modification d'un dossier inexistant.",
+    "clientID": 2,
+    "status": "Terminé"
+}
+
+### Test for updating a dossier with non-existent avocatID
+# Description: Attempts to update a dossier with a non-existent avocatID.
+# Expected Result: A 400 or 404 status code with an error message.
+PUT http://localhost:3000/dossier/1
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 999,
+    "dossierNom": "Litige Avocat Inexistant",
+    "dossierType": "Litige",
+    "description": "Modification avec un avocat inexistant.",
+    "clientID": 2,
+    "status": "Terminé"
+}
+
+### Test for updating a dossier with non-existent clientID
+# Description: Attempts to update a dossier with a non-existent clientID.
+# Expected Result: A 400 or 404 status code with an error message.
+PUT http://localhost:3000/dossier/1
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierNom": "Litige Client Inexistant",
+    "dossierType": "Litige",
+    "description": "Modification avec un client inexistant.",
+    "clientID": 999,
+    "status": "Terminé"
+}

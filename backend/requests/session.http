@@ -1,0 +1,50 @@
+### Login to obtain JWT token for avocat
+# @name avocatLogin
+POST http://localhost:3000/login/avocat
+Content-Type: application/json
+
+{
+    "email": "markhenry@example.com",
+    "password": "securePassword123"
+}
+
+### Save the token to be used in other requests
+@avocatToken = {{avocatLogin.response.body.token}}
+
+### Test for retrieving all sessions
+# Description: Retrieves all sessions for the authenticated avocat.
+# Expected Result: A list of sessions with their details.
+GET http://localhost:3000/session
+Authorization: Bearer {{avocatToken}}
+
+### Test for creating a session with valid data
+# Description: Creates a new session with valid data.
+# Expected Result: A 201 status code and the ID of the created session.
+POST http://localhost:3000/session
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierID": 1,
+    "description": "Session de consultation initiale."
+}
+
+### Test for updating a session with valid data
+# Description: Updates an existing session with valid data.
+# Expected Result: A 200 status code and a success message.
+PUT http://localhost:3000/session/6
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierID": 1,
+    "description": "Session modifiée avec succès."
+}
+
+### Test for deleting a session
+# Description: Deletes an existing session by ID.
+# Expected Result: A 200 status code and a success message.
+DELETE http://localhost:3000/session/6
+Authorization: Bearer {{avocatToken}}
