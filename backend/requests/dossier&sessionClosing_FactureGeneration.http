@@ -1,0 +1,78 @@
+### Test for avocat registration
+# Description: Registers a new avocat with valid data.
+# Expected Result: A 201 status code and a success message.
+POST http://localhost:3000/register/avocat
+Content-Type: application/json
+
+{
+    "prenom": "Mark",
+    "nom": "Henry",
+    "email": "markhenry@example.com",
+    "telephone": "1234567890",
+    "password": "securePassword123"
+}
+
+### Login to obtain JWT token for avocat
+# Description: Logs in an avocat with valid credentials to obtain a JWT token.
+# Expected Result: A 200 status code and a token in the response body.
+# @name avocatLogin
+POST http://localhost:3000/login/avocat
+Content-Type: application/json
+
+{
+    "email": "markhenry@example.com",
+    "password": "securePassword123"
+}
+
+### Save the token to be used in other requests
+@avocatToken = {{avocatLogin.response.body.token}}
+
+### Create a New Session
+POST http://localhost:3000/session
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+  "avocatID": 1,
+  "dossierID": 3,
+  "description": "Test session for EndSession procedure"
+}
+
+### End the Newly Created Session
+# Replace <sessionID> with the ID returned from the previous request.
+POST http://localhost:3000/session/end/8
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+  "description": "Session ended successfully."
+}
+
+### Attempt to End the Same Session Again (Should Fail)
+# This request should return an error that the session has already been ended.
+POST http://localhost:3000/session/end/5
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+  "description": "Attempt to end a session twice."
+}
+
+### End a Non-Existent Session (Should Return Not Found)
+POST http://localhost:3000/session/end/99999
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+  "description": "Trying to end a non-existent session."
+}
+
+### Close dossier with id 1
+POST http://localhost:3000/dossier/close/3
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+### Retrieve All Dossiers
+GET http://localhost:3000/dossier
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}

@@ -463,6 +463,44 @@ app.delete('/dossier/:id', verifyAvocatToken, async (req, res) => {
     }
 });
 
+app.post('/dossier/close/:id', verifyAvocatToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Ensure all sessions for this dossier are closed
+        const activeSessions = await db('session')
+            .where({ dossierID: id })
+            .andWhere('clockOutTime', null);
+        if (activeSessions.length > 0) {
+            return res.status(400).json({ 
+                message: 'Veuillez clôturer toutes les sessions actives avant de fermer le dossier.' 
+            });
+        }
+
+        // Call the stored procedure CloseDossier
+        const result = await db.raw('EXEC CloseDossier @dossierID = ?', [id]);
+        // The procedure returns the total hours in a "TotalHeures" field.
+        // Depending on your DB driver, the returned structure may vary.
+        const totalHours =
+            result && result[0] && result[0][0] && result[0][0].TotalHeures !== undefined 
+                ? result[0][0].TotalHeures 
+                : null;
+        return res.status(200).json({ 
+            message: 'Dossier fermé avec succès.', 
+            totalHours 
+        });
+    } catch (error) {
+        // Check for errors from the procedure indicating a double close or missing dossier
+        if (error.message && error.message.includes('Le dossier est déjà fermé')) {
+            return res.status(400).json({ message: 'Le dossier est déjà fermé.' });
+        }
+        if (error.message && error.message.includes("n'existe pas")) {
+            return res.status(404).json({ message: 'Le dossier spécifié n\'existe pas.' });
+        }
+        console.error(error);
+        return res.status(500).json({ message: 'Erreur lors de la fermeture du dossier.', error: error.message });
+    }
+});
+
 app.get('/document', verifyAvocatToken, async (req, res) => {
     try {
         const documents = await db('document').select('*');
@@ -751,6 +789,42 @@ app.delete('/session/:id', verifyAvocatToken, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Erreur lors de la suppression de la session.', error: error.message });
+    }
+});
+
+app.post('/session/end/:id', verifyAvocatToken, async (req, res) => {
+    const { id } = req.params;
+    const { description } = req.body; // Optional updated description
+
+    try {
+        // Call the stored procedure EndSession. Only an existing session that isn't already ended can be marked as ended.
+        const result = await db.raw(
+            'EXEC EndSession @sessionID = ?, @description = ?',
+            [id, description || null]
+        );
+        // Depending on your driver, adjust how you access the returned data.
+        const updatedSession =
+            result && result[0] && result[0][0]
+                ? result[0][0]
+                : null;
+
+        return res.status(200).json({
+            message: 'Session clôturée avec succès.',
+            session: updatedSession
+        });
+    } catch (error) {
+        // Handle errors coming from the procedure
+        if (error.message && error.message.includes('This session has already been ended')) {
+            return res.status(400).json({ message: 'Cette session a déjà été clôturée.' });
+        }
+        if (error.message && error.message.includes('Session ID does not exist')) {
+            return res.status(404).json({ message: 'Session introuvable.' });
+        }
+        console.error(error);
+        return res.status(500).json({
+            message: 'Erreur lors de la clôture de la session.',
+            error: error.message
+        });
     }
 });
 
