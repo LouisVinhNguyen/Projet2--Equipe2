@@ -1,14 +1,98 @@
 import { getClients } from './clientStorage.js'
 
-const FACTURES_KEY = 'legalconnect_factures'
-const PAIEMENTS_KEY = 'legalconnect_paiements'
+const API_BASE_URL = '/api' // Replace with your actual API base URL
+const FACTURES_ENDPOINT = `${API_BASE_URL}/factures`
+const PAIEMENTS_ENDPOINT = `${API_BASE_URL}/paiements`
 
-let factures = JSON.parse(localStorage.getItem(FACTURES_KEY) || '[]')
-let paiements = JSON.parse(localStorage.getItem(PAIEMENTS_KEY) || '[]')
+// State variables
+let factures = []
+let paiements = []
 
-const saveState = () => {
-  localStorage.setItem(FACTURES_KEY, JSON.stringify(factures))
-  localStorage.setItem(PAIEMENTS_KEY, JSON.stringify(paiements))
+// Fetch data from API
+const fetchData = async () => {
+  try {
+    const [facturesResponse, paiementsResponse] = await Promise.all([
+      fetch(FACTURES_ENDPOINT),
+      fetch(PAIEMENTS_ENDPOINT)
+    ])
+    
+    if (!facturesResponse.ok || !paiementsResponse.ok) {
+      throw new Error('Failed to fetch data')
+    }
+    
+    factures = await facturesResponse.json()
+    paiements = await paiementsResponse.json()
+  } catch (error) {
+    console.error('Error fetching data:', error)
+    // Fallback to localStorage if API fails
+    factures = JSON.parse(localStorage.getItem('legalconnect_factures') || '[]')
+    paiements = JSON.parse(localStorage.getItem('legalconnect_paiements') || '[]')
+  }
+}
+
+// Save data to API
+const saveState = async () => {
+  try {
+    // Save to localStorage as backup
+    localStorage.setItem('legalconnect_factures', JSON.stringify(factures))
+    localStorage.setItem('legalconnect_paiements', JSON.stringify(paiements))
+  } catch (error) {
+    console.error('Error saving to localStorage:', error)
+  }
+}
+
+// Add a facture via API
+const addFacture = async (factureData) => {
+  try {
+    const response = await fetch(FACTURES_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(factureData)
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to add facture')
+    }
+    
+    const newFacture = await response.json()
+    factures.push(newFacture)
+    return newFacture
+  } catch (error) {
+    console.error('Error adding facture:', error)
+    // Fallback to local operation
+    factures.push(factureData)
+    saveState()
+    return factureData
+  }
+}
+
+// Add a paiement via API
+const addPaiement = async (paiementData) => {
+  try {
+    const response = await fetch(PAIEMENTS_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(paiementData)
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to add paiement')
+    }
+    
+    const newPaiement = await response.json()
+    paiements.push(newPaiement)
+    return newPaiement
+  } catch (error) {
+    console.error('Error adding paiement:', error)
+    // Fallback to local operation
+    paiements.push(paiementData)
+    saveState()
+    return paiementData
+  }
 }
 
 const getClientOptions = () => {
@@ -20,16 +104,18 @@ const getClientOptions = () => {
 
 const getFactureOptions = () => {
   return factures.length
-    ? factures.map((f, i) => `<option value="${i}">#${i + 1} – ${f.client} – ${f.montant}€</option>`).join('')
+    ? factures.map((f, i) => `<option value="${f.id || i}">#${f.id || i + 1} – ${f.client} – ${f.montant}€</option>`).join('')
     : '<option disabled selected>Aucune facture</option>'
 }
 
-const getFactureStatut = (factureIndex) => {
-  const facture = factures[factureIndex]
+const getFactureStatut = (factureId) => {
+  const facture = factures.find(f => (f.id || factures.indexOf(f)) == factureId)
   if (!facture) return 'Inconnu'
+  
   const totalPayé = paiements
-    .filter(p => p.factureIndex == factureIndex)
+    .filter(p => p.factureId == factureId || p.factureIndex == factureId)
     .reduce((sum, p) => sum + Number(p.montant), 0)
+    
   return totalPayé >= Number(facture.montant) ? 'Payée' : 'En attente'
 }
 
@@ -44,24 +130,37 @@ const renderFacturesTable = () => {
       </tr>
     </thead>
     <tbody>
-      ${factures.map((f, i) => `
+      ${factures.map((f, i) => {
+        const factureId = f.id || i
+        return `
         <tr>
           <td>${f.client}</td>
           <td>${f.montant}</td>
           <td>${f.date}</td>
-          <td><strong>${getFactureStatut(i)}</strong></td>
-          <td><button class="button is-small is-info" onclick="generatePDF(${i})">
+          <td><strong>${getFactureStatut(factureId)}</strong></td>
+          <td><button class="button is-small is-info" onclick="generatePDF('${factureId}')">
             <i class="fas fa-file-pdf"></i>
           </button></td>
         </tr>
-      `).join('')}
+      `}).join('')}
     </tbody>
   </table>
   `
 }
 
-export const renderBillingSection = () => {
+export const renderBillingSection = async () => {
   const container = document.getElementById('dashboard-sections')
+  
+  // Show loading state
+  container.innerHTML = `
+    <div class="box has-text-centered">
+      <h2 class="title is-4">Facturation & Paiements</h2>
+      <p>Chargement des données...</p>
+    </div>
+  `
+  
+  // Fetch data from API
+  await fetchData()
 
   const clients = getClients()
   if (!clients.length) {
@@ -108,7 +207,7 @@ export const renderBillingSection = () => {
             <div class="field">
               <label class="label">Facture</label>
               <div class="select is-fullwidth">
-                <select name="factureIndex" required>
+                <select name="factureId" required>
                   ${getFactureOptions()}
                 </select>
               </div>
@@ -132,39 +231,40 @@ export const renderBillingSection = () => {
     </div>
   `
 
-  document.getElementById('factureForm').onsubmit = (e) => {
+  document.getElementById('factureForm').onsubmit = async (e) => {
     e.preventDefault()
     const data = Object.fromEntries(new FormData(e.target))
-    factures.push(data)
-    saveState()
+    await addFacture(data)
     renderBillingSection()
   }
 
-  document.getElementById('paiementForm').onsubmit = (e) => {
+  document.getElementById('paiementForm').onsubmit = async (e) => {
     e.preventDefault()
     const data = Object.fromEntries(new FormData(e.target))
-    paiements.push({ ...data, factureIndex: Number(data.factureIndex) })
-    saveState()
+    data.factureId = data.factureId
+    await addPaiement(data)
     renderBillingSection()
   }
 }
 
-window.generatePDF = (index) => {
-  const f = factures[index]
+window.generatePDF = (factureId) => {
+  const f = factures.find(f => (f.id || factures.indexOf(f)) == factureId)
+  if (!f) return
+
   const totalPayé = paiements
-    .filter(p => p.factureIndex == index)
+    .filter(p => p.factureId == factureId || p.factureIndex == factureId)
     .reduce((sum, p) => sum + Number(p.montant), 0)
   const restant = f.montant - totalPayé
 
   const element = document.createElement('div')
   element.innerHTML = `
-    <h1 style="text-align:center;">Facture #${index + 1}</h1>
+    <h1 style="text-align:center;">Facture #${f.id || parseInt(factureId) + 1}</h1>
     <p><strong>Client :</strong> ${f.client}</p>
     <p><strong>Date :</strong> ${f.date}</p>
     <p><strong>Montant :</strong> ${f.montant} €</p>
     <p><strong>Payé :</strong> ${totalPayé} €</p>
     <p><strong>Restant :</strong> ${restant} €</p>
-    <p><strong>Statut :</strong> ${getFactureStatut(index)}</p>
+    <p><strong>Statut :</strong> ${getFactureStatut(factureId)}</p>
   `
   html2pdf().from(element).save(`facture-${f.client}.pdf`)
 }
