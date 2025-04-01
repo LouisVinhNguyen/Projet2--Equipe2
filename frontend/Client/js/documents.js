@@ -46,6 +46,14 @@ export const renderDocumentUploader = async () => {
     </div>
   `;
 
+  let document = {
+    titre: "Document 1",
+    nomFichier: "doc1.pdf",
+    contenu: "data:application/pdf;base64,abc123",
+    date: "2021-09-15",
+    client: "John Doe"
+  };
+
   // Gestion du formulaire d'envoi
   const form = document.getElementById('uploadForm');
   form.onsubmit = async (e) => {
@@ -66,7 +74,6 @@ export const renderDocumentUploader = async () => {
           client: formData.get('client')
         };
 
-        // Envoyer le document au serveur au lieu de le stocker dans localStorage
         await envoyerDocument(doc);
       };
 
@@ -102,6 +109,10 @@ export async function getDocuments() {
     return [];
   }
 }
+
+
+
+
 
 // Fonction pour envoyer un document
 export async function envoyerDocument(document) {
