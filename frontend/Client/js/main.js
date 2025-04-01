@@ -5,10 +5,14 @@ import { renderDossiers } from './dossiers.js'
 import { renderPaiements } from './paiements.js'
 import { renderDocumentUploader } from './documents.js'
 
+if (!sessionStorage.getItem('token')) {
+  alert("Vous devez être connecté pour accéder à cette page.");
+  window.location.href = "../index.html";
+}
 
 let dexo = document.getElementById('deconnexion');
 dexo.addEventListener('click', function(){
-  localStorage.removeItem('token');
+  sessionStorage.removeItem('token');
   window.location.href = "../index.html";
 });
 

@@ -1,5 +1,3 @@
-import { addClient } from './clientStorage.js'
-
 export const renderClientForm = () => {
   const container = document.getElementById('dashboard-sections')
   container.innerHTML = `
@@ -39,20 +37,10 @@ export const renderClientForm = () => {
     </div>
   `
 
-  // Handle client form submission
-  document.getElementById('clientForm').onsubmit = async (e) => {
-    e.preventDefault()
-    const data = Object.fromEntries(new FormData(e.target))
-    await addClient(data)
-    alert('Client ajouté !')
-    e.target.reset()
-    await fetchClientsList()
-  }
-
   // Fetch and display clients
   const fetchClientsList = async () => {
     try {
-      const storedToken = localStorage.getItem('token')
+      const storedToken = sessionStorage.getItem('token')
       if (!storedToken) {
         alert('Vous devez être connecté pour voir les clients.')
         return

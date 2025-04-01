@@ -1,5 +1,3 @@
-import { getClients } from './clientStorage.js'
-
 const API_BASE_URL = '/api' // Replace with your actual API base URL
 const FACTURES_ENDPOINT = `${API_BASE_URL}/factures`
 const PAIEMENTS_ENDPOINT = `${API_BASE_URL}/paiements`

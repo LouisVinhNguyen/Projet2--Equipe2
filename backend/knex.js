@@ -3,7 +3,7 @@ const knex = require('knex');
 const db = knex({
     client: 'mssql',
     connection: {
-        server: 'LENOVOLN\\SQLEXPRESS',
+        server: 'DESKTOP-67ADTQ8\\SQLEXPRESS',
         user: 'user',
         password: 'password',
         database: 'Cabinet',

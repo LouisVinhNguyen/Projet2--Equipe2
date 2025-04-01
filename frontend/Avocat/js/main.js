@@ -6,14 +6,16 @@ import { renderEventSection } from './eventManager.js'
 import { renderBillingSection } from './billing.js'
 import { renderReceivedDocuments } from './documents.js'
 
+if (!sessionStorage.getItem('token')) {
+  alert("Vous devez être connecté pour accéder à cette page.");
+  window.location.href = "../index.html";
+}
 
 let dexo = document.getElementById('deconnexion');
 dexo.addEventListener('click', function(){
-  localStorage.removeItem('token');
+  sessionStorage.removeItem('token');
   window.location.href = "../index.html";
 });
-
-
 
 document.addEventListener('DOMContentLoaded', () => {
   initSidebar({

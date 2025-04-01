@@ -39,13 +39,13 @@ async function getToken(user, endpoint, role) {
         if (response.ok) {
             const data = await response.json();
             console.log(`Le jeton d'authentification: ${data.token}`);
+            // Store token before redirecting
+            sessionStorage.setItem("token", data.token);
             // Redirect based on the role
             if (role === "avocat") {
-                sessionStorage.setItem("token", data.token);
-                window.location.href = `Avocat/indexAvocat.html?token=${data.token}`;
+                window.location.href = `Avocat/indexAvocat.html`;
             } else {
-                window.location.href = `Client/indexClient.html?token=${data.token}`;
-                sessionStorage.setItem("token", data.token);
+                window.location.href = `Client/indexClient.html`;
             }
         } else {
             console.error("Erreur lors de la récupération du jeton");

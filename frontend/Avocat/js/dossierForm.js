@@ -29,12 +29,14 @@ export const renderDossierForm = async () => {
       <table class="table is-fullwidth is-striped">
         <thead>
           <tr>
+            <th>ID</th>
             <th>Nom</th>
             <th>Type</th>
             <th>Status</th>
             <th>Description</th>
             <th>Date Création</th>
             <th>Date Fermeture</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="dossierTableBody">
@@ -44,17 +46,10 @@ export const renderDossierForm = async () => {
     </div>
   `
 
-  // Extract token from URL and store it in localStorage
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token');
-  if (token) {
-    localStorage.setItem('token', token);
-  }
-
   // Fetch and populate client dropdown
   const fetchClients = async () => {
     try {
-      const storedToken = localStorage.getItem('token');
+      const storedToken = sessionStorage.getItem('token');
       if (!storedToken) return;
       const response = await fetch('/client', {
         method: 'GET',
@@ -81,9 +76,10 @@ export const renderDossierForm = async () => {
   // Fetch and display dossiers
   const fetchDossiers = async () => {
     try {
-      const storedToken = localStorage.getItem('token');
+      const storedToken = sessionStorage.getItem('token');
       if (!storedToken) {
         alert('Vous devez être connecté pour voir les dossiers.');
+        window.location.href = "../index.html";
         return;
       }
       const response = await fetch('/dossier', {
@@ -98,14 +94,37 @@ export const renderDossierForm = async () => {
         const tableBody = document.getElementById('dossierTableBody');
         tableBody.innerHTML = dossiers.map(dossier => `
           <tr>
+            <td>${dossier.dossierID}</td>
             <td>${dossier.dossierNom}</td>
             <td>${dossier.dossierType}</td>
             <td>${dossier.status}</td>
             <td>${dossier.description}</td>
             <td>${new Date(dossier.dateCreated).toLocaleDateString()}</td>
             <td>${dossier.dateClosed ? new Date(dossier.dateClosed).toLocaleDateString() : 'N/A'}</td>
+            <td>
+              <button class="button is-small is-warning edit-dossier" data-id="${dossier.id}">Edit</button>
+              <button class="button is-small is-danger delete-dossier" data-id="${dossier.id}">Supprimer</button>
+            </td>
           </tr>
         `).join('');
+
+        // Add event listeners for Edit and Delete buttons
+        const editButtons = document.querySelectorAll('.edit-dossier');
+        const deleteButtons = document.querySelectorAll('.delete-dossier');
+
+        editButtons.forEach(button => {
+          button.addEventListener('click', (e) => {
+            const dossierId = e.target.getAttribute('data-id');
+            editDossier(dossierId);
+          });
+        });
+
+        deleteButtons.forEach(button => {
+          button.addEventListener('click', (e) => {
+            const dossierId = e.target.getAttribute('data-id');
+            deleteDossier(dossierId);
+          });
+        });
       } else {
         console.error('Erreur lors de la récupération des dossiers:', response.statusText);
         alert('Erreur lors de la récupération des dossiers. Veuillez réessayer.');
@@ -119,7 +138,7 @@ export const renderDossierForm = async () => {
   // Handle form submission for creating a new dossier
   document.getElementById('dossierForm').onsubmit = async (e) => {
     e.preventDefault();
-    const storedToken = localStorage.getItem('token');
+    const storedToken = sessionStorage.getItem('token');
     if (!storedToken) {
       alert('Vous devez être connecté pour créer un dossier.');
       return;
