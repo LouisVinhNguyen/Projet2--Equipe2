@@ -5,6 +5,13 @@ import { renderDossiers } from './dossiers.js'
 import { renderPaiements } from './paiements.js'
 import { renderDocumentUploader } from './documents.js'
 
+
+let dexo = document.getElementById('deconnexion');
+dexo.addEventListener('click', function(){
+  localStorage.removeItem('token');
+  window.location.href = "../index.html";
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   initSidebar({
     onSectionChange: (key) => {

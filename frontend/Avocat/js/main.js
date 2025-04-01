@@ -6,6 +6,15 @@ import { renderEventSection } from './eventManager.js'
 import { renderBillingSection } from './billing.js'
 import { renderReceivedDocuments } from './documents.js'
 
+
+let dexo = document.getElementById('deconnexion');
+dexo.addEventListener('click', function(){
+  localStorage.removeItem('token');
+  window.location.href = "../index.html";
+});
+
+
+
 document.addEventListener('DOMContentLoaded', () => {
   initSidebar({
     onSectionChange: (key) => {
