@@ -1,0 +1,22 @@
+.sidebar {
+    min-height: calc(100vh - 52px);
+    border-right: 1px solid #dbdbdb;
+  }
+  
+  .menu-list a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-radius: 4px;
+  }
+  
+  .menu-list a:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .menu-list a.is-active {
+    background-color: #00d1b2;
+    color: white;
+  }
+  

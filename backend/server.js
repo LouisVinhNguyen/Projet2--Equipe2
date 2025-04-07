@@ -17,6 +17,11 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
 
+/**
+ * Middleware pour vérifier la validité du token JWT et les rôles autorisés
+ * @param {string[]} allowedRoles - Tableau des rôles autorisés
+ * @returns {Function} Middleware Express qui vérifie le token et les rôles
+ */
 function verifyToken(allowedRoles) {
   return (req, res, next) => {
     const authHeader = req.headers["authorization"];
@@ -47,15 +52,22 @@ function verifyToken(allowedRoles) {
 }
 
 // Usage:
+// Vérificateurs à rôle unique
 const verifyAvocatToken = verifyToken(["avocat"]);
 const verifyClientToken = verifyToken(["client"]);
+const verifyAdminToken = verifyToken(["admin"]);
+
+// Vérificateurs à rôles multiples
 const verifyAvocatOrClientToken = verifyToken(["avocat", "client"]);
+const verifyAvocatOrAdminToken = verifyToken(["avocat", "admin"]);
+const verifyClientOrAdminToken = verifyToken(["client", "admin"]);
+const verifyAnyUserToken = verifyToken(["avocat", "client", "admin"]);
 
 /**
  * POST /register/avocat
  * Cette route permet de créer un nouvel avocat avec les informations fournies dans le corps de la requête.
  * Elle vérifie d'abord si tous les champs requis sont présents et si l'email est valide.
- * Ensuite, elle hache le mot de passe et exécute la procédure stockée CreateAvocat pour insérer l'avocat dans la base de données.
+ * Ensuite, elle hache le mot de passe et exécute la fonction createAvocat pour insérer l'avocat dans la table users.
  */
 app.post("/register/avocat", async (req, res) => {
   const { prenom, nom, email, telephone, password } = req.body;
@@ -73,7 +85,11 @@ app.post("/register/avocat", async (req, res) => {
   }
 
   try {
-    const existingAvocat = await db("avocat").where({ email }).first();
+    // Check in the users table for an existing user with this email and role avocat
+    const existingAvocat = await db("users")
+      .where({ email: email, role: 'avocat' })
+      .first();
+      
     if (existingAvocat) {
       return res
         .status(409)
@@ -82,6 +98,7 @@ app.post("/register/avocat", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     
+    // Use the createAvocat function from procedures.js which calls createUser
     const result = await procedures.createAvocat(
       prenom, 
       nom, 
@@ -90,7 +107,7 @@ app.post("/register/avocat", async (req, res) => {
       hashedPassword
     );
 
-    res.status(201).json({ avocatID: result.avocatID });
+    res.status(201).json({ userID: result.userID });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -101,10 +118,10 @@ app.post("/register/avocat", async (req, res) => {
 });
 
 /**
- *
- *
- *
- *
+ * POST /login/avocat
+ * Cette route permet à un avocat de se connecter avec son email et mot de passe.
+ * Elle vérifie si l'email correspond à un utilisateur avec le rôle 'avocat',
+ * puis valide le mot de passe et génère un token JWT.
  */
 app.post("/login/avocat", async (req, res) => {
   const { email, password } = req.body;
@@ -114,7 +131,13 @@ app.post("/login/avocat", async (req, res) => {
   }
 
   try {
-    const avocat = await db("avocat").where({ email }).first();
+    // Query the users table for a user with role 'avocat' and matching email
+    const avocat = await db("users")
+      .where({ 
+        email: email,
+        role: 'avocat'
+      })
+      .first();
 
     if (!avocat) {
       return res
@@ -135,7 +158,11 @@ app.post("/login/avocat", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: avocat.id, email: avocat.email, role: "avocat" },
+      { 
+        userId: avocat.userID, 
+        email: avocat.email, 
+        role: "avocat" 
+      },
       SECRET_KEY,
       { expiresIn: "1h" }
     );

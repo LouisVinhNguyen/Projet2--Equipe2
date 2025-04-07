@@ -14,57 +14,57 @@ async function generateTestData() {
         const saltRounds = 10;
         
         const hashedPassword1 = await bcrypt.hash('MotDePasse123', saltRounds);
-        const avocat1 = await procedures.createAvocat(
+        const avocat1 = await procedures.createUser(
             'Sophie', 'Tremblay', 'sophie.tremblay@cabinet-juridique.ca', 
-            '514-555-1234', hashedPassword1
+            '514-555-1234', hashedPassword1, 'avocat'
         );
-        avocats.push(avocat1.avocatID);
+        avocats.push(avocat1.userID);
         
         const hashedPassword2 = await bcrypt.hash('AvoMB2023', saltRounds);
-        const avocat2 = await procedures.createAvocat(
+        const avocat2 = await procedures.createUser(
             'Marc', 'Bélanger', 'marc.belanger@cabinet-juridique.ca', 
-            '514-555-2345', hashedPassword2
+            '514-555-2345', hashedPassword2, 'avocat'
         );
-        avocats.push(avocat2.avocatID);
+        avocats.push(avocat2.userID);
         
         const hashedPassword3 = await bcrypt.hash('DroitQc2023', saltRounds);
-        const avocat3 = await procedures.createAvocat(
+        const avocat3 = await procedures.createUser(
             'Isabelle', 'Gagnon', 'isabelle.gagnon@cabinet-juridique.ca', 
-            '514-555-3456', hashedPassword3
+            '514-555-3456', hashedPassword3, 'avocat'
         );
-        avocats.push(avocat3.avocatID);
+        avocats.push(avocat3.userID);
         
         // -------- CRÉATION DES CLIENTS --------
         console.log('Création des clients...');
         const clients = [];
         
         const hashedClientPassword1 = await bcrypt.hash('Client123', saltRounds);
-        const client1 = await procedures.createClient(
+        const client1 = await procedures.createUser(
             'Jean', 'Dupont', 'jean.dupont@gmail.com',
-            '514-555-6789', hashedClientPassword1
+            '514-555-6789', hashedClientPassword1, 'client'
         );
-        clients.push(client1.clientID);
+        clients.push(client1.userID);
         
         const hashedClientPassword2 = await bcrypt.hash('ML2023!', saltRounds);
-        const client2 = await procedures.createClient(
+        const client2 = await procedures.createUser(
             'Marie', 'Lavoie', 'marie.lavoie@hotmail.com',
-            '514-555-7890', hashedClientPassword2
+            '514-555-7890', hashedClientPassword2, 'client'
         );
-        clients.push(client2.clientID);
+        clients.push(client2.userID);
         
         const hashedClientPassword3 = await bcrypt.hash('PLeclerc2023', saltRounds);
-        const client3 = await procedures.createClient(
+        const client3 = await procedures.createUser(
             'Pierre', 'Leclerc', 'pierre.leclerc@yahoo.ca',
-            '514-555-8901', hashedClientPassword3
+            '514-555-8901', hashedClientPassword3, 'client'
         );
-        clients.push(client3.clientID);
+        clients.push(client3.userID);
         
         const hashedClientPassword4 = await bcrypt.hash('ECote123!', saltRounds);
-        const client4 = await procedures.createClient(
+        const client4 = await procedures.createUser(
             'Émilie', 'Côté', 'emilie.cote@gmail.com',
-            '514-555-9012', hashedClientPassword4
+            '514-555-9012', hashedClientPassword4, 'client'
         );
-        clients.push(client4.clientID);
+        clients.push(client4.userID);
         
         // -------- CRÉATION DES DOSSIERS --------
         console.log('Création des dossiers...');
@@ -72,19 +72,22 @@ async function generateTestData() {
         
         const dossier1 = await procedures.createDossier(
             avocats[0], 'Divorce Dupont', 'Familial',
-            'Procédure de divorce à l\'amiable entre Jean Dupont et son épouse'
+            'Procédure de divorce à l\'amiable entre Jean Dupont et son épouse',
+            clients[0]
         );
         dossiers.push(dossier1.dossierID);
         
         const dossier2 = await procedures.createDossier(
             avocats[1], 'Contrat Lavoie Inc.', 'Commercial',
-            'Révision du contrat commercial pour l\'entreprise de Marie Lavoie'
+            'Révision du contrat commercial pour l\'entreprise de Marie Lavoie',
+            clients[1]
         );
         dossiers.push(dossier2.dossierID);
         
         const dossier3 = await procedures.createDossier(
             avocats[2], 'Litige Propriété Leclerc', 'Immobilier',
-            'Litige concernant les limites de propriété de M. Leclerc avec son voisin'
+            'Litige concernant les limites de propriété de M. Leclerc avec son voisin',
+            clients[2]
         );
         dossiers.push(dossier3.dossierID);
         
@@ -97,9 +100,8 @@ async function generateTestData() {
         // -------- LIAISON CLIENTS-DOSSIERS --------
         console.log('Liaison des clients aux dossiers...');
         
-        await procedures.linkClientToDossier(clients[0], dossiers[0]);
-        await procedures.linkClientToDossier(clients[1], dossiers[1]);
-        await procedures.linkClientToDossier(clients[2], dossiers[2]);
+        // Nous avons déjà lié les clients lors de la création des dossiers 1-3
+        // Ajoutons seulement la liaison supplémentaire pour le dossier 4
         await procedures.linkClientToDossier(clients[3], dossiers[3]);
         
         // Liaison supplémentaire pour montrer un client avec plusieurs dossiers
@@ -112,46 +114,42 @@ async function generateTestData() {
         const document1 = await procedures.createDocument(
             avocats[0], 'Requête en divorce', 
             'Document officiel pour la demande de divorce de M. Dupont',
-            'https://placeholder.com/documents/divorce_request.pdf'
+            'https://placeholder.com/documents/divorce_request.pdf',
+            dossiers[0]
         );
         documents.push(document1.documentID);
         
         const document2 = await procedures.createDocument(
             avocats[0], 'État financier Dupont',
             'Rapport détaillé de la situation financière pour procédure de divorce',
-            'https://placeholder.com/documents/financial_report.pdf'
+            'https://placeholder.com/documents/financial_report.pdf',
+            dossiers[0]
         );
         documents.push(document2.documentID);
         
         const document3 = await procedures.createDocument(
             avocats[1], 'Contrat commercial v1',
             'Première version du contrat commercial pour Lavoie Inc.',
-            'https://placeholder.com/documents/commercial_contract_v1.pdf'
+            'https://placeholder.com/documents/commercial_contract_v1.pdf',
+            dossiers[1]
         );
         documents.push(document3.documentID);
         
         const document4 = await procedures.createDocument(
             avocats[2], 'Photos terrain Leclerc',
             'Photos montrant les limites contestées de la propriété',
-            'https://placeholder.com/documents/property_photos.jpg'
+            'https://placeholder.com/documents/property_photos.jpg',
+            dossiers[2]
         );
         documents.push(document4.documentID);
         
         const document5 = await procedures.createDocument(
             avocats[0], 'Testament brouillon',
             'Première ébauche du testament de Mme Côté',
-            'https://placeholder.com/documents/draft_will.pdf'
+            'https://placeholder.com/documents/draft_will.pdf',
+            dossiers[3]
         );
         documents.push(document5.documentID);
-        
-        // -------- LIAISON DOCUMENTS-DOSSIERS --------
-        console.log('Liaison des documents aux dossiers...');
-        
-        await procedures.linkDocumentToDossier(documents[0], dossiers[0]);
-        await procedures.linkDocumentToDossier(documents[1], dossiers[0]);
-        await procedures.linkDocumentToDossier(documents[2], dossiers[1]);
-        await procedures.linkDocumentToDossier(documents[3], dossiers[2]);
-        await procedures.linkDocumentToDossier(documents[4], dossiers[3]);
         
         // -------- CRÉATION DES TÂCHES --------
         console.log('Création des tâches...');
@@ -292,7 +290,7 @@ async function generateTestData() {
         // -------- FERMETURE DE DOSSIER --------
         console.log('Fermeture d\'un dossier...');
         
-        // Fermer le dossier de divorce (déjà facturé mais on va le marquer comme terminé)
+        // Fermer le dossier de testament
         const closureResult = await procedures.closeDossier(dossiers[3]);
         console.log(`Dossier ${dossiers[3]} fermé avec ${closureResult.totalHours}h travaillées.`);
         console.log(`Facture finale créée: ID ${closureResult.factureID}`);

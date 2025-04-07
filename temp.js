@@ -1,3 +1,6 @@
+Simplified Database Schema with Unified Users Table
+Based on your request for a simpler approach without role-specific detail tables, here's an updated schema that consolidates all users into a single table with a role identifier:
+
 -- Drop tables if they exist
 DROP TABLE IF EXISTS client_dossier;
 DROP TABLE IF EXISTS dossier_document;
@@ -124,3 +127,9 @@ CREATE TABLE dossier_document (
     FOREIGN KEY (dossierID) REFERENCES dossier(dossierID),
     FOREIGN KEY (documentID) REFERENCES document(documentID)
 );
+
+Key Changes
+Unified Users Table: All users (clients, lawyers, admins) are stored in a single table with a role identifier
+Foreign Key Updates: All references to avocatID and clientID are replaced with userID or role-specific names like avocatUserID/clientUserID
+Role Validation: The role column has a CHECK constraint to ensure only valid roles are used
+Added Creation Date: A dateCreated timestamp is added to track when users were created

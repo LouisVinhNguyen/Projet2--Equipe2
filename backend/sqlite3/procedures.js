@@ -1,73 +1,61 @@
 const db = require('../knex');
 
 /**
- * 1. Create a new client
+ * 1. Create a new user (client, avocat, or admin)
  * @param {string} prenom - First name
  * @param {string} nom - Last name
  * @param {string} email - Email address
  * @param {string} telephone - Phone number
  * @param {string} password - Password (hashed)
- * @returns {Promise<Object>} The new client ID
+ * @param {string} role - User role ('client', 'avocat', or 'admin')
+ * @returns {Promise<Object>} The new user ID
  */
-async function createClient(prenom, nom, email, telephone, password) {
+async function createUser(prenom, nom, email, telephone, password, role) {
     try {
-        const [clientID] = await db('client').insert({
-            prenom,
-            nom,
-            email,
-            telephone,
-            password
-        });
-        
-        return { clientID };
-    } catch (error) {
-        console.error('Error in createClient:', error);
-        throw new Error(`Échec de création du client: ${error.message}`);
-    }
-}
+        // Validate role
+        const validRoles = ['client', 'avocat', 'admin'];
+        if (!validRoles.includes(role)) {
+            throw new Error(`Role invalide. Doit être l'un des suivants: ${validRoles.join(', ')}`);
+        }
 
-/**
- * 2. Create a new lawyer
- * @param {string} prenom - First name
- * @param {string} nom - Last name
- * @param {string} email - Email address
- * @param {string} telephone - Phone number
- * @param {string} password - Password (hashed)
- * @returns {Promise<Object>} The new lawyer ID
- */
-async function createAvocat(prenom, nom, email, telephone, password) {
-    try {
-        const [avocatID] = await db('avocat').insert({
+        const [userID] = await db('users').insert({
             prenom,
             nom,
             email,
             telephone,
-            password
+            password,
+            role
         });
         
-        return { avocatID };
+        return { userID };
     } catch (error) {
-        console.error('Error in createAvocat:', error);
-        throw new Error(`Échec de création de l'avocat: ${error.message}`);
+        console.error(`Error in createUser (${role}):`, error);
+        throw new Error(`Échec de création de l'utilisateur: ${error.message}`);
     }
 }
 
 /**
  * 3. Create a new dossier (case file)
- * @param {number} avocatID - Lawyer ID
+ * @param {number} avocatUserID - Lawyer user ID
  * @param {string} dossierNom - Case name
  * @param {string} dossierType - Case type
  * @param {string} description - Case description
- * @param {number|null} clientID - Optional client ID to link
+ * @param {number|null} clientUserID - Optional client user ID to link
  * @returns {Promise<Object>} The new dossier ID
  */
-async function createDossier(avocatID, dossierNom, dossierType, description, clientID = null) {
+async function createDossier(avocatUserID, dossierNom, dossierType, description, clientUserID = null) {
     try {
+        // Check if the user exists and is an avocat
+        const avocat = await db('users').where({ userID: avocatUserID, role: 'avocat' }).first();
+        if (!avocat) {
+            throw new Error('L\'utilisateur spécifié n\'existe pas ou n\'est pas un avocat.');
+        }
+        
         // Begin transaction
         const result = await db.transaction(async trx => {
             // Insert dossier with default status
             const [dossierID] = await trx('dossier').insert({
-                avocatID,
+                avocatUserID,
                 dossierNom,
                 status: 'En cours',
                 dossierType,
@@ -75,10 +63,15 @@ async function createDossier(avocatID, dossierNom, dossierType, description, cli
                 dateCreated: new Date().toISOString()
             });
             
-            // If client ID provided, link the client to the dossier
-            if (clientID !== null) {
+            // If client ID provided, verify it's a client and link to the dossier
+            if (clientUserID !== null) {
+                const client = await trx('users').where({ userID: clientUserID, role: 'client' }).first();
+                if (!client) {
+                    throw new Error('L\'utilisateur spécifié n\'existe pas ou n\'est pas un client.');
+                }
+
                 await trx('client_dossier').insert({
-                    clientID,
+                    clientUserID,
                     dossierID
                 });
             }
@@ -95,20 +88,26 @@ async function createDossier(avocatID, dossierNom, dossierType, description, cli
 
 /**
  * 4. Create a new document
- * @param {number} avocatID - Lawyer ID
+ * @param {number} userID - User ID (avocat or client)
  * @param {string} documentNom - Document name
  * @param {string} description - Document description
  * @param {string} fichier - Document file URL
  * @param {number|null} dossierID - Optional dossier ID to link
  * @returns {Promise<Object>} The new document ID
  */
-async function createDocument(avocatID, documentNom, description, fichier, dossierID = null) {
+async function createDocument(userID, documentNom, description, fichier, dossierID = null) {
     try {
+        // Check if the user exists
+        const user = await db('users').where({ userID }).first();
+        if (!user) {
+            throw new Error('L\'utilisateur spécifié n\'existe pas.');
+        }
+        
         // Begin transaction
         const result = await db.transaction(async trx => {
             // Insert document
             const [documentID] = await trx('document').insert({
-                avocatID,
+                userID,
                 documentNom,
                 description,
                 fichier,
@@ -117,6 +116,11 @@ async function createDocument(avocatID, documentNom, description, fichier, dossi
             
             // If dossier ID provided, link the document to the dossier
             if (dossierID !== null) {
+                const dossier = await trx('dossier').where({ dossierID }).first();
+                if (!dossier) {
+                    throw new Error('Le dossier spécifié n\'existe pas.');
+                }
+
                 await trx('dossier_document').insert({
                     dossierID,
                     documentID
@@ -135,15 +139,27 @@ async function createDocument(avocatID, documentNom, description, fichier, dossi
 
 /**
  * 5. Create a new session (start time tracking)
- * @param {number} avocatID - Lawyer ID
+ * @param {number} userID - User ID (typically an avocat)
  * @param {number} dossierID - Dossier ID
  * @param {string} description - Session description
  * @returns {Promise<Object>} The new session ID
  */
-async function createSession(avocatID, dossierID, description) {
+async function createSession(userID, dossierID, description) {
     try {
+        // Check if user exists and is an avocat
+        const user = await db('users').where({ userID }).first();
+        if (!user) {
+            throw new Error('L\'utilisateur spécifié n\'existe pas.');
+        }
+        
+        // Check if dossier exists
+        const dossier = await db('dossier').where({ dossierID }).first();
+        if (!dossier) {
+            throw new Error('Le dossier spécifié n\'existe pas.');
+        }
+
         const [sessionID] = await db('session').insert({
-            avocatID,
+            userID,
             dossierID,
             clockInTime: new Date().toISOString(),
             clockOutTime: null,
@@ -211,15 +227,27 @@ async function endSession(sessionID, description = null) {
 
 /**
  * 7. Create a new task
- * @param {number} avocatID - Lawyer ID
+ * @param {number} userID - User ID (typically an avocat)
  * @param {number} dossierID - Dossier ID
  * @param {string} documentNom - Document name
  * @param {string} description - Task description
  * @param {string} status - Task status
  * @returns {Promise<Object>} The new task ID
  */
-async function createTache(avocatID, dossierID, documentNom, description, status) {
+async function createTache(userID, dossierID, documentNom, description, status) {
     try {
+        // Check if user exists
+        const user = await db('users').where({ userID }).first();
+        if (!user) {
+            throw new Error('L\'utilisateur spécifié n\'existe pas.');
+        }
+        
+        // Check if dossier exists
+        const dossier = await db('dossier').where({ dossierID }).first();
+        if (!dossier) {
+            throw new Error('Le dossier spécifié n\'existe pas.');
+        }
+        
         // Valid status values
         const validStatuses = ['Non commencée', 'En cours', 'Terminée', 'Bloquée', 'Annulée'];
         
@@ -228,7 +256,7 @@ async function createTache(avocatID, dossierID, documentNom, description, status
         }
         
         const [tacheID] = await db('tache').insert({
-            avocatID,
+            userID,
             dossierID,
             documentNom,
             description,
@@ -246,14 +274,14 @@ async function createTache(avocatID, dossierID, documentNom, description, status
 /**
  * Update an existing task
  * @param {number} tacheID - Task ID to update
- * @param {number} avocatID - Lawyer ID
+ * @param {number} userID - User ID
  * @param {number} dossierID - Dossier ID
  * @param {string} documentNom - Document name
  * @param {string} description - Task description
  * @param {string} status - Task status
  * @returns {Promise<Object>} Confirmation message
  */
-async function updateTache(tacheID, avocatID, dossierID, documentNom, description, status) {
+async function updateTache(tacheID, userID, dossierID, documentNom, description, status) {
     try {
         // Valid status values
         const validStatuses = ['Non commencée', 'En cours', 'Terminée', 'Bloquée', 'Annulée'];
@@ -270,10 +298,10 @@ async function updateTache(tacheID, avocatID, dossierID, documentNom, descriptio
                 throw new Error('Tâche introuvable');
             }
             
-            // Check if the avocat exists
-            const existingAvocat = await trx('avocat').where({ avocatID }).first();
-            if (!existingAvocat) {
-                throw new Error('L\'avocat spécifié n\'existe pas');
+            // Check if the user exists
+            const existingUser = await trx('users').where({ userID }).first();
+            if (!existingUser) {
+                throw new Error('L\'utilisateur spécifié n\'existe pas');
             }
             
             // Check if the dossier exists
@@ -286,7 +314,7 @@ async function updateTache(tacheID, avocatID, dossierID, documentNom, descriptio
             await trx('tache')
                 .where({ tacheID })
                 .update({
-                    avocatID,
+                    userID,
                     dossierID,
                     documentNom,
                     description,
@@ -301,20 +329,18 @@ async function updateTache(tacheID, avocatID, dossierID, documentNom, descriptio
     }
 }
 
-// Don't forget to add this to the module.exports
-
 /**
  * 8. Link a client to a dossier
- * @param {number} clientID - Client ID
+ * @param {number} clientUserID - Client user ID
  * @param {number} dossierID - Dossier ID
  * @returns {Promise<Object>} Confirmation details
  */
-async function linkClientToDossier(clientID, dossierID) {
+async function linkClientToDossier(clientUserID, dossierID) {
     try {
-        // Check if client exists
-        const clientExists = await db('client').where({ clientID }).first();
+        // Check if client exists and has the correct role
+        const clientExists = await db('users').where({ userID: clientUserID, role: 'client' }).first();
         if (!clientExists) {
-            throw new Error('ID de client inexistant.');
+            throw new Error('ID de client inexistant ou l\'utilisateur n\'est pas un client.');
         }
         
         // Check if dossier exists
@@ -325,7 +351,7 @@ async function linkClientToDossier(clientID, dossierID) {
         
         // Check if relationship already exists
         const linkExists = await db('client_dossier')
-            .where({ clientID, dossierID })
+            .where({ clientUserID, dossierID })
             .first();
             
         if (linkExists) {
@@ -333,16 +359,16 @@ async function linkClientToDossier(clientID, dossierID) {
         }
         
         // Create the link
-        await db('client_dossier').insert({ clientID, dossierID });
+        await db('client_dossier').insert({ clientUserID, dossierID });
         
         // Return confirmation with details
         const result = await db('client_dossier as cd')
-            .join('client as c', 'cd.clientID', 'c.clientID')
+            .join('users as u', 'cd.clientUserID', 'u.userID')
             .join('dossier as d', 'cd.dossierID', 'd.dossierID')
-            .where({ 'cd.clientID': clientID, 'cd.dossierID': dossierID })
+            .where({ 'cd.clientUserID': clientUserID, 'cd.dossierID': dossierID })
             .select(
-                'c.clientID',
-                db.raw("c.nom || ', ' || c.prenom as clientNom"),
+                'u.userID as clientUserID',
+                db.raw("u.nom || ', ' || u.prenom as clientNom"),
                 'd.dossierID',
                 'd.dossierNom'
             )
@@ -357,18 +383,18 @@ async function linkClientToDossier(clientID, dossierID) {
 
 /**
  * 9. Create a reminder
- * @param {number} avocatID - Lawyer ID
+ * @param {number} userID - User ID
  * @param {string} rappelNom - Reminder name
  * @param {string} description - Reminder description
  * @param {string} dateAnnonce - Announcement date (ISO string)
  * @returns {Promise<Object>} The created reminder details
  */
-async function createRappel(avocatID, rappelNom, description, dateAnnonce) {
+async function createRappel(userID, rappelNom, description, dateAnnonce) {
     try {
-        // Check if avocat exists
-        const avocatExists = await db('avocat').where({ avocatID }).first();
-        if (!avocatExists) {
-            throw new Error('ID d\'avocat inexistant.');
+        // Check if user exists
+        const userExists = await db('users').where({ userID }).first();
+        if (!userExists) {
+            throw new Error('ID d\'utilisateur inexistant.');
         }
         
         // Validate that announcement date is in the future
@@ -381,7 +407,7 @@ async function createRappel(avocatID, rappelNom, description, dateAnnonce) {
         
         // Create the rappel
         const [rappelID] = await db('rappel').insert({
-            avocatID,
+            userID,
             rappelNom,
             description,
             dateCreated: currentDate.toISOString(),
@@ -453,33 +479,64 @@ async function linkDocumentToDossier(documentID, dossierID) {
 }
 
 /**
- * 11. Delete a client and related records
- * @param {number} clientID - Client ID to delete
+ * 11. Delete a user and related records
+ * @param {number} userID - User ID to delete
  * @returns {Promise<Object>} Confirmation message
  */
-async function deleteClient(clientID) {
+async function deleteUser(userID) {
     try {
+        // Check if user exists
+        const user = await db('users').where({ userID }).first();
+        if (!user) {
+            throw new Error('Utilisateur introuvable');
+        }
+
         // Begin transaction to ensure all operations succeed or fail together
         await db.transaction(async trx => {
-            // Delete related records in client_dossier
-            await trx('client_dossier')
-                .where({ clientID })
-                .del();
-            
-            // Delete the client
-            const deleted = await trx('client')
-                .where({ clientID })
-                .del();
-            
-            if (!deleted) {
-                throw new Error('Client introuvable');
+            if (user.role === 'client') {
+                // Delete related records in client_dossier if user is a client
+                await trx('client_dossier')
+                    .where({ clientUserID: userID })
+                    .del();
             }
+            
+            // Delete any documents created by the user
+            const documents = await trx('document').where({ userID }).select('documentID');
+            for (const doc of documents) {
+                await trx('dossier_document')
+                    .where({ documentID: doc.documentID })
+                    .del();
+                
+                await trx('document')
+                    .where({ documentID: doc.documentID })
+                    .del();
+            }
+            
+            // Delete sessions created by the user
+            await trx('session')
+                .where({ userID })
+                .del();
+                
+            // Delete tasks created by the user
+            await trx('tache')
+                .where({ userID })
+                .del();
+                
+            // Delete reminders created by the user
+            await trx('rappel')
+                .where({ userID })
+                .del();
+                
+            // Delete the user
+            await trx('users')
+                .where({ userID })
+                .del();
         });
         
-        return { message: 'Client et enregistrements associés supprimés avec succès.' };
+        return { message: `Utilisateur (${user.role}) et enregistrements associés supprimés avec succès.` };
     } catch (error) {
-        console.error('Error in deleteClient:', error);
-        throw new Error(`Échec de suppression du client: ${error.message}`);
+        console.error('Error in deleteUser:', error);
+        throw new Error(`Échec de suppression de l'utilisateur: ${error.message}`);
     }
 }
 
@@ -631,9 +688,24 @@ async function closeDossier(dossierID) {
     }
 }
 
+// Helper functions for client and avocat creation using the unified user creation function
+async function createClient(prenom, nom, email, telephone, password) {
+    return createUser(prenom, nom, email, telephone, password, 'client');
+}
+
+async function createAvocat(prenom, nom, email, telephone, password) {
+    return createUser(prenom, nom, email, telephone, password, 'avocat');
+}
+
+async function createAdmin(prenom, nom, email, telephone, password) {
+    return createUser(prenom, nom, email, telephone, password, 'admin');
+}
+
 module.exports = {
+    createUser,
     createClient,
     createAvocat,
+    createAdmin,
     createDossier,
     createDocument,
     createSession,
@@ -643,7 +715,7 @@ module.exports = {
     linkClientToDossier,
     createRappel,
     linkDocumentToDossier,
-    deleteClient,
+    deleteUser,
     deleteDocument,
     createFacture,
     closeDossier
