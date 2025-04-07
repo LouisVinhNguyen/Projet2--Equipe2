@@ -158,9 +158,13 @@ export const renderDossierForm = async () => {
       return;
     }
     
+    // Get userID from JWT token payload
+    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+    const userID = tokenPayload.userID;
+    
     // Create the dossier data object with correct property names
     const dossierData = {
-      avocatUserID: token.userID, // Should be dynamic, get from token or user session
+      avocatUserID: userID,
       dossierNom: dossierNom,
       dossierType: dossierType,
       description: description

@@ -16,7 +16,14 @@ document.getElementById("connexion").addEventListener("click", async () => {
     };
 
     // Determine the correct endpoint based on the role
-    const endpoint = role === "avocat" ? "/auth/login/avocat" : "/auth/login/client";
+    let endpoint;
+    if (role === "avocat") {
+        endpoint = "/auth/login/avocat";
+    } else if (role === "client") {
+        endpoint = "/auth/login/client";
+    } else if (role === "admin") {
+        endpoint = "/auth/login/admin";
+    }
 
     try {
         await getToken(user, endpoint, role);
@@ -41,8 +48,10 @@ async function getToken(user, endpoint, role) {
             // Redirect based on the role
             if (role === "avocat") {
                 window.location.href = `Avocat/indexAvocat.html`;
-            } else {
+            } else if (role === "client") {
                 window.location.href = `Client/indexClient.html`;
+            } else if (role === "admin") {
+                window.location.href = `Admin/indexAdmin.html`;
             }
         } else {
             console.error("Erreur lors de la récupération du jeton");

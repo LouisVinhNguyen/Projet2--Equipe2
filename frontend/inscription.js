@@ -1,3 +1,6 @@
+// Import validation functions from the frontend utils
+import { validateEmail, validateTelephone } from './utils/validators.js';
+
 function inscription() {
     document.getElementById("bouton-connexion").addEventListener("click", function () {
         const prenom = document.getElementById("prenom").value.trim();
@@ -14,8 +17,10 @@ function inscription() {
         if (!role) {
             if (document.getElementById("avocat").checked) {
                 role = "avocat";
-            } else if (document.getElementById("user").checked) {
-                role = "user";
+            } else if (document.getElementById("client").checked) {
+                role = "client";
+            } else if (document.getElementById("admin").checked) {
+                role = "admin";
             } else {
                 alert("Veuillez sélectionner un type d'utilisateur.");
                 return;
@@ -30,42 +35,80 @@ function inscription() {
             return;
         }
 
+        // Validate email format
+        if (!validateEmail(email)) {
+            alert("Format d'email invalide. Veuillez entrer un email valide.");
+            return;
+        }
+
+        // Validate telephone format
+        if (!validateTelephone(telephone)) {
+            alert("Format de téléphone invalide. Veuillez entrer un numéro valide.");
+            return;
+        }
+
         // Validate password confirmation
         if (password !== confirmPassword) {
             alert("Les mots de passe ne correspondent pas.");
             return;
         }
 
-        const inscriptionData = { prenom, nom, email, password, telephone};
+        const inscriptionData = { prenom, nom, email, password, telephone };
 
-        // Determine the route based on the role
-        const route = role === "avocat" ? '/auth/register/avocat' : '/auth/register/client';
-
-        // Send the data to the server
-        fetch(route, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(inscriptionData),
+        // First, check if email already exists for any user
+        fetch(`/user/check-email?email=${encodeURIComponent(email)}`, {
+            method: 'GET',
         })
-            .then(response => {
+        .then(response => response.json())
+        .then(data => {
+            if (data.exists) {
+                alert("Un utilisateur avec cet email existe déjà.");
+                return;
+            }
+            
+            // Determine the route based on the role
+            let route;
+            if (role === "avocat") {
+                route = '/auth/register/avocat';
+            } else if (role === "client") {
+                route = '/auth/register/client';
+            } else if (role === "admin") {
+                route = '/auth/register/admin';
+            }
+
+            // Email doesn't exist, proceed with registration
+            return fetch(route, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(inscriptionData),
+            });
+        })
+        .then(response => {
+            // If we stopped at the email check (response will be undefined)
+            if (!response) return;
+            
             if (!response.ok) {
                 return response.json().then(err => {
-                throw new Error(err.message || "Erreur lors de l'enregistrement");
+                    throw new Error(err.message || "Erreur lors de l'enregistrement");
                 });
             }
             return response.json();
-            })
-            .then(data => {
+        })
+        .then(data => {
+            // If we stopped at the email check (data will be undefined)
+            if (!data) return;
+            
             console.log("Inscription réussie:", data);
             setCookie('prenom', prenom); // Save the prenom in a cookie
+            setCookie('role', role); // Save the role in a cookie
 
-            // Redirect to connexion.html for both roles
+            // Redirect to connexion.html for all roles
             window.location.href = "connexion.html";
-            })
-            .catch(error => {
+        })
+        .catch(error => {
             console.error("Erreur lors de l'enregistrement d'inscription:", error.message);
             alert("Erreur lors de l'enregistrement: " + error.message); // Notify the user
-            });
+        });
     });
 }
 

@@ -92,6 +92,50 @@ const registerClient = async (req, res) => {
   }
 };
 
+// Register a new admin
+const registerAdmin = async (req, res) => {
+  const { prenom, nom, email, telephone, password } = req.body;
+
+  if (!prenom || !nom || !email || !telephone || !password) {
+    return res.status(400).json({ error: "Tous les champs sont requis" });
+  }
+
+  if (!validateEmail(email)) {
+    return res.status(400).json({ error: "Format d'email invalide" });
+  }
+
+  if (!validateTelephone(telephone)) {
+    return res.status(400).json({ error: "Format de téléphone invalide" });
+  }
+
+  try {
+    const existingUser = await db("users").where({ email, role: 'admin' }).first();
+    if (existingUser) {
+      return res
+        .status(409)
+        .json({ message: "Un admin avec cet email existe déjà." });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const result = await procedures.createAdmin(
+      prenom, 
+      nom, 
+      email, 
+      telephone, 
+      hashedPassword
+    );
+
+    res.status(201).json({ adminUserID: result.userID });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Erreur lors de la création de l'admin.",
+      error: error.message,
+    });
+  }
+};
+
 // Login avocat
 const loginAvocat = async (req, res) => {
   const { email, password } = req.body;
@@ -221,6 +265,7 @@ const loginAdmin = async (req, res) => {
 module.exports = {
   registerAvocat,
   registerClient,
+  registerAdmin,
   loginAvocat,
   loginClient,
   loginAdmin

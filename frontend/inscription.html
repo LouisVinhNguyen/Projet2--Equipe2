@@ -79,12 +79,16 @@
                             <label class="label">Type d'utilisateur</label>
                             <div class="control">
                                 <label class="radio">
-                                    <input type="radio" name="role" id="avocat" value="admin">
+                                    <input type="radio" name="role" id="avocat" value="avocat">
                                     Avocat
                                 </label>
                                 <label class="radio">
-                                    <input type="radio" name="role" id="user" value="user">
-                                    Utilisateur
+                                    <input type="radio" name="role" id="client" value="client">
+                                    Client
+                                </label>
+                                <label class="radio">
+                                    <input type="radio" name="role" id="admin" value="admin">
+                                    Admin
                                 </label>
                             </div>
                         </div>
@@ -109,6 +113,6 @@
 
     <!-- Font Awesome for icons -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
-    <script src="inscription.js"></script>
+    <script type="module" src="inscription.js"></script>
 </body>
 </html>

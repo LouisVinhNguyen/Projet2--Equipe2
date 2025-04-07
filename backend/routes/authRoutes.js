@@ -8,6 +8,9 @@ router.post('/register/avocat', authController.registerAvocat);
 // POST register a new client
 router.post('/register/client', authController.registerClient);
 
+// POST register a new admin
+router.post('/register/admin', authController.registerAdmin);
+
 // POST login for avocat
 router.post('/login/avocat', authController.loginAvocat);
 

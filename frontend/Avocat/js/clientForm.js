@@ -79,90 +79,90 @@ export const renderClientForm = () => {
     }
   }
 
-document.getElementById('btn-ajouter-client').addEventListener('click', function() {
-  const prenom = document.getElementById('client-prenom').value.trim();
-  const nom = document.getElementById('client-nom').value.trim();
-  const email = document.getElementById('client-email').value.trim();
-  const telephone = document.getElementById('client-tel').value.trim();
-  // Using a default password
-  const password = "Client123";
-  
-  console.log("Client data:", { prenom, nom, email, telephone });
-  
-  // Validate that all fields are filled
-  if (!prenom || !nom || !email || !telephone) {
-    alert("Veuillez remplir tous les champs.");
-    return;
-  }
-  
-  // Get the token for authorization
-  const token = sessionStorage.getItem('token');
-  if (!token) {
-    alert("Vous devez être connecté pour ajouter un client.");
-    return;
-  }
-  
-  // First, check if email already exists for any user
-  fetch(`/user/check-email?email=${encodeURIComponent(email)}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.exists) {
-      alert("Un utilisateur avec cet email existe déjà.");
+  document.getElementById('btn-ajouter-client').addEventListener('click', function() {
+    const prenom = document.getElementById('client-prenom').value.trim();
+    const nom = document.getElementById('client-nom').value.trim();
+    const email = document.getElementById('client-email').value.trim();
+    const telephone = document.getElementById('client-tel').value.trim();
+    // Using a default password
+    const password = "Client123";
+    
+    console.log("Client data:", { prenom, nom, email, telephone });
+    
+    // Validate that all fields are filled
+    if (!prenom || !nom || !email || !telephone) {
+      alert("Veuillez remplir tous les champs.");
       return;
     }
     
-    // Email doesn't exist, proceed with registration
-    const clientData = { 
-      prenom, 
-      nom, 
-      email, 
-      telephone, 
-      password,
-      role: "client"
-    };
-    
-    // Send the data to the server
-    return fetch('/auth/register/client', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(clientData),
-    });
-  })
-  .then(response => {
-    // If we stopped at the email check (response will be undefined)
-    if (!response) return;
-    
-    if (!response.ok) {
-      return response.json().then(err => {
-        throw new Error(err.message || "Erreur lors de l'ajout du client");
-      });
+    // Get the token for authorization
+    const token = sessionStorage.getItem('token');
+    if (!token) {
+      alert("Vous devez être connecté pour ajouter un client.");
+      return;
     }
-    return response.json();
-  })
-  .then(data => {
-    // If we stopped at the email check (data will be undefined)
-    if (!data) return;
     
-    console.log("Client ajouté avec succès:", data);
-    // Reset the form
-    document.getElementById('clientForm').reset();
-    // Refresh the client list
-    fetchClientsList();
-    alert("Client ajouté avec succès!");
-  })
-  .catch(error => {
-    console.error("Erreur lors de l'ajout du client:", error.message);
-    alert("Erreur lors de l'ajout du client: " + error.message);
+    // First, check if email already exists for any user
+    fetch(`/user/check-email?email=${encodeURIComponent(email)}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.exists) {
+        alert("Un utilisateur avec cet email existe déjà.");
+        return;
+      }
+      
+      // Email doesn't exist, proceed with registration
+      const clientData = { 
+        prenom, 
+        nom, 
+        email, 
+        telephone, 
+        password,
+        role: "client"
+      };
+      
+      // Send the data to the server
+      return fetch('/auth/register/client', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(clientData),
+      });
+    })
+    .then(response => {
+      // If we stopped at the email check (response will be undefined)
+      if (!response) return;
+      
+      if (!response.ok) {
+        return response.json().then(err => {
+          throw new Error(err.message || "Erreur lors de l'ajout du client");
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      // If we stopped at the email check (data will be undefined)
+      if (!data) return;
+      
+      console.log("Client ajouté avec succès:", data);
+      // Reset the form
+      document.getElementById('clientForm').reset();
+      // Refresh the client list
+      fetchClientsList();
+      alert("Client ajouté avec succès!");
+    })
+    .catch(error => {
+      console.error("Erreur lors de l'ajout du client:", error.message);
+      alert("Erreur lors de l'ajout du client: " + error.message);
+    });
   });
-});
 
   // Initial fetch of clients list
   fetchClientsList()

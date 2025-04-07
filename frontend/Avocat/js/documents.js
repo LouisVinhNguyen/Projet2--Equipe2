@@ -45,8 +45,8 @@ export const renderReceivedDocuments = () => {
   
   const fetchDocumentsList = async () => {
     try {
-      const storedToken = sessionStorage.getItem('token')
-      if (!storedToken) {
+      const token = sessionStorage.getItem('token')
+      if (!token) {
         alert('Vous devez être connecté pour voir les documents.')
         return
       }
@@ -54,7 +54,7 @@ export const renderReceivedDocuments = () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${storedToken}`
+          'Authorization': `Bearer ${token}`
         }
       })
   
@@ -64,7 +64,7 @@ export const renderReceivedDocuments = () => {
         tableBody.innerHTML = documents.map(doc => `
           <tr>
             <td>${doc.documentID}</td>
-            <td>${doc.avocatID}</td>
+            <td>${doc.userID}</td>
             <td>${doc.documentNom}</td>
             <td>${doc.description}</td>
             <td>${doc.fichier}</td>
@@ -82,38 +82,78 @@ export const renderReceivedDocuments = () => {
   }
   
   document.getElementById('documentForm').onsubmit = async (e) => {
-    e.preventDefault()
-    const formData = new FormData(e.target)
-    const documentNom = formData.get('documentNom').trim()
-    const description = formData.get('description').trim()
-    const fichier = formData.get('fichier').trim()
-    let dossierID = formData.get('dossierID').trim()
-    dossierID = dossierID === "" ? null : dossierID
-    // For demonstration purposes, we assume the avocatID is 1.
-    const avocatID = 1
-  
-    try {
-      const storedToken = sessionStorage.getItem('token')
-      const response = await fetch('/document', {
-        method: 'POST',
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${storedToken}`
-        },
-        body: JSON.stringify({ avocatID, documentNom, description, fichier, dossierID })
-      })
-  
-      if (response.ok) {
-        e.target.reset()
-        fetchDocumentsList()
-      } else {
-        const result = await response.json()
-        alert(result.message || "Erreur lors de l'ajout du document.")
-      }
-    } catch (error) {
-      console.error(error)
-      alert("Erreur réseau lors de l'ajout du document.")
+    e.preventDefault();
+    
+    // Get token
+    const token = sessionStorage.getItem('token');
+    if (!token) {
+      alert('Vous devez être connecté pour ajouter un document.');
+      return;
     }
+    
+    // Get values from form
+    const documentNom = document.querySelector('input[name="documentNom"]').value.trim();
+    const description = document.querySelector('textarea[name="description"]').value.trim();
+    const fichier = document.querySelector('input[name="fichier"]').value.trim();
+    const dossierID = document.querySelector('input[name="dossierID"]').value.trim();
+    
+    // Validate required fields
+    if (!documentNom || !description || !fichier) {
+      alert("Veuillez remplir tous les champs obligatoires.");
+      return;
+    }
+    
+    // Get userID from JWT token payload
+    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+    const userID = tokenPayload.userID;
+    
+    // Create the document data object with correct property names
+    const documentData = {
+      userID: userID,
+      documentNom: documentNom,
+      description: description,
+      fichier: fichier
+    };
+    
+    // Add dossierID if provided
+    if (dossierID) {
+      documentData.dossierID = dossierID;
+    }
+    
+    console.log("Sending document data:", documentData);
+    
+    // Send data to server
+    fetch('/document', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(documentData)
+    })
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(err => {
+          throw new Error(err.error || err.message || "Erreur lors de l'ajout du document");
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log("Document ajouté avec succès:", data);
+      
+      // Reset form
+      document.getElementById('documentForm').reset();
+      
+      // Refresh the document list
+      fetchDocumentsList();
+      
+      alert("Document ajouté avec succès!");
+    })
+    .catch(error => {
+      console.error("Erreur lors de l'ajout du document:", error.message);
+      alert("Erreur lors de l'ajout du document: " + error.message);
+    });
   }
   
   fetchDocumentsList()
