@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 const SECRET_KEY = require("./secret_key"); // Importer la clé secrète
+const procedures = require('./sqlite3/procedures');
 
 const app = express();
 const PORT = 3000;
@@ -80,14 +81,16 @@ app.post("/register/avocat", async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await db.raw(
-      `
-            EXEC CreateAvocat @prenom = ?, @nom = ?, @email = ?, @telephone = ?, @password = ?
-        `,
-      [prenom, nom, email, telephone, hashedPassword]
+    
+    const result = await procedures.createAvocat(
+      prenom, 
+      nom, 
+      email, 
+      telephone, 
+      hashedPassword
     );
 
-    res.status(201).json({ avocatID: result[0].AvocatID });
+    res.status(201).json({ avocatID: result.avocatID });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -147,48 +150,7 @@ app.post("/login/avocat", async (req, res) => {
     return res.status(500).json({ message: "Erreur interne." });
   }
 });
-// Route ajouter get Facture + Post facture
-app.get("/facture", verifyAvocatToken, async (res, req) => {
-  try {
-    const facture = await db("facture").select("*");
-    res.status(200).json(facture);
-  } catch (error) {
-    res.status(500).json({
-      message: "Erreur lors de la récuperations des factures",
-      error: error.message,
-    });
-  }
-});
-app.post("/facture-automatique", verifyAvocatToken, async (req, res) => {
-  const { dossierID, timeWorked, hourlyRate } = req.body;
-  if ((!dossierID, !timeWorked, !hourlyRate)) {
-    return res.status(400).json({ error: "Tous les champs sont requis" });
-  }
-  try {
-    const dossier = await db("dossier").where({ dossierID }).first();
 
-    if (!dossier) {
-      return res.status(404).json({ message: "dossier existe pas " });
-    }
-
-    const result = await db.raw(
-      `
-             EXEC CreateFacture @dossierID = ?, @timeWorked = ?, @hourlyRate = ?
-            `,
-      [dossierID, timeWorked, hourlyRate]
-    );
-
-    res.status(200).json({
-      message: "facture creer avec succes",
-      data: result[0],
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "erreur lors de la creatioin de la facture automatique",
-      error: error.message,
-    });
-  }
-});
 app.get("/avocat", verifyAvocatToken, async (req, res) => {
   try {
     const avocats = await db("avocat").select("*");
@@ -219,12 +181,17 @@ app.put("/avocat/:id", verifyAvocatToken, async (req, res) => {
   }
 
   try {
-    const existingAvocat = await db("avocat").where({ id }).first();
+    // Change from "id" to "avocatID" to match your SQLite schema
+    const existingAvocat = await db("avocat").where({ avocatID: id }).first();
     if (!existingAvocat) {
       return res.status(404).json({ message: "Avocat introuvable." });
     }
 
-    await db("avocat").where({ id }).update({ prenom, nom, email, telephone });
+    // Update with avocatID as the column name
+    await db("avocat")
+      .where({ avocatID: id })
+      .update({ prenom, nom, email, telephone });
+      
     res.status(200).json({ message: "Avocat modifié avec succès." });
   } catch (error) {
     console.error(error);
@@ -239,12 +206,22 @@ app.delete("/avocat/:id", verifyAvocatToken, async (req, res) => {
   const { id } = req.params;
 
   try {
-    const existingAvocat = await db("avocat").where({ id }).first();
+    // Change "id" to "avocatID" to match your SQLite schema
+    const existingAvocat = await db("avocat").where({ avocatID: id }).first();
     if (!existingAvocat) {
       return res.status(404).json({ message: "Avocat introuvable." });
     }
 
-    await db("avocat").where({ id }).delete();
+    // Check if the avocat has any related records before deletion
+    const relatedDossiers = await db("dossier").where({ avocatID: id });
+    if (relatedDossiers.length > 0) {
+      return res.status(400).json({ 
+        message: "Impossible de supprimer l'avocat car il est associé à des dossiers existants." 
+      });
+    }
+
+    // Delete the avocat with the correct column name
+    await db("avocat").where({ avocatID: id }).delete();
     res.status(200).json({ message: "Avocat supprimé avec succès." });
   } catch (error) {
     console.error(error);
@@ -285,14 +262,17 @@ app.post("/register/client", async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const result = await db.raw(
-      `
-            EXEC CreateClient @prenom = ?, @nom = ?, @email = ?, @telephone = ?, @password = ?
-        `,
-      [prenom, nom, email, telephone, hashedPassword]
+    
+    // Use the createClient function from procedures.js instead of raw SQL
+    const result = await procedures.createClient(
+      prenom, 
+      nom, 
+      email, 
+      telephone, 
+      hashedPassword
     );
 
-    res.status(201).json({ clientID: result[0].ClientID });
+    res.status(201).json({ clientID: result.clientID });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -347,58 +327,6 @@ app.post("/login/client", async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: "Erreur interne." });
-  }
-});
-
-app.post("/link-client-dossier", verifyAvocatToken, async (req, res) => {
-  const { clientID, dossierID } = req.body;
-
-  if (!clientId || !dossierId) {
-    return res
-      .status(400)
-      .json({ error: "ID de client et dossier son requis" });
-  }
-  try {
-    const result = await db.raw(
-      `EXEC LinkClientToDossier @clientID = ?, @dossierID = ?`,
-      [clientID, dossierID]
-    );
-
-    res.status(200).json({
-      message: "Le client est lier au dossier ",
-      data: result[0],
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "Erreur lors du lien client-dossier.",
-      error: error.message,
-    });
-  }
-});
-
-app.post("/link-document-dossier", verifyAvocatToken, async (req, res) => {
-  if (!documentID || !dossierID) {
-    return res
-      .status(400)
-      .json({ error: "Le ID de document et dossier sont requis" });
-  }
-  try {
-    const result = await db.raw(
-      `
-            EXEC LinkDocumentToDossier @documentID = ?, @dossierID = ?
-            `,
-      [documentID, dossierID]
-    );
-    res.status(200).json({
-      message: "liason fait avec succès ",
-      data: result[0],
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Erreur lors de la liason",
-      error: error.message,
-    });
   }
 });
 
@@ -459,14 +387,10 @@ app.delete("/client/:id", verifyAvocatOrClientToken, async (req, res) => {
       return res.status(404).json({ message: "Client introuvable." });
     }
 
-    await db.raw(
-      `
-            EXEC DeleteClient @clientID = ?
-        `,
-      [id]
-    );
-
-    res.status(200).json({ message: "Client supprimé avec succès." });
+    // Replace the raw SQL execution with the procedures.deleteClient function
+    const result = await procedures.deleteClient(id);
+    
+    res.status(200).json({ message: result.message });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -529,14 +453,16 @@ app.post("/dossier", verifyAvocatToken, async (req, res) => {
         .json({ error: "Un dossier avec ce nom existe déjà." });
     }
 
-    const result = await db.raw(
-      `
-            EXEC CreateDossier @avocatID = ?, @dossierNom = ?, @dossierType = ?, @description = ?, @clientID = ?
-        `,
-      [avocatID, dossierNom, dossierType, description, clientID || null]
+    // Use the createDossier function from procedures.js instead of raw SQL
+    const result = await procedures.createDossier(
+      avocatID, 
+      dossierNom, 
+      dossierType, 
+      description, 
+      clientID || null
     );
 
-    res.status(201).json({ dossierID: result[0].DossierID });
+    res.status(201).json({ dossierID: result.dossierID });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -576,40 +502,71 @@ app.put("/dossier/:id", verifyAvocatToken, async (req, res) => {
   }
 
   try {
-    const existingDossier = await db("dossier")
-      .where({ dossierID: id })
-      .first();
-    if (!existingDossier) {
-      return res.status(404).json({ message: "Dossier introuvable." });
-    }
-
-    // Check if the avocatID exists
-    const existingAvocat = await db("avocat").where({ avocatID }).first();
-    if (!existingAvocat) {
-      return res.status(404).json({ error: "L'avocat spécifié n'existe pas." });
-    }
-
-    // Check if the clientID exists (if provided)
-    if (clientID) {
-      const existingClient = await db("client").where({ clientID }).first();
-      if (!existingClient) {
-        return res
-          .status(404)
-          .json({ error: "Le client spécifié n'existe pas." });
+    // Begin a transaction to ensure data consistency
+    await db.transaction(async (trx) => {
+      // Check if the dossier exists
+      const existingDossier = await trx("dossier")
+        .where({ dossierID: id })
+        .first();
+        
+      if (!existingDossier) {
+        throw new Error("Dossier introuvable.");
       }
-    }
 
-    await db("dossier").where({ dossierID: id }).update({
-      avocatID,
-      dossierNom,
-      status,
-      dossierType,
-      description,
-      clientID,
+      // Check if the avocatID exists
+      const existingAvocat = await trx("avocat").where({ avocatID }).first();
+      if (!existingAvocat) {
+        throw new Error("L'avocat spécifié n'existe pas.");
+      }
+
+      // Update the dossier table (without clientID)
+      await trx("dossier").where({ dossierID: id }).update({
+        avocatID,
+        dossierNom,
+        status,
+        dossierType,
+        description
+      });
+
+      // Handle client relationship in client_dossier junction table
+      if (clientID) {
+        // Check if the clientID exists
+        const existingClient = await trx("client").where({ clientID }).first();
+        if (!existingClient) {
+          throw new Error("Le client spécifié n'existe pas.");
+        }
+
+        // Check if relationship already exists
+        const existingRelation = await trx("client_dossier")
+          .where({ dossierID: id, clientID })
+          .first();
+
+        if (!existingRelation) {
+          // Remove any existing client associations for this dossier first
+          await trx("client_dossier").where({ dossierID: id }).delete();
+          
+          // Add the new client-dossier relationship
+          await trx("client_dossier").insert({
+            clientID,
+            dossierID: id
+          });
+        }
+      }
     });
+
     res.status(200).json({ message: "Dossier modifié avec succès." });
   } catch (error) {
     console.error(error);
+    
+    // Return appropriate error messages based on error type
+    if (error.message === "Dossier introuvable.") {
+      return res.status(404).json({ message: error.message });
+    }
+    if (error.message === "L'avocat spécifié n'existe pas." || 
+        error.message === "Le client spécifié n'existe pas.") {
+      return res.status(404).json({ error: error.message });
+    }
+    
     res.status(500).json({
       message: "Erreur lors de la modification du dossier.",
       error: error.message,
@@ -627,14 +584,42 @@ app.delete("/dossier/:id", verifyAvocatToken, async (req, res) => {
   const { id } = req.params;
 
   try {
+    // First check if the dossier exists
     const existingDossier = await db("dossier")
       .where({ dossierID: id })
       .first();
+      
     if (!existingDossier) {
       return res.status(404).json({ message: "Dossier introuvable." });
     }
 
-    await db("dossier").where({ dossierID: id }).delete();
+    // Use a transaction to ensure all related records are properly deleted
+    await db.transaction(async (trx) => {
+      // Delete related records in client_dossier junction table
+      await trx("client_dossier")
+        .where({ dossierID: id })
+        .delete();
+      
+      // Delete related records in dossier_document junction table
+      await trx("dossier_document")
+        .where({ dossierID: id })
+        .delete();
+        
+      // Delete related tasks
+      await trx("tache")
+        .where({ dossierID: id })
+        .delete();
+        
+      // Delete related sessions
+      await trx("session")
+        .where({ dossierID: id })
+        .delete();
+        
+      // Finally delete the dossier itself
+      await trx("dossier")
+        .where({ dossierID: id })
+        .delete();
+    });
 
     res.status(200).json({ message: "Dossier supprimé avec succès." });
   } catch (error) {
@@ -653,6 +638,7 @@ app.post("/dossier/close/:id", verifyAvocatToken, async (req, res) => {
     const activeSessions = await db("session")
       .where({ dossierID: id })
       .andWhere("clockOutTime", null);
+      
     if (activeSessions.length > 0) {
       return res.status(400).json({
         message:
@@ -660,23 +646,16 @@ app.post("/dossier/close/:id", verifyAvocatToken, async (req, res) => {
       });
     }
 
-    // Call the stored procedure CloseDossier
-    const result = await db.raw("EXEC CloseDossier @dossierID = ?", [id]);
-    // The procedure returns the total hours in a "TotalHeures" field.
-    // Depending on your DB driver, the returned structure may vary.
-    const totalHours =
-      result &&
-      result[0] &&
-      result[0][0] &&
-      result[0][0].TotalHeures !== undefined
-        ? result[0][0].TotalHeures
-        : null;
+    // Call the closeDossier function from procedures.js instead of the raw SQL stored procedure
+    const result = await procedures.closeDossier(id);
+    
     return res.status(200).json({
       message: "Dossier fermé avec succès.",
-      totalHours,
+      totalHours: result.totalHours,
+      factureID: result.factureID
     });
   } catch (error) {
-    // Check for errors from the procedure indicating a double close or missing dossier
+    // Check for errors from the function
     if (error.message && error.message.includes("Le dossier est déjà fermé")) {
       return res.status(400).json({ message: "Le dossier est déjà fermé." });
     }
@@ -688,6 +667,97 @@ app.post("/dossier/close/:id", verifyAvocatToken, async (req, res) => {
     console.error(error);
     return res.status(500).json({
       message: "Erreur lors de la fermeture du dossier.",
+      error: error.message,
+    });
+  }
+});
+
+app.post("/link-client-dossier", verifyAvocatToken, async (req, res) => {
+  const { clientID, dossierID } = req.body;
+
+  if (!clientID || !dossierID) {
+    return res
+      .status(400)
+      .json({ error: "ID de client et dossier sont requis" });
+  }
+  
+  try {
+    const result = await procedures.linkClientToDossier(clientID, dossierID);
+
+    res.status(200).json({
+      message: "Le client a été lié au dossier avec succès",
+      data: result,
+    });
+  } catch (error) {
+    console.error(error);
+    
+    // Return appropriate status codes based on the error message
+    if (error.message.includes('ID de client inexistant')) {
+      return res.status(404).json({
+        message: "Erreur lors du lien client-dossier.",
+        error: "Le client spécifié n'existe pas."
+      });
+    } 
+    else if (error.message.includes('ID de dossier inexistant')) {
+      return res.status(404).json({
+        message: "Erreur lors du lien client-dossier.",
+        error: "Le dossier spécifié n'existe pas."
+      });
+    }
+    else if (error.message.includes('déjà lié')) {
+      return res.status(409).json({
+        message: "Erreur lors du lien client-dossier.",
+        error: "Le client est déjà lié à ce dossier."
+      });
+    }
+    
+    res.status(500).json({
+      message: "Erreur lors du lien client-dossier.",
+      error: error.message,
+    });
+  }
+});
+
+app.post("/link-document-dossier", verifyAvocatToken, async (req, res) => {
+  const { documentID, dossierID } = req.body;
+  
+  if (!documentID || !dossierID) {
+    return res
+      .status(400)
+      .json({ error: "Les ID de document et dossier sont requis" });
+  }
+  
+  try {
+    const result = await procedures.linkDocumentToDossier(documentID, dossierID);
+    res.status(200).json({
+      message: "Liaison établie avec succès",
+      data: result,
+    });
+  } catch (error) {
+    console.error(error);
+    
+    // Handle specific errors with appropriate status codes
+    if (error.message.includes('ID de document inexistant')) {
+      return res.status(404).json({
+        message: "Erreur lors de la liaison",
+        error: "Le document spécifié n'existe pas."
+      });
+    } 
+    else if (error.message.includes('ID de dossier inexistant')) {
+      return res.status(404).json({
+        message: "Erreur lors de la liaison",
+        error: "Le dossier spécifié n'existe pas."
+      });
+    }
+    else if (error.message.includes('déjà lié')) {
+      return res.status(409).json({
+        message: "Erreur lors de la liaison",
+        error: "Le document est déjà lié à ce dossier."
+      });
+    }
+    
+    res.status(500).json({
+      message: "Erreur lors de la liaison",
       error: error.message,
     });
   }
@@ -716,6 +786,12 @@ app.post("/document", verifyAvocatToken, async (req, res) => {
   }
 
   try {
+    // Check if the avocatID exists
+    const existingAvocat = await db("avocat").where({ avocatID }).first();
+    if (!existingAvocat) {
+      return res.status(404).json({ error: "L'avocat spécifié n'existe pas." });
+    }
+    
     // Check if the dossierID exists (if provided)
     if (dossierID) {
       const existingDossier = await db("dossier").where({ dossierID }).first();
@@ -734,14 +810,16 @@ app.post("/document", verifyAvocatToken, async (req, res) => {
         .json({ error: "Un document avec ce nom existe déjà." });
     }
 
-    const result = await db.raw(
-      `
-            EXEC CreateDocument @avocatID = ?, @documentNom = ?, @description = ?, @fichier = ?, @dossierID = ?
-        `,
-      [avocatID, documentNom, description, fichier, dossierID]
+    // Use createDocument function from procedures.js instead of raw SQL
+    const result = await procedures.createDocument(
+      avocatID,
+      documentNom,
+      description,
+      fichier,
+      dossierID || null
     );
 
-    res.status(201).json({ documentID: result[0].DocumentID });
+    res.status(201).json({ documentID: result.documentID });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -760,6 +838,7 @@ app.put("/document/:id", verifyAvocatToken, async (req, res) => {
   }
 
   try {
+    // Check if document exists
     const existingDocument = await db("document")
       .where({ documentID: id })
       .first();
@@ -767,9 +846,33 @@ app.put("/document/:id", verifyAvocatToken, async (req, res) => {
       return res.status(404).json({ message: "Document introuvable." });
     }
 
+    // Check if the avocat exists
+    const existingAvocat = await db("avocat").where({ avocatID }).first();
+    if (!existingAvocat) {
+      return res.status(404).json({ error: "L'avocat spécifié n'existe pas." });
+    }
+
+    // Check if a document with the same name already exists (excluding the current document)
+    const duplicateDocument = await db("document")
+      .where({ documentNom })
+      .whereNot({ documentID: id })
+      .first();
+    if (duplicateDocument) {
+      return res
+        .status(409)
+        .json({ error: "Un document avec ce nom existe déjà." });
+    }
+
+    // Update the document
     await db("document")
       .where({ documentID: id })
-      .update({ avocatID, documentNom, description, fichier });
+      .update({ 
+        avocatID, 
+        documentNom, 
+        description, 
+        fichier 
+      });
+    
     res.status(200).json({ message: "Document modifié avec succès." });
   } catch (error) {
     console.error(error);
@@ -792,15 +895,10 @@ app.delete("/document/:id", verifyAvocatToken, async (req, res) => {
       return res.status(404).json({ message: "Document introuvable." });
     }
 
-    // Call the stored procedure to delete the document and related records
-    await db.raw(
-      `
-            EXEC DeleteDocument @documentID = ?
-        `,
-      [id]
-    );
+    // Call the deleteDocument function from procedures.js instead of the raw SQL
+    const result = await procedures.deleteDocument(id);
 
-    res.status(200).json({ message: "Document supprimé avec succès." });
+    res.status(200).json({ message: result.message });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -863,14 +961,16 @@ app.post("/tache", verifyAvocatToken, async (req, res) => {
         .json({ error: "Le dossier spécifié n'existe pas." });
     }
 
-    const result = await db.raw(
-      `
-            EXEC CreateTache @avocatID = ?, @dossierID = ?, @documentNom = ?, @description = ?, @status = ?
-        `,
-      [avocatID, dossierID, documentNom, description, status]
+    // Call the createTache function from procedures.js instead of the raw SQL
+    const result = await procedures.createTache(
+      avocatID,
+      dossierID,
+      documentNom,
+      description,
+      status
     );
 
-    res.status(201).json({ tacheID: result[0].TacheID });
+    res.status(201).json({ tacheID: result.tacheID });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -907,31 +1007,31 @@ app.put("/tache/:id", verifyAvocatToken, async (req, res) => {
   }
 
   try {
-    const existingTache = await db("tache").where({ tacheID: id }).first();
-    if (!existingTache) {
-      return res.status(404).json({ message: "Tâche introuvable." });
-    }
-
-    // Check if the avocatID exists
-    const existingAvocat = await db("avocat").where({ avocatID }).first();
-    if (!existingAvocat) {
-      return res.status(404).json({ error: "L'avocat spécifié n'existe pas." });
-    }
-
-    // Check if the dossierID exists
-    const existingDossier = await db("dossier").where({ dossierID }).first();
-    if (!existingDossier) {
-      return res
-        .status(404)
-        .json({ error: "Le dossier spécifié n'existe pas." });
-    }
-
-    await db("tache")
-      .where({ tacheID: id })
-      .update({ avocatID, dossierID, documentNom, description, status });
-    res.status(200).json({ message: "Tâche modifiée avec succès." });
+    // Call the updateTache function from procedures.js
+    const result = await procedures.updateTache(
+      id,
+      avocatID,
+      dossierID,
+      documentNom,
+      description,
+      status
+    );
+    
+    res.status(200).json({ message: result.message });
   } catch (error) {
     console.error(error);
+    
+    // Handle specific error messages with appropriate status codes
+    if (error.message.includes('Tâche introuvable')) {
+      return res.status(404).json({ message: "Tâche introuvable." });
+    }
+    if (error.message.includes('L\'avocat spécifié n\'existe pas')) {
+      return res.status(404).json({ error: "L'avocat spécifié n'existe pas." });
+    }
+    if (error.message.includes('Le dossier spécifié n\'existe pas')) {
+      return res.status(404).json({ error: "Le dossier spécifié n'existe pas." });
+    }
+    
     res.status(500).json({
       message: "Erreur lors de la modification de la tâche.",
       error: error.message,
@@ -994,14 +1094,14 @@ app.post("/session", verifyAvocatToken, async (req, res) => {
         .json({ error: "Le dossier spécifié n'existe pas." });
     }
 
-    const result = await db.raw(
-      `
-            EXEC CreateSession @avocatID = ?, @dossierID = ?, @description = ?
-        `,
-      [avocatID, dossierID, description]
+    // Use the createSession function from procedures.js instead of raw SQL
+    const result = await procedures.createSession(
+      avocatID,
+      dossierID, 
+      description
     );
 
-    res.status(201).json({ sessionID: result[0].SessionID });
+    res.status(201).json({ sessionID: result.sessionID });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -1081,35 +1181,70 @@ app.post("/session/end/:id", verifyAvocatToken, async (req, res) => {
   const { description } = req.body; // Optional updated description
 
   try {
-    // Call the stored procedure EndSession. Only an existing session that isn't already ended can be marked as ended.
-    const result = await db.raw(
-      "EXEC EndSession @sessionID = ?, @description = ?",
-      [id, description || null]
-    );
-    // Depending on your driver, adjust how you access the returned data.
-    const updatedSession =
-      result && result[0] && result[0][0] ? result[0][0] : null;
+    // Use the endSession function instead of calling a raw SQL stored procedure
+    const updatedSession = await procedures.endSession(id, description);
 
     return res.status(200).json({
       message: "Session clôturée avec succès.",
       session: updatedSession,
     });
   } catch (error) {
-    // Handle errors coming from the procedure
-    if (
-      error.message &&
-      error.message.includes("This session has already been ended")
-    ) {
+    // Handle specific error cases with appropriate status codes
+    if (error.message.includes('déjà terminée')) {
       return res
         .status(400)
         .json({ message: "Cette session a déjà été clôturée." });
     }
-    if (error.message && error.message.includes("Session ID does not exist")) {
+    if (error.message.includes('ID de session inexistant')) {
       return res.status(404).json({ message: "Session introuvable." });
     }
     console.error(error);
     return res.status(500).json({
       message: "Erreur lors de la clôture de la session.",
+      error: error.message,
+    });
+  }
+});
+
+// Route ajouter get Facture + Post facture
+app.get("/facture", verifyAvocatToken, async (res, req) => {
+  try {
+    const facture = await db("facture").select("*");
+    res.status(200).json(facture);
+  } catch (error) {
+    res.status(500).json({
+      message: "Erreur lors de la récuperations des factures",
+      error: error.message,
+    });
+  }
+});
+
+app.post("/facture-automatique", verifyAvocatToken, async (req, res) => {
+  const { dossierID, timeWorked, hourlyRate } = req.body;
+  if ((!dossierID, !timeWorked, !hourlyRate)) {
+    return res.status(400).json({ error: "Tous les champs sont requis" });
+  }
+  try {
+    const dossier = await db("dossier").where({ dossierID }).first();
+
+    if (!dossier) {
+      return res.status(404).json({ message: "dossier existe pas " });
+    }
+
+    const result = await db.raw(
+      `
+             EXEC CreateFacture @dossierID = ?, @timeWorked = ?, @hourlyRate = ?
+            `,
+      [dossierID, timeWorked, hourlyRate]
+    );
+
+    res.status(200).json({
+      message: "facture creer avec succes",
+      data: result[0],
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "erreur lors de la creatioin de la facture automatique",
       error: error.message,
     });
   }

@@ -1,539 +1,19 @@
-### Avocat Requests
-
-### Test for successful registration of avocat
-POST http://localhost:3000/register/avocat
-Content-Type: application/json
-
-{
-    "prenom": "Mark",
-    "nom": "Henry",
-    "email": "markhenry@example.com",
-    "telephone": "1234567890",
-    "password": "securePassword123"
-}
-
-### Test for missing fields in avocat registration
-POST http://localhost:3000/register/avocat
-Content-Type: application/json
-
-{
-    "prenom": "John",
-    "nom": "Doe",
-    "email": "john.doe@example.com",
-    "telephone": "1234567890"
-}
-
-### Test for invalid email format in avocat registration
-POST http://localhost:3000/register/avocat
-Content-Type: application/json
-
-{
-    "prenom": "John",
-    "nom": "Doe",
-    "email": "john.doe@invalid",
-    "telephone": "1234567890",
-    "password": "securePassword123"
-}
-
-### Test for existing email in avocat registration
-POST http://localhost:3000/register/avocat
-Content-Type: application/json
-
-{
-    "prenom": "Mark",
-    "nom": "Henry",
-    "email": "markhenry@example.com",
-    "telephone": "1234567890",
-    "password": "securePassword123"
-}
-
-### Login to obtain JWT token for avocat
+### Login to obtain JWT token for avocat (needed for client management)
 # @name avocatLogin
 POST http://localhost:3000/login/avocat
 Content-Type: application/json
 
 {
-    "email": "markhenry@example.com",
-    "password": "securePassword123"
+    "email": "marc.belanger@cabinet-juridique.ca",
+    "password": "AvoMB2023"
 }
 
-### Save the token to be used in other requests
+### Save the avocat token to be used in other requests
 @avocatToken = {{avocatLogin.response.body.token}}
 
-### Test for avocat login with incorrect password
-POST http://localhost:3000/login/avocat
-Content-Type: application/json
-
-{
-    "email": "markhenry@example.com",
-    "password": "wrongPassword"
-}
-
-### Test for avocat login with non-existent email
-POST http://localhost:3000/login/avocat
-Content-Type: application/json
-
-{
-    "email": "nonexistent@example.com",
-    "password": "securePassword123"
-}
-
-### Test for retrieving all clients (allowed for avocat)
-GET http://localhost:3000/client
-Authorization: Bearer {{avocatToken}}
-
-### Test for updating a client (allowed for avocat)
-PUT http://localhost:3000/client/1
-Content-Type: application/json
-Authorization: Bearer {{avocatToken}}
-
-{
-    "prenom": "Updated",
-    "nom": "Client",
-    "email": "updatedclient@example.com",
-    "telephone": "9876543210"
-}
-
-### Test for deleting a client (allowed for avocat)
-DELETE http://localhost:3000/client/1
-Authorization: Bearer {{avocatToken}}
-
-### Test for retrieving all dossiers (allowed for avocat)
-GET http://localhost:3000/dossier
-Authorization: Bearer {{avocatToken}}
-
-### Test for creating a dossier with valid data
-POST http://localhost:3000/dossier
-Content-Type: application/json
-Authorization: Bearer {{avocatToken}}
-
-{
-    "avocatID": 1,
-    "dossierNom": "Litige Commercial",
-    "status": "Ouvert",
-    "dossierType": "Litige",
-    "description": "Litige concernant un contrat commercial.",
-    "clientID": 2
-}
-
-### Test for creating a dossier with missing required fields
-POST http://localhost:3000/dossier
-Content-Type: application/json
-Authorization: Bearer {{avocatToken}}
-
-{
-    "avocatID": 1,
-    "status": "Ouvert",
-    "dossierType": "Litige",
-    "description": "Litige concernant un contrat commercial."
-}
-
-### Test for creating a dossier with non-existent avocatID
-POST http://localhost:3000/dossier
-Content-Type: application/json
-Authorization: Bearer {{avocatToken}}
-
-{
-    "avocatID": 999,
-    "dossierNom": "Litige Inexistant",
-    "status": "Ouvert",
-    "dossierType": "Litige",
-    "description": "Litige concernant un avocat inexistant."
-}
-
-### Test for creating a dossier with non-existent clientID
-POST http://localhost:3000/dossier
-Content-Type: application/json
-Authorization: Bearer {{avocatToken}}
-
-{
-    "avocatID": 1,
-    "dossierNom": "Litige Client Inexistant",
-    "status": "Ouvert",
-    "dossierType": "Litige",
-    "description": "Litige concernant un client inexistant.",
-    "clientID": 999
-}
-
-### Test for creating a dossier with duplicate dossierNom
-POST http://localhost:3000/dossier
-Content-Type: application/json
-Authorization: Bearer {{avocatToken}}
-
-{
-    "avocatID": 1,
-    "dossierNom": "Litige Commercial",
-    "status": "Ouvert",
-    "dossierType": "Litige",
-    "description": "Litige avec un nom déjà existant.",
-    "clientID": 2
-}
-
-### Test for updating a dossier with valid data
-PUT http://localhost:3000/dossier/1
-Content-Type: application/json
-Authorization: Bearer {{avocatToken}}
-
-{
-    "avocatID": 1,
-    "dossierNom": "Litige Commercial Modifié",
-    "status": "Fermé",
-    "dossierType": "Litige",
-    "description": "Litige modifié avec succès."
-}
-
-### Test for updating a dossier with missing required fields
-PUT http://localhost:3000/dossier/1
-Content-Type: application/json
-Authorization: Bearer {{avocatToken}}
-
-{
-    "avocatID": 1,
-    "status": "Fermé",
-    "dossierType": "Litige",
-    "description": "Litige modifié avec des champs manquants."
-}
-
-### Test for updating a non-existent dossier
-PUT http://localhost:3000/dossier/999
-Content-Type: application/json
-Authorization: Bearer {{avocatToken}}
-
-{
-    "avocatID": 1,
-    "dossierNom": "Litige Inexistant",
-    "status": "Fermé",
-    "dossierType": "Litige",
-    "description": "Tentative de modification d'un dossier inexistant.",
-    "clientID": 2
-}
-
-### Test for updating a dossier with non-existent avocatID
-PUT http://localhost:3000/dossier/1
-Content-Type: application/json
-Authorization: Bearer {{avocatToken}}
-
-{
-    "avocatID": 999,
-    "dossierNom": "Litige Avocat Inexistant",
-    "status": "Fermé",
-    "dossierType": "Litige",
-    "description": "Modification avec un avocat inexistant.",
-    "clientID": 2
-}
-
-### Test for updating a dossier with non-existent clientID
-PUT http://localhost:3000/dossier/1
-Content-Type: application/json
-Authorization: Bearer {{avocatToken}}
-
-{
-    "avocatID": 1,
-    "dossierNom": "Litige Client Inexistant",
-    "status": "Fermé",
-    "dossierType": "Litige",
-    "description": "Modification avec un client inexistant.",
-    "clientID": 999
-}
-
-### Document Requests
-
-### Login to obtain JWT token for avocat
-# @name avocatLoginNew
-POST http://localhost:3000/login/avocat
-Content-Type: application/json
-
-{
-    "email": "markhenry@example.com",
-    "password": "securePassword123"
-}
-
-### Save the token to be used in other requests
-@avocatTokenNew = {{avocatLoginNew.response.body.token}}
-
-### Test for retrieving all documents
-GET http://localhost:3000/document
-Authorization: Bearer {{avocatTokenNew}}
-
-### Test for creating a document with valid data
-POST http://localhost:3000/document
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "dossierID": 1,
-    "documentNom": "Contrat Commercial",
-    "documentType": "PDF",
-    "description": "Contrat signé entre les parties.",
-    "fichier": "https://example.com/placeholder-file-url.pdf"
-}
-
-### Test for creating a document with missing required fields
-POST http://localhost:3000/document
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "dossierID": 1,
-    "documentNom": "Contrat Commercial",
-    "documentType": "PDF",
-    "description": "Contrat signé entre les parties."
-}
-
-### Test for creating a document with non-existent dossierID
-POST http://localhost:3000/document
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "dossierID": 999,
-    "documentNom": "Contrat Inexistant",
-    "documentType": "PDF",
-    "description": "Tentative de création avec un dossier inexistant.",
-    "fichier": "base64EncodedFileContent"
-}
-
-### Test for updating a document with valid data
-PUT http://localhost:3000/document/6
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "dossierID": 1,
-    "documentNom": "Contrat Commercial Modifié",
-    "documentType": "PDF",
-    "description": "Contrat modifié avec succès.",
-    "fichier": "https://example.com/placeholder-file-url-modified.pdf"
-}
-
-### Test for updating a document with missing required fields
-PUT http://localhost:3000/document/1
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "dossierID": 1,
-    "documentNom": "Contrat Commercial Modifié",
-    "documentType": "PDF",
-    "description": "Contrat modifié avec des champs manquants."
-}
-### Test for updating a non-existent document
-PUT http://localhost:3000/document/999
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "dossierID": 1,
-    "documentNom": "Document Inexistant",
-    "documentType": "PDF",
-    "description": "Tentative de modification d'un document inexistant.",
-    "fichier": "https://example.com/nonexistent-document.pdf"
-}
-
-### Test for deleting a document with valid ID
-DELETE http://localhost:3000/document/6
-Authorization: Bearer {{avocatTokenNew}}
-
-### Test for deleting a non-existent document
-DELETE http://localhost:3000/document/999
-Authorization: Bearer {{avocatTokenNew}}
-
-### Tache Requests
-
-### Test for retrieving all taches
-GET http://localhost:3000/tache
-Authorization: Bearer {{avocatTokenNew}}
-
-### Test for creating a tache with valid data
-POST http://localhost:3000/tache
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "dossierID": 1,
-    "documentNom": "Tâche Importante",
-    "description": "Description de la tâche importante."
-}
-
-### Test for creating a tache with missing required fields
-POST http://localhost:3000/tache
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "dossierID": 1,
-    "documentNom": "Tâche Incomplète"
-}
-
-### Test for creating a tache with non-existent avocatID
-POST http://localhost:3000/tache
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 999,
-    "dossierID": 1,
-    "documentNom": "Tâche Avocat Inexistant",
-    "description": "Tentative de création avec un avocat inexistant."
-}
-
-### Test for creating a tache with non-existent dossierID
-POST http://localhost:3000/tache
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "dossierID": 999,
-    "documentNom": "Tâche Dossier Inexistant",
-    "description": "Tentative de création avec un dossier inexistant."
-}
-
-### Test for updating a tache with valid data
-PUT http://localhost:3000/tache/6
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "dossierID": 1,
-    "documentNom": "Tâche Modifiée",
-    "description": "Description modifiée de la tâche."
-}
-
-### Test for updating a tache with missing required fields
-PUT http://localhost:3000/tache/1
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "dossierID": 1,
-    "documentNom": "Tâche Incomplète"
-}
-
-### Test for updating a non-existent tache
-PUT http://localhost:3000/tache/999
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "dossierID": 1,
-    "documentNom": "Tâche Inexistante",
-    "description": "Tentative de modification d'une tâche inexistante."
-}
-
-### Test for deleting a tache with valid ID
-DELETE http://localhost:3000/tache/6
-Authorization: Bearer {{avocatTokenNew}}
-
-### Test for deleting a non-existent tache
-DELETE http://localhost:3000/tache/999
-Authorization: Bearer {{avocatTokenNew}}
-
-
-### Session Requests
-
-### Test for retrieving all sessions
-GET http://localhost:3000/session
-Authorization: Bearer {{avocatTokenNew}}
-
-### Test for creating a session with valid data
-POST http://localhost:3000/session
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "dossierID": 1,
-    "description": "Session de consultation initiale."
-}
-
-### Test for creating a session with missing required fields
-POST http://localhost:3000/session
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "description": "Session incomplète."
-}
-
-### Test for creating a session with non-existent avocatID
-POST http://localhost:3000/session
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 999,
-    "dossierID": 1,
-    "description": "Session avec un avocat inexistant."
-}
-
-### Test for creating a session with non-existent dossierID
-POST http://localhost:3000/session
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "dossierID": 999,
-    "description": "Session avec un dossier inexistant."
-}
-
-### Test for updating a session with valid data
-PUT http://localhost:3000/session/6
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "dossierID": 1,
-    "description": "Session modifiée avec succès."
-}
-
-### Test for updating a session with missing required fields
-PUT http://localhost:3000/session/1
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "description": "Session incomplète."
-}
-
-### Test for updating a non-existent session
-PUT http://localhost:3000/session/999
-Content-Type: application/json
-Authorization: Bearer {{avocatTokenNew}}
-
-{
-    "avocatID": 1,
-    "dossierID": 1,
-    "description": "Tentative de modification d'une session inexistante."
-}
-
-### Test for deleting a session with valid ID
-DELETE http://localhost:3000/session/1
-Authorization: Bearer {{avocatTokenNew}}
-
-### Test for deleting a non-existent session
-DELETE http://localhost:3000/session/999
-Authorization: Bearer {{avocatTokenNew}}
-
-
-
-
-### Client Requests
-
 ### Test for successful registration of client
+# Description: Registers a new client with valid data.
+# Expected Result: A 201 status code and the client ID in the response body.
 POST http://localhost:3000/register/client
 Content-Type: application/json
 
@@ -546,6 +26,8 @@ Content-Type: application/json
 }
 
 ### Test for missing fields in client registration
+# Description: Attempts to register a client with missing required fields.
+# Expected Result: A 400 status code with an error message.
 POST http://localhost:3000/register/client
 Content-Type: application/json
 
@@ -554,9 +36,12 @@ Content-Type: application/json
     "nom": "Johnson",
     "email": "bob.johnson@example.com",
     "telephone": "1234567890"
+    // missing password
 }
 
 ### Test for invalid email format in client registration
+# Description: Attempts to register a client with an invalid email format.
+# Expected Result: A 400 status code with an error message.
 POST http://localhost:3000/register/client
 Content-Type: application/json
 
@@ -568,19 +53,37 @@ Content-Type: application/json
     "password": "securePassword123"
 }
 
+### Test for invalid telephone format in client registration
+# Description: Attempts to register a client with an invalid telephone format.
+# Expected Result: A 400 status code with an error message.
+POST http://localhost:3000/register/client
+Content-Type: application/json
+
+{
+    "prenom": "Bob",
+    "nom": "Johnson",
+    "email": "bob.johnson@example.com",
+    "telephone": "123abc4567",
+    "password": "securePassword123"
+}
+
 ### Test for existing email in client registration
+# Description: Attempts to register a client with an email that already exists.
+# Expected Result: A 409 status code with an error message.
 POST http://localhost:3000/register/client
 Content-Type: application/json
 
 {
     "prenom": "Alice",
-    "nom": "Smith",
+    "nom": "Clone",
     "email": "alicesmith@example.com",
     "telephone": "1234567890",
     "password": "securePassword123"
 }
 
 ### Login to obtain JWT token for client
+# Description: Logs in a client with valid credentials to obtain a JWT token.
+# Expected Result: A 200 status code and a token in the response body.
 # @name clientLogin
 POST http://localhost:3000/login/client
 Content-Type: application/json
@@ -590,10 +93,23 @@ Content-Type: application/json
     "password": "securePassword123"
 }
 
-### Save the token to be used in other requests
+### Save the client token to be used in other requests
 @clientToken = {{clientLogin.response.body.token}}
 
+### Test for client login with missing credentials
+# Description: Attempts to log in without providing all required fields.
+# Expected Result: A 400 status code with an error message.
+POST http://localhost:3000/login/client
+Content-Type: application/json
+
+{
+    "email": "alicesmith@example.com"
+    // missing password
+}
+
 ### Test for client login with incorrect password
+# Description: Attempts to log in with an incorrect password.
+# Expected Result: A 401 status code with an error message.
 POST http://localhost:3000/login/client
 Content-Type: application/json
 
@@ -603,22 +119,39 @@ Content-Type: application/json
 }
 
 ### Test for client login with non-existent email
+# Description: Attempts to log in with an email that does not exist.
+# Expected Result: A 401 status code with an error message.
 POST http://localhost:3000/login/client
 Content-Type: application/json
 
 {
-    "email": "nonexistentclient@example.com",
+    "email": "nonexistent@example.com",
     "password": "securePassword123"
 }
 
-### Test for retrieving all clients (denied for client)
+### Test for retrieving all clients (avocat permission)
+# Description: Retrieves all clients in the system using an avocat token.
+# Expected Result: A 200 status code and a list of clients.
+GET http://localhost:3000/client
+Authorization: Bearer {{avocatToken}}
+
+### Test for retrieving all clients (client denied)
+# Description: Attempts to retrieve all clients using a client token.
+# Expected Result: A 403 status code with an access denied message.
 GET http://localhost:3000/client
 Authorization: Bearer {{clientToken}}
 
-### Test for updating a client (allowed for client only if it’s their own data)
+### Test for retrieving all clients (no token)
+# Description: Attempts to retrieve all clients without authentication.
+# Expected Result: A 401 status code with an error message.
+GET http://localhost:3000/client
+
+### Test for updating a client (avocat permission)
+# Description: Updates an existing client with valid data using an avocat token.
+# Expected Result: A 200 status code and a success message.
 PUT http://localhost:3000/client/2
 Content-Type: application/json
-Authorization: Bearer {{clientToken}}
+Authorization: Bearer {{avocatToken}}
 
 {
     "prenom": "Updated",
@@ -627,20 +160,90 @@ Authorization: Bearer {{clientToken}}
     "telephone": "9876543210"
 }
 
-### Test for deleting a client
-DELETE http://localhost:3000/client/2
-Authorization: Bearer {{clientToken}}
-
-### Test for creating a dossier (denied for client)
-POST http://localhost:3000/dossier
+### Test for updating a client (client permission for own data)
+# Description: Updates client's own data using their token.
+# Expected Result: A 200 status code and a success message.
+PUT http://localhost:3000/client/2
 Content-Type: application/json
 Authorization: Bearer {{clientToken}}
 
 {
-    "avocatID": 1,
-    "dossierNom": "Litige Commercial",
-    "status": "Ouvert",
-    "dossierType": "Litige",
-    "description": "Litige concernant un contrat commercial.",
-    "clientID": 2
+    "prenom": "Self",
+    "nom": "Updated",
+    "email": "selfrequest@example.com",
+    "telephone": "9876543210"
 }
+
+### Test for updating a client with missing fields
+# Description: Attempts to update a client with missing required fields.
+# Expected Result: A 400 status code with an error message.
+PUT http://localhost:3000/client/2
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "prenom": "Incomplete",
+    "nom": "Data",
+    "telephone": "9876543210"
+    // missing email
+}
+
+### Test for updating a client with invalid email
+# Description: Attempts to update a client with an invalid email format.
+# Expected Result: A 400 status code with an error message.
+PUT http://localhost:3000/client/2
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "prenom": "Invalid",
+    "nom": "Email",
+    "email": "invalid-email",
+    "telephone": "9876543210"
+}
+
+### Test for updating a client with invalid telephone
+# Description: Attempts to update a client with an invalid telephone format.
+# Expected Result: A 400 status code with an error message.
+PUT http://localhost:3000/client/2
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "prenom": "Invalid",
+    "nom": "Phone",
+    "email": "valid@example.com",
+    "telephone": "abcdefghij"
+}
+
+### Test for updating a non-existent client
+# Description: Attempts to update a client that does not exist.
+# Expected Result: A 404 status code with an error message.
+PUT http://localhost:3000/client/999
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "prenom": "Nonexistent",
+    "nom": "Client",
+    "email": "nonexistent@example.com",
+    "telephone": "9876543210"
+}
+
+### Test for deleting a client (avocat permission)
+# Description: Deletes an existing client by ID using an avocat token.
+# Expected Result: A 200 status code and a success message.
+DELETE http://localhost:3000/client/2
+Authorization: Bearer {{avocatToken}}
+
+### Test for deleting a client (client permission for own data)
+# Description: Deletes client's own account using their token.
+# Expected Result: A 200 status code and a success message.
+DELETE http://localhost:3000/client/3
+Authorization: Bearer {{clientToken}}
+
+### Test for deleting a non-existent client
+# Description: Attempts to delete a client that does not exist.
+# Expected Result: A 404 status code with an error message.
+DELETE http://localhost:3000/client/999
+Authorization: Bearer {{avocatToken}}

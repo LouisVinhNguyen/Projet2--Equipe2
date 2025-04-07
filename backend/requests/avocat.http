@@ -1,6 +1,6 @@
 ### Test for avocat registration
 # Description: Registers a new avocat with valid data.
-# Expected Result: A 201 status code and a success message.
+# Expected Result: A 201 status code and the new avocat ID.
 POST http://localhost:3000/register/avocat
 Content-Type: application/json
 
@@ -23,6 +23,7 @@ Content-Type: application/json
     "nom": "Doe",
     "email": "john.doe@example.com",
     "telephone": "1234567890"
+    // missing password
 }
 
 ### Test for invalid email format in avocat registration
@@ -39,18 +40,32 @@ Content-Type: application/json
     "password": "securePassword123"
 }
 
-### Test for existing email in avocat registration
-# Description: Attempts to register an avocat with an email that already exists.
+### Test for invalid telephone format in avocat registration
+# Description: Attempts to register an avocat with an invalid telephone format.
 # Expected Result: A 400 status code with an error message.
 POST http://localhost:3000/register/avocat
 Content-Type: application/json
 
 {
-    "prenom": "Mark",
-    "nom": "Henry",
-    "email": "markhenry@example.com",
-    "telephone": "1234567890",
+    "prenom": "John",
+    "nom": "Doe", 
+    "email": "john.doe@example.com",
+    "telephone": "123abc4567",
     "password": "securePassword123"
+}
+
+### Test for existing email in avocat registration
+# Description: Attempts to register an avocat with an email that already exists.
+# Expected Result: A 409 status code with an error message.
+POST http://localhost:3000/register/avocat
+Content-Type: application/json
+
+{
+    "prenom": "Different",
+    "nom": "Person",
+    "email": "markhenry@example.com",
+    "telephone": "9876543210",
+    "password": "anotherPassword456"
 }
 
 ### Login to obtain JWT token for avocat
@@ -81,7 +96,7 @@ Content-Type: application/json
 
 ### Test for avocat login with non-existent email
 # Description: Attempts to log in an avocat with an email that does not exist.
-# Expected Result: A 404 status code with an error message.
+# Expected Result: A 401 status code with an error message.
 POST http://localhost:3000/login/avocat
 Content-Type: application/json
 
@@ -90,11 +105,27 @@ Content-Type: application/json
     "password": "securePassword123"
 }
 
+### Test for missing credentials in login
+# Description: Attempts to log in without providing all required fields.
+# Expected Result: A 400 status code with an error message.
+POST http://localhost:3000/login/avocat
+Content-Type: application/json
+
+{
+    "email": "markhenry@example.com"
+    // missing password
+}
+
 ### Test for retrieving all avocats
 # Description: Retrieves all avocats in the system.
 # Expected Result: A 200 status code and a list of avocats.
 GET http://localhost:3000/avocat
 Authorization: Bearer {{avocatToken}}
+
+### Test for unauthorized access to avocats list
+# Description: Attempts to access avocats list without authentication.
+# Expected Result: An unauthorized error.
+GET http://localhost:3000/avocat
 
 ### Test for updating an avocat
 # Description: Updates an existing avocat with valid data.
@@ -110,8 +141,62 @@ Authorization: Bearer {{avocatToken}}
     "telephone": "9876543210"
 }
 
+### Test for updating an avocat with missing fields
+# Description: Attempts to update an avocat with missing required fields.
+# Expected Result: A 400 status code with an error message.
+PUT http://localhost:3000/avocat/1
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "prenom": "Updated",
+    "nom": "Avocat",
+    "telephone": "9876543210"
+    // missing email
+}
+
+### Test for updating an avocat with invalid email
+# Description: Attempts to update an avocat with an invalid email format.
+# Expected Result: A 400 status code with an error message.
+PUT http://localhost:3000/avocat/1
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "prenom": "Updated",
+    "nom": "Avocat",
+    "email": "invalid-email",
+    "telephone": "9876543210"
+}
+
+### Test for updating a non-existent avocat
+# Description: Attempts to update an avocat that does not exist.
+# Expected Result: A 404 status code with an error message.
+PUT http://localhost:3000/avocat/999
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "prenom": "Updated",
+    "nom": "Avocat",
+    "email": "updatedavocat@example.com",
+    "telephone": "9876543210"
+}
+
 ### Test for deleting an avocat
 # Description: Deletes an existing avocat by ID.
 # Expected Result: A 200 status code and a success message.
-DELETE http://localhost:3000/avocat/1
+DELETE http://localhost:3000/avocat/4
+Authorization: Bearer {{avocatToken}}
+
+### Test for deleting a non-existent avocat
+# Description: Attempts to delete an avocat that does not exist.
+# Expected Result: A 404 status code with an error message.
+DELETE http://localhost:3000/avocat/999
+Authorization: Bearer {{avocatToken}}
+
+### Test for deleting an avocat with associated dossiers
+# Description: Attempts to delete an avocat that has associated dossiers.
+# Expected Result: A 400 status code with an error message indicating the avocat cannot be deleted.
+DELETE http://localhost:3000/avocat/2
 Authorization: Bearer {{avocatToken}}

@@ -1,14 +1,14 @@
-### Login to obtain JWT token for avocat
+### Login to obtain JWT token for avocat (needed for client management)
 # @name avocatLogin
 POST http://localhost:3000/login/avocat
 Content-Type: application/json
 
 {
-    "email": "markhenry@example.com",
-    "password": "securePassword123"
+    "email": "marc.belanger@cabinet-juridique.ca",
+    "password": "AvoMB2023"
 }
 
-### Save the token to be used in other requests
+### Save the avocat token to be used in other requests
 @avocatToken = {{avocatLogin.response.body.token}}
 
 ### Test for retrieving all sessions
@@ -48,3 +48,171 @@ Authorization: Bearer {{avocatToken}}
 # Expected Result: A 200 status code and a success message.
 DELETE http://localhost:3000/session/6
 Authorization: Bearer {{avocatToken}}
+
+### Test for creating a session with missing fields
+# Description: Attempts to create a session with missing required fields.
+# Expected Result: A 400 status code with an error message.
+POST http://localhost:3000/session
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "description": "Session incomplète."
+    // missing dossierID
+}
+
+### Test for creating a session with invalid avocatID
+# Description: Attempts to create a session with a non-existent avocatID.
+# Expected Result: A 400 status code with an error message.
+POST http://localhost:3000/session
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 999,
+    "dossierID": 1,
+    "description": "Session avec avocat invalide."
+}
+
+### Test for creating a session with invalid dossierID
+# Description: Attempts to create a session with a non-existent dossierID.
+# Expected Result: A 400 status code with an error message.
+POST http://localhost:3000/session
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierID": 999,
+    "description": "Session avec dossier invalide."
+}
+
+### Test for retrieving sessions without authentication
+# Description: Attempts to retrieve sessions without providing authentication.
+# Expected Result: A 401 status code with an error message.
+GET http://localhost:3000/session
+
+### Test for creating a session without authentication
+# Description: Attempts to create a session without providing authentication.
+# Expected Result: A 401 status code with an error message.
+POST http://localhost:3000/session
+Content-Type: application/json
+
+{
+    "avocatID": 1,
+    "dossierID": 1,
+    "description": "Session sans authentification."
+}
+
+### Test for updating a session without authentication
+# Description: Attempts to update a session without providing authentication.
+# Expected Result: A 401 status code with an error message.
+PUT http://localhost:3000/session/6
+Content-Type: application/json
+
+{
+    "avocatID": 1,
+    "dossierID": 1,
+    "description": "Session modifiée sans authentification."
+}
+
+### Test for deleting a session without authentication
+# Description: Attempts to delete a session without providing authentication.
+# Expected Result: A 401 status code with an error message.
+DELETE http://localhost:3000/session/6
+
+### Test for updating a non-existent session
+# Description: Attempts to update a session that does not exist.
+# Expected Result: A 404 status code with an error message.
+PUT http://localhost:3000/session/999
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierID": 1,
+    "description": "Session inexistante."
+}
+
+### Test for deleting a non-existent session
+# Description: Attempts to delete a session that does not exist.
+# Expected Result: A 404 status code with an error message.
+DELETE http://localhost:3000/session/999
+Authorization: Bearer {{avocatToken}}
+
+### Test for updating a session with invalid data format
+# Description: Attempts to update a session with an invalid data format.
+# Expected Result: A 400 status code with an error message.
+PUT http://localhost:3000/session/1
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": "not-a-number",
+    "dossierID": 1,
+    "description": "Session avec format de données invalide."
+}
+
+### Test for ending a session successfully
+# Description: Ends an active session with a valid session ID.
+# Expected Result: A 200 status code and details of the updated session.
+POST http://localhost:3000/session/end/7
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "description": "Session terminée avec succès."
+}
+
+### Test for ending a session with only ID (no description update)
+# Description: Ends an active session without updating the description.
+# Expected Result: A 200 status code and details of the updated session.
+POST http://localhost:3000/session/end/2
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{}
+
+### Test for ending a non-existent session
+# Description: Attempts to end a session that does not exist.
+# Expected Result: A 404 status code with an error message.
+POST http://localhost:3000/session/end/999
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "description": "Session inexistante."
+}
+
+### Test for ending an already ended session
+# Description: Attempts to end a session that has already been ended.
+# Expected Result: A 400 status code with an error message.
+POST http://localhost:3000/session/end/3
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "description": "Session déjà terminée."
+}
+
+### Test for ending a session without authentication
+# Description: Attempts to end a session without providing authentication.
+# Expected Result: A 401 status code with an error message.
+POST http://localhost:3000/session/end/1
+Content-Type: application/json
+
+{
+    "description": "Session sans authentification."
+}
+
+### Test for ending a session with invalid token
+# Description: Attempts to end a session with an invalid authentication token.
+# Expected Result: A 403 status code with an error message.
+POST http://localhost:3000/session/end/1
+Content-Type: application/json
+Authorization: Bearer invalidtoken123
+
+{
+    "description": "Session avec token invalide."
+}

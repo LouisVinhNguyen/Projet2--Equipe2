@@ -1,25 +1,42 @@
-### Login to obtain JWT token for avocat
+### Login to obtain JWT token for avocat (needed for client management)
 # @name avocatLogin
 POST http://localhost:3000/login/avocat
 Content-Type: application/json
 
 {
-    "email": "markhenry@example.com",
-    "password": "securePassword123"
+    "email": "marc.belanger@cabinet-juridique.ca",
+    "password": "AvoMB2023"
 }
 
-### Save the token to be used in other requests
+### Save the avocat token to be used in other requests
 @avocatToken = {{avocatLogin.response.body.token}}
 
-### Test for retrieving all taches
-# Description: Retrieves all taches for the authenticated avocat.
-# Expected Result: A list of taches with their details.
+### Get all tasks
+# Description: Retrieves all tâches accessible to the authenticated avocat
+# Expected Result: A list of tâches with their details
 GET http://localhost:3000/tache
 Authorization: Bearer {{avocatToken}}
 
-### Test for creating a tache with valid data
-# Description: Creates a new tache with valid data.
-# Expected Result: A 201 status code and the ID of the created tache.
+### Get all tasks (no authentication)
+# Description: Attempts to retrieve all tâches without authentication
+# Expected Result: A 401 status code with an error message
+GET http://localhost:3000/tache
+
+### Get a specific task by ID
+# Description: Retrieves a specific tâche by its ID
+# Expected Result: A 200 status code and the tâche details
+GET http://localhost:3000/tache/1
+Authorization: Bearer {{avocatToken}}
+
+### Get a non-existent task
+# Description: Attempts to retrieve a tâche with an ID that doesn't exist
+# Expected Result: A 404 status code with "Tâche introuvable" message
+GET http://localhost:3000/tache/999
+Authorization: Bearer {{avocatToken}}
+
+### Create a new task
+# Description: Creates a new tâche with all required fields
+# Expected Result: A 201 status code and the ID of the created tâche
 POST http://localhost:3000/tache
 Content-Type: application/json
 Authorization: Bearer {{avocatToken}}
@@ -27,26 +44,159 @@ Authorization: Bearer {{avocatToken}}
 {
     "avocatID": 1,
     "dossierID": 1,
-    "documentNom": "Tâche Importante",
-    "description": "Description de la tâche importante."
+    "documentNom": "Rédaction contrat",
+    "description": "Rédiger le contrat de vente pour le client",
+    "status": "Non commencée"
 }
 
-### Test for updating a tache with valid data
-# Description: Updates an existing tache with valid data.
-# Expected Result: A 200 status code and a success message.
-PUT http://localhost:3000/tache/6
+### Create a task with invalid status (should fail)
+# Description: Attempts to create a task with an invalid status value
+# Expected Result: A 400 status code with an error message about invalid status
+POST http://localhost:3000/tache
 Content-Type: application/json
 Authorization: Bearer {{avocatToken}}
 
 {
     "avocatID": 1,
     "dossierID": 1,
-    "documentNom": "Tâche Modifiée",
-    "description": "Description modifiée de la tâche."
+    "documentNom": "Tâche test",
+    "description": "Description de test",
+    "status": "Statut invalide"
 }
 
-### Test for deleting a tache
-# Description: Deletes an existing tache by ID.
-# Expected Result: A 200 status code and a success message.
-DELETE http://localhost:3000/tache/6
+### Create a task with missing fields
+# Description: Attempts to create a task with missing required fields
+# Expected Result: A 400 status code with an error message about missing fields
+POST http://localhost:3000/tache
+Content-Type: application/json
 Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierID": 1,
+    "description": "Description sans nom de document",
+    "status": "Non commencée"
+}
+
+### Create a task with invalid avocat ID
+# Description: Attempts to create a task with an avocat ID that doesn't exist
+# Expected Result: A 400 status code with an error message about invalid avocat ID
+POST http://localhost:3000/tache
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 999,
+    "dossierID": 1,
+    "documentNom": "Tâche test",
+    "description": "Description de test",
+    "status": "Non commencée"
+}
+
+### Create a task with invalid dossier ID
+# Description: Attempts to create a task with a dossier ID that doesn't exist
+# Expected Result: A 400 status code with an error message about invalid dossier ID
+POST http://localhost:3000/tache
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierID": 999,
+    "documentNom": "Tâche test",
+    "description": "Description de test",
+    "status": "Non commencée"
+}
+
+### Create a task without authentication
+# Description: Attempts to create a task without authentication
+# Expected Result: A 401 status code with an error message
+POST http://localhost:3000/tache
+Content-Type: application/json
+
+{
+    "avocatID": 1,
+    "dossierID": 1,
+    "documentNom": "Tâche test",
+    "description": "Description de test",
+    "status": "Non commencée"
+}
+
+### Update an existing task
+# Description: Updates an existing tâche by ID
+# Expected Result: A 200 status code and a success message
+PUT http://localhost:3000/tache/1
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierID": 1,
+    "documentNom": "Rédaction contrat - Mis à jour",
+    "description": "Rédiger et réviser le contrat de vente pour le client",
+    "status": "En cours"
+}
+
+### Update a task with only some fields
+# Description: Updates only specific fields of an existing tâche
+# Expected Result: A 200 status code and a success message
+PUT http://localhost:3000/tache/1
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "status": "Terminée"
+}
+
+### Update a task with invalid status
+# Description: Attempts to update a task with an invalid status value
+# Expected Result: A 400 status code with an error message about invalid status
+PUT http://localhost:3000/tache/1
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "status": "Statut inexistant"
+}
+
+### Update a non-existent task (should fail)
+# Description: Attempts to update a task with an ID that doesn't exist
+# Expected Result: A 404 status code with "Tâche introuvable" message
+PUT http://localhost:3000/tache/999
+Content-Type: application/json
+Authorization: Bearer {{avocatToken}}
+
+{
+    "avocatID": 1,
+    "dossierID": 1,
+    "documentNom": "Tâche inexistante",
+    "description": "Cette tâche n'existe pas",
+    "status": "En cours"
+}
+
+### Update a task without authentication
+# Description: Attempts to update a task without authentication
+# Expected Result: A 401 status code with an error message
+PUT http://localhost:3000/tache/1
+Content-Type: application/json
+
+{
+    "status": "En cours"
+}
+
+### Delete a task
+# Description: Deletes an existing tâche by ID
+# Expected Result: A 200 status code and a success message
+DELETE http://localhost:3000/tache/1
+Authorization: Bearer {{avocatToken}}
+
+### Delete a non-existent task (should fail)
+# Description: Attempts to delete a task with an ID that doesn't exist
+# Expected Result: A 404 status code with "Tâche introuvable" message
+DELETE http://localhost:3000/tache/999
+Authorization: Bearer {{avocatToken}}
+
+### Delete a task without authentication
+# Description: Attempts to delete a task without authentication
+# Expected Result: A 401 status code with an error message
+DELETE http://localhost:3000/tache/2
