@@ -11,6 +11,7 @@ const documentRoutes = require('./routes/documentRoutes');
 const tacheRoutes = require('./routes/tacheRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
 const factureRoutes = require('./routes/factureRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,14 +26,15 @@ app.get("/", (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/avocat', avocatRoutes);
-app.use('/api/client', clientRoutes);
-app.use('/api/dossier', dossierRoutes);
-app.use('/api/document', documentRoutes);
-app.use('/api/tache', tacheRoutes);
-app.use('/api/session', sessionRoutes);
-app.use('/api/facture', factureRoutes);
+app.use('/auth', authRoutes);
+app.use('/avocat', avocatRoutes);
+app.use('/client', clientRoutes);
+app.use('/dossier', dossierRoutes);
+app.use('/document', documentRoutes);
+app.use('/tache', tacheRoutes);
+app.use('/session', sessionRoutes);
+app.use('/facture', factureRoutes);
+app.use('/user', userRoutes);
 
 // Start server
 app.listen(PORT, () => {

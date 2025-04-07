@@ -39,7 +39,7 @@ function inscription() {
         const inscriptionData = { prenom, nom, email, password, telephone};
 
         // Determine the route based on the role
-        const route = role === "avocat" ? '/api/auth/register/avocat' : '/api/auth/register/client';
+        const route = role === "avocat" ? '/auth/register/avocat' : '/auth/register/client';
 
         // Send the data to the server
         fetch(route, {

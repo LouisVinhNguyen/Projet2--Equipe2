@@ -16,7 +16,7 @@ document.getElementById("connexion").addEventListener("click", async () => {
     };
 
     // Determine the correct endpoint based on the role
-    const endpoint = role === "avocat" ? "/api/auth/login/avocat" : "/api/auth/login/client";
+    const endpoint = role === "avocat" ? "/auth/login/avocat" : "/auth/login/client";
 
     try {
         await getToken(user, endpoint, role);

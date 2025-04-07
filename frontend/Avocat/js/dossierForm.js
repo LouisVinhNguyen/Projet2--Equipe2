@@ -51,7 +51,7 @@ export const renderDossierForm = async () => {
     try {
       const storedToken = sessionStorage.getItem('token');
       if (!storedToken) return;
-      const response = await fetch('/api/client', {
+      const response = await fetch('/client', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +82,7 @@ export const renderDossierForm = async () => {
         window.location.href = "../index.html";
         return;
       }
-      const response = await fetch('/api/dossier', {
+      const response = await fetch('/dossier', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -138,39 +138,73 @@ export const renderDossierForm = async () => {
   // Handle form submission for creating a new dossier
   document.getElementById('dossierForm').onsubmit = async (e) => {
     e.preventDefault();
-    const storedToken = sessionStorage.getItem('token');
-    if (!storedToken) {
+    
+    // Get token
+    const token = sessionStorage.getItem('token');
+    if (!token) {
       alert('Vous devez être connecté pour créer un dossier.');
       return;
     }
-    const formData = new FormData(e.target);
-    const dossierData = Object.fromEntries(formData.entries());
-    dossierData.avocatID = 1; // Set avocatID (can be dynamic if needed)
-    // If no client is selected, remove clientID so backend sets it to null
-    if (!dossierData.clientID) {
-      delete dossierData.clientID;
+    
+    // Get values from form
+    const dossierNom = document.querySelector('input[name="dossierNom"]').value.trim();
+    const dossierType = document.querySelector('input[name="dossierType"]').value.trim();
+    const clientID = document.getElementById('clientSelect').value; // This is clientUserID
+    const description = document.querySelector('textarea[name="description"]').value.trim();
+    
+    // Validate required fields
+    if (!dossierNom || !dossierType || !description) {
+      alert("Veuillez remplir tous les champs obligatoires.");
+      return;
     }
-    try {
-      const response = await fetch('/api/dossier', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${storedToken}`
-        },
-        body: JSON.stringify(dossierData),
-      });
-      if (response.ok) {
-        alert('Dossier créé avec succès.');
-        e.target.reset();
-        await fetchDossiers();
-      } else {
-        console.error('Erreur lors de la création du dossier:', response.statusText);
-        alert('Erreur lors de la création du dossier. Veuillez réessayer.');
+    
+    // Create the dossier data object with correct property names
+    const dossierData = {
+      avocatUserID: token.userID, // Should be dynamic, get from token or user session
+      dossierNom: dossierNom,
+      dossierType: dossierType,
+      description: description
+    };
+    
+    // Add clientUserID if selected
+    if (clientID) {
+      dossierData.clientUserID = clientID;
+    }
+    
+    console.log("Sending dossier data:", dossierData);
+    
+    // Send data to server
+    fetch('/dossier', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(dossierData)
+    })
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(err => {
+          throw new Error(err.error || err.message || "Erreur lors de la création du dossier");
+        });
       }
-    } catch (error) {
-      console.error('Erreur réseau:', error);
-      alert('Une erreur réseau s\'est produite. Veuillez réessayer.');
-    }
+      return response.json();
+    })
+    .then(data => {
+      console.log("Dossier créé avec succès:", data);
+      
+      // Reset form
+      document.getElementById('dossierForm').reset();
+      
+      // Refresh the dossier list
+      fetchDossiers();
+      
+      alert("Dossier créé avec succès!");
+    })
+    .catch(error => {
+      console.error("Erreur lors de la création du dossier:", error.message);
+      alert("Erreur lors de la création du dossier: " + error.message);
+    });
   };
 
   await fetchClients();
