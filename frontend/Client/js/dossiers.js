@@ -8,7 +8,7 @@ export const renderDossiers = async () => {
   const container = document.getElementById('dossierContainer');
 
   try {
-    const response = await fetch('/dossier', {
+    const response = await fetch('/api/dossier', {
       method: 'GET',
       headers: { 
         "Authorization": `Bearer ${token}` 

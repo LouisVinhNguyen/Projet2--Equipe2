@@ -51,7 +51,7 @@ export const renderDossierForm = async () => {
     try {
       const storedToken = sessionStorage.getItem('token');
       if (!storedToken) return;
-      const response = await fetch('/client', {
+      const response = await fetch('/api/client', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -63,7 +63,7 @@ export const renderDossierForm = async () => {
         const clientSelect = document.getElementById('clientSelect');
         clientSelect.innerHTML = `<option value="">Sélectionnez un client</option>` +
           clients.map(client => `
-            <option value="${client.clientID}">${client.clientID} - ${client.prenom} ${client.nom}</option>
+            <option value="${client.userID}">${client.userID} - ${client.prenom} ${client.nom}</option>
           `).join('');
       } else {
         console.error('Erreur lors de la récupération des clients:', response.statusText);
@@ -82,7 +82,7 @@ export const renderDossierForm = async () => {
         window.location.href = "../index.html";
         return;
       }
-      const response = await fetch('/dossier', {
+      const response = await fetch('/api/dossier', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -151,7 +151,7 @@ export const renderDossierForm = async () => {
       delete dossierData.clientID;
     }
     try {
-      const response = await fetch('/dossier', {
+      const response = await fetch('/api/dossier', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

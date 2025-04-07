@@ -1,6 +1,3 @@
-
-
-
 document.getElementById("connexion").addEventListener("click", async () => {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
@@ -19,7 +16,7 @@ document.getElementById("connexion").addEventListener("click", async () => {
     };
 
     // Determine the correct endpoint based on the role
-    const endpoint = role === "avocat" ? "/login/avocat" : "/login/client";
+    const endpoint = role === "avocat" ? "/api/auth/login/avocat" : "/api/auth/login/client";
 
     try {
         await getToken(user, endpoint, role);
