@@ -1,16 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const dossierController = require('../controllers/dossierController');
-const { verifyAvocatToken, verifyAvocatOrClientToken } = require('../middleware/authMiddleware');
+const { verifyAvocatToken, verifyAvocatOrClientToken, verifyAvocatOrAdminToken } = require('../middleware/authMiddleware');
 
 // GET all dossiers
-router.get('/', verifyAvocatToken, dossierController.getAllDossiers);
+router.get('/', verifyAvocatOrAdminToken, dossierController.getAllDossiers);
 
 // GET dossier by ID
 router.get('/:id', verifyAvocatOrClientToken, dossierController.getDossierById);
 
 // POST create a new dossier
-router.post('/', verifyAvocatToken, dossierController.createDossier);
+router.post('/', verifyAvocatOrAdminToken, dossierController.createDossier);
 
 // PUT update a dossier
 router.put('/:id', verifyAvocatToken, dossierController.updateDossier);

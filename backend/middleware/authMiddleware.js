@@ -43,6 +43,9 @@ const verifyAdminToken = verifyToken(["admin"]);
 // Specialized token verification for both avocat and client roles
 const verifyAvocatOrClientToken = verifyToken(["avocat", "client"]);
 
+// Specialized token verification for both avocat and admin roles
+const verifyAvocatOrAdminToken = verifyToken(["avocat", "admin"]);
+
 // Specialized token verification for any of the three roles
 const verifyAnyUserToken = verifyToken(["avocat", "client", "admin"]);
 
@@ -52,5 +55,6 @@ module.exports = {
   verifyClientToken,
   verifyAdminToken,
   verifyAvocatOrClientToken,
+  verifyAvocatOrAdminToken,
   verifyAnyUserToken
 };

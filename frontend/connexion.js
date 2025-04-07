@@ -10,25 +10,43 @@ document.getElementById("connexion").addEventListener("click", async () => {
         return; // Stop execution if fields are empty
     }
 
-    const user = {
-        email: email,
-        password: password
-    };
-
-    // Determine the correct endpoint based on the role
-    let endpoint;
-    if (role === "avocat") {
-        endpoint = "/auth/login/avocat";
-    } else if (role === "client") {
-        endpoint = "/auth/login/client";
-    } else if (role === "admin") {
-        endpoint = "/auth/login/admin";
-    }
-
+    // First check if email exists
     try {
+        const emailCheckResponse = await fetch(`/user/check-email?email=${encodeURIComponent(email)}`, {
+            method: 'GET'
+        });
+        
+        if (!emailCheckResponse.ok) {
+            throw new Error("Erreur lors de la vérification de l'email");
+        }
+        
+        const emailData = await emailCheckResponse.json();
+        
+        if (!emailData.exists) {
+            alert("Aucun utilisateur trouvé avec cet email.");
+            return;
+        }
+        
+        // Email exists, proceed with authentication
+        const user = {
+            email: email,
+            password: password
+        };
+
+        // Determine the correct endpoint based on the role
+        let endpoint;
+        if (role === "avocat") {
+            endpoint = "/auth/login/avocat";
+        } else if (role === "client") {
+            endpoint = "/auth/login/client";
+        } else if (role === "admin") {
+            endpoint = "/auth/login/admin";
+        }
+
         await getToken(user, endpoint, role);
     } catch (error) {
         console.error("Erreur lors de la connexion :", error);
+        alert("Une erreur s'est produite. Veuillez réessayer.");
     }
 });
 

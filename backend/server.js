@@ -4,6 +4,7 @@ const path = require("path");
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const avocatRoutes = require('./routes/avocatRoutes');
 const clientRoutes = require('./routes/clientRoutes');
 const dossierRoutes = require('./routes/dossierRoutes');
@@ -27,6 +28,7 @@ app.get("/", (req, res) => {
 
 // API Routes
 app.use('/auth', authRoutes);
+app.use('/admin', adminRoutes);
 app.use('/avocat', avocatRoutes);
 app.use('/client', clientRoutes);
 app.use('/dossier', dossierRoutes);

@@ -6,21 +6,21 @@ export const renderClientForm = () => {
       <form id="clientForm">
         <div class="field">
           <label class="label">Prénom</label>
-          <input class="input" name="prenom" required placeholder="Prénom" />
+          <input class="input" id="client-prenom" name="prenom" required placeholder="Prénom" />
         </div>
         <div class="field">
           <label class="label">Nom</label>
-          <input class="input" name="nom" required placeholder="Nom" />
+          <input class="input" id="client-nom" name="nom" required placeholder="Nom" />
         </div>
         <div class="field">
           <label class="label">Email</label>
-          <input class="input" name="email" type="email" required />
+          <input class="input" id="client-email" name="email" type="email" required />
         </div>
         <div class="field">
           <label class="label">Téléphone</label>
-          <input class="input" name="tel" placeholder="Téléphone" />
+          <input class="input" id="client-tel" name="tel" placeholder="Téléphone" />
         </div>
-        <button class="button is-success" type="submit">Ajouter</button>
+        <button class="button is-success" id="btn-ajouter-client" type="button">Ajouter</button>
       </form>
       <hr />
       <h3 class="title is-5">Liste des Clients</h3>
@@ -41,7 +41,7 @@ export const renderClientForm = () => {
     </div>
   `
 
-  // Function to fetch and display clients from /client
+  // Function to fetch and display clients from /api/client
   const fetchClientsList = async () => {
     try {
       const storedToken = sessionStorage.getItem('token')
@@ -62,7 +62,7 @@ export const renderClientForm = () => {
         const tableBody = document.getElementById('clientTableBody')
         tableBody.innerHTML = clients.map(client => `
           <tr>
-            <td>${client.clientID}</td>
+            <td>${client.userID}</td>
             <td>${client.prenom}</td>
             <td>${client.nom}</td>
             <td>${client.email}</td>
@@ -79,38 +79,91 @@ export const renderClientForm = () => {
     }
   }
 
-  // Event listener for form submission to create a client
-  document.getElementById('clientForm').onsubmit = async (e) => {
-    e.preventDefault()
-    const formData = new FormData(e.target)
-    const prenom = formData.get('prenom').trim()
-    const nom = formData.get('nom').trim()
-    const email = formData.get('email').trim()
-    const telephone = formData.get('tel').trim()
-    // Using a default password; replace as needed
-    const password = "Client123"
-
-    try {
-      const response = await fetch("/register/client", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ prenom, nom, email, telephone, password })
-      })
-      
-      if (response.ok) {  
-        e.target.reset()
-        fetchClientsList()
-      } else {
-        const result = await response.json()
-        alert(result.message || "Erreur lors de l'ajout du client.")
-      }
-    } catch (error) {
-      console.error(error)
-      alert("Erreur réseau lors de l'ajout du client.")
+  document.getElementById('btn-ajouter-client').addEventListener('click', function() {
+    const prenom = document.getElementById('client-prenom').value.trim();
+    const nom = document.getElementById('client-nom').value.trim();
+    const email = document.getElementById('client-email').value.trim();
+    const telephone = document.getElementById('client-tel').value.trim();
+    // Using a default password
+    const password = "Client123";
+    
+    console.log("Client data:", { prenom, nom, email, telephone });
+    
+    // Validate that all fields are filled
+    if (!prenom || !nom || !email || !telephone) {
+      alert("Veuillez remplir tous les champs.");
+      return;
     }
-  }
+    
+    // Get the token for authorization
+    const token = sessionStorage.getItem('token');
+    if (!token) {
+      alert("Vous devez être connecté pour ajouter un client.");
+      return;
+    }
+    
+    // First, check if email already exists for any user
+    fetch(`/user/check-email?email=${encodeURIComponent(email)}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.exists) {
+        alert("Un utilisateur avec cet email existe déjà.");
+        return;
+      }
+      
+      // Email doesn't exist, proceed with registration
+      const clientData = { 
+        prenom, 
+        nom, 
+        email, 
+        telephone, 
+        password,
+        role: "client"
+      };
+      
+      // Send the data to the server
+      return fetch('/auth/register/client', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(clientData),
+      });
+    })
+    .then(response => {
+      // If we stopped at the email check (response will be undefined)
+      if (!response) return;
+      
+      if (!response.ok) {
+        return response.json().then(err => {
+          throw new Error(err.message || "Erreur lors de l'ajout du client");
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      // If we stopped at the email check (data will be undefined)
+      if (!data) return;
+      
+      console.log("Client ajouté avec succès:", data);
+      // Reset the form
+      document.getElementById('clientForm').reset();
+      // Refresh the client list
+      fetchClientsList();
+      alert("Client ajouté avec succès!");
+    })
+    .catch(error => {
+      console.error("Erreur lors de l'ajout du client:", error.message);
+      alert("Erreur lors de l'ajout du client: " + error.message);
+    });
+  });
 
+  // Initial fetch of clients list
   fetchClientsList()
 }
