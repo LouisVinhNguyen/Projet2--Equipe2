@@ -5,8 +5,12 @@ export const renderClientForm = () => {
       <h2 class="title is-4">Ajouter un Client</h2>
       <form id="clientForm">
         <div class="field">
-          <label class="label">Nom complet</label>
-          <input class="input" name="nom" required />
+          <label class="label">Prénom</label>
+          <input class="input" name="prenom" required placeholder="Prénom" />
+        </div>
+        <div class="field">
+          <label class="label">Nom</label>
+          <input class="input" name="nom" required placeholder="Nom" />
         </div>
         <div class="field">
           <label class="label">Email</label>
@@ -14,7 +18,7 @@ export const renderClientForm = () => {
         </div>
         <div class="field">
           <label class="label">Téléphone</label>
-          <input class="input" name="tel" />
+          <input class="input" name="tel" placeholder="Téléphone" />
         </div>
         <button class="button is-success" type="submit">Ajouter</button>
       </form>
@@ -37,7 +41,7 @@ export const renderClientForm = () => {
     </div>
   `
 
-  // Fetch and display clients
+  // Function to fetch and display clients from /client
   const fetchClientsList = async () => {
     try {
       const storedToken = sessionStorage.getItem('token')
@@ -72,6 +76,39 @@ export const renderClientForm = () => {
     } catch (error) {
       console.error("Erreur réseau:", error)
       alert("Une erreur réseau s'est produite. Veuillez réessayer.")
+    }
+  }
+
+  // Event listener for form submission to create a client
+  document.getElementById('clientForm').onsubmit = async (e) => {
+    e.preventDefault()
+    const formData = new FormData(e.target)
+    const prenom = formData.get('prenom').trim()
+    const nom = formData.get('nom').trim()
+    const email = formData.get('email').trim()
+    const telephone = formData.get('tel').trim()
+    // Using a default password; replace as needed
+    const password = "Client123"
+
+    try {
+      const response = await fetch("/register/client", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ prenom, nom, email, telephone, password })
+      })
+      
+      if (response.ok) {  
+        e.target.reset()
+        fetchClientsList()
+      } else {
+        const result = await response.json()
+        alert(result.message || "Erreur lors de l'ajout du client.")
+      }
+    } catch (error) {
+      console.error(error)
+      alert("Erreur réseau lors de l'ajout du client.")
     }
   }
 
