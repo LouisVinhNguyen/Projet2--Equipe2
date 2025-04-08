@@ -9,6 +9,9 @@ router.get('/', verifyAvocatOrAdminToken, dossierController.getAllDossiers);
 // GET dossier by ID
 router.get('/:id', verifyAvocatOrClientToken, dossierController.getDossierById);
 
+// GET dossiers by avocat ID
+router.get('/avocat/:avocatUserID', verifyAvocatToken, dossierController.getDossierByAvocatId);
+
 // POST create a new dossier
 router.post('/', verifyAvocatOrAdminToken, dossierController.createDossier);
 

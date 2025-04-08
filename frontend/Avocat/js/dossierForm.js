@@ -82,7 +82,10 @@ export const renderDossierForm = async () => {
         window.location.href = "../index.html";
         return;
       }
-      const response = await fetch('/dossier', {
+      const tokenPayload = JSON.parse(atob(storedToken.split('.')[1]));
+      const avocatUserID = tokenPayload.userID;
+
+      const response = await fetch(`/dossier/avocat/${avocatUserID}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
