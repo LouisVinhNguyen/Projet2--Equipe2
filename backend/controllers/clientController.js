@@ -17,6 +17,33 @@ const getAllClients = async (req, res) => {
   }
 };
 
+// Get clients by avocat ID
+const getClientsByAvocatId = async (req, res) => {
+  const { avocatUserID } = req.params;
+
+  try {
+    // Get client IDs from client_dossier join with dossier where avocatUserID matches
+    const clients = await db("users")
+      .select("users.*")
+      .where("users.role", "client")
+      .whereIn("users.userID", function() {
+        this.select("client_dossier.clientUserID")
+          .distinct()
+          .from("client_dossier")
+          .join("dossier", "dossier.dossierID", "client_dossier.dossierID")
+          .where("dossier.avocatUserID", avocatUserID);
+      });
+
+    res.status(200).json(clients);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Erreur lors de la récupération des clients.",
+      error: error.message,
+    });
+  }
+};
+
 // Get client by ID
 const getClientById = async (req, res) => {
   const { id } = req.params;
@@ -197,6 +224,7 @@ const getClientDossiers = async (req, res) => {
 
 module.exports = {
   getAllClients,
+  getClientsByAvocatId,
   getClientById,
   updateClient,
   deleteClient,

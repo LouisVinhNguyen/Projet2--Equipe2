@@ -6,6 +6,9 @@ const { verifyAvocatToken, verifyClientToken, verifyAvocatOrClientToken } = requ
 // GET all clients
 router.get('/', verifyAvocatToken, clientController.getAllClients);
 
+// GET clients by avocat ID
+router.get('/avocat/:avocatUserID', verifyAvocatToken, clientController.getClientsByAvocatId);
+
 // GET client by ID
 router.get('/:id', verifyAvocatOrClientToken, clientController.getClientById);
 

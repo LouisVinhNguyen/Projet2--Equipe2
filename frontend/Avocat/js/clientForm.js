@@ -40,8 +40,7 @@ export const renderClientForm = () => {
       </table>
     </div>
   `
-
-  // Function to fetch and display clients from /api/client
+  // Function to fetch and display clients associated with the logged-in avocat
   const fetchClientsList = async () => {
     try {
       const storedToken = sessionStorage.getItem('token')
@@ -49,7 +48,13 @@ export const renderClientForm = () => {
         alert('Vous devez être connecté pour voir les clients.')
         return
       }
-      const response = await fetch('/client', {
+      
+      // Get avocat ID from the token
+      const tokenPayload = JSON.parse(atob(storedToken.split('.')[1]));
+      const avocatUserID = tokenPayload.userID;
+      
+      // Fetch clients for this avocat
+      const response = await fetch(`/client/avocat/${avocatUserID}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
