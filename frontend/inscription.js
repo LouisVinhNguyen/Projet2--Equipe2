@@ -9,23 +9,13 @@ function inscription() {
         const telephone = document.getElementById("telephone").value.trim();
         const password = document.getElementById("password").value.trim();
         const confirmPassword = document.getElementById("confirm_password").value.trim();
-        let role = getRoleFromNavbar() || ""; // Get role from navbar or default to empty
-
-        console.log("Fields before role selection:", { prenom, nom, email, password, telephone, role });
-
-        // If no role is set from the navbar, use the role selected in the form
-        if (!role) {
-            if (document.getElementById("avocat").checked) {
-                role = "avocat";
-            } else if (document.getElementById("client").checked) {
-                role = "client";
-            } else if (document.getElementById("admin").checked) {
-                role = "admin";
-            } else {
-                alert("Veuillez sélectionner un type d'utilisateur.");
-                return;
-            }
+        // Removed role from cookies/navbar. Instead, get role directly from radio button.
+        const roleRadio = document.querySelector('input[name="role"]:checked');
+        if (!roleRadio) {
+            alert("Veuillez sélectionner un type d'utilisateur.");
+            return;
         }
+        const role = roleRadio.value;
 
         console.log("Fields after role selection:", { prenom, nom, email, password, telephone, role });
 
@@ -110,18 +100,6 @@ function inscription() {
             alert("Erreur lors de l'enregistrement: " + error.message); // Notify the user
         });
     });
-}
-
-// Helper function to get the role from the navbar or cookies
-function getRoleFromNavbar() {
-    // Example: Check if the role is stored in a cookie or navbar
-    const cookies = document.cookie.split(";").reduce((acc, cookie) => {
-        const [key, value] = cookie.split("=").map(c => c.trim());
-        acc[key] = value;
-        return acc;
-    }, {});
-
-    return cookies.role || null; // Return the role if it exists in cookies
 }
 
 // Helper function to set a cookie

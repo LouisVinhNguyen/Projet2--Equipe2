@@ -33,9 +33,6 @@ export const renderDossierForm = async () => {
             <th>Nom</th>
             <th>Type</th>
             <th>Status</th>
-            <th>Description</th>
-            <th>Date Création</th>
-            <th>Date Fermeture</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -101,12 +98,9 @@ export const renderDossierForm = async () => {
             <td>${dossier.dossierNom}</td>
             <td>${dossier.dossierType}</td>
             <td>${dossier.status}</td>
-            <td>${dossier.description}</td>
-            <td>${new Date(dossier.dateCreated).toLocaleDateString()}</td>
-            <td>${dossier.dateClosed ? new Date(dossier.dateClosed).toLocaleDateString() : 'N/A'}</td>
-            <td>
-              <button class="button is-small is-warning edit-dossier" data-id="${dossier.id}">Edit</button>
-              <button class="button is-small is-danger delete-dossier" data-id="${dossier.id}">Supprimer</button>
+            <td>              <button class="button is-small is-info view-dossier" onclick="renderDetails('dossier', '${dossier.dossierID}')">Voir</button>
+              <button class="button is-small is-warning edit-dossier" data-id="${dossier.dossierID}">Edit</button>
+              <button class="button is-small is-danger delete-dossier" data-id="${dossier.dossierID}">Supprimer</button>
             </td>
           </tr>
         `).join('');

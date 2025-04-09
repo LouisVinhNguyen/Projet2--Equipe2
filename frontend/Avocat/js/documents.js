@@ -31,9 +31,7 @@ export const renderReceivedDocuments = () => {
             <th>ID</th>
             <th>Avocat ID</th>
             <th>Nom</th>
-            <th>Description</th>
-            <th>Fichier</th>
-            <th>Date Création</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="documentTableBody">
@@ -66,9 +64,9 @@ export const renderReceivedDocuments = () => {
             <td>${doc.documentID}</td>
             <td>${doc.userID}</td>
             <td>${doc.documentNom}</td>
-            <td>${doc.description}</td>
-            <td>${doc.fichier}</td>
-            <td>${new Date(doc.dateCreated).toLocaleDateString()}</td>
+            <td>
+              <button class="button is-small is-info view-document" onclick="renderDetails('document', '${doc.documentID}')">Voir</button>
+            </td>
           </tr>
         `).join('')
       } else {

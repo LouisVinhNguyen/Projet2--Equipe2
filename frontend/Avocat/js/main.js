@@ -5,6 +5,7 @@ import { initTimeTracker } from './timeTracker.js'
 import { renderEventSection } from './eventManager.js'
 import { renderBillingSection } from './billing.js'
 import { renderReceivedDocuments } from './documents.js'
+import { renderDetails } from './details.js';
 
 if (!sessionStorage.getItem('token')) {
   alert("Vous devez être connecté pour accéder à cette page.");
@@ -30,4 +31,4 @@ document.addEventListener('DOMContentLoaded', () => {
   })
 })
 
-export { initSidebar, renderDossierForm, renderClientForm, initTimeTracker, renderEventSection, renderBillingSection, renderReceivedDocuments }
+window.renderDetails = renderDetails;
