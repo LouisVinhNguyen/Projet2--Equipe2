@@ -1,3 +1,5 @@
+
+
 export const renderReceivedDocuments = () => {
   const container = document.getElementById('dashboard-sections')
 
