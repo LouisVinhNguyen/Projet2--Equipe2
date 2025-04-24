@@ -21,4 +21,7 @@ router.delete('/:id', verifyAvocatToken, documentController.deleteDocument);
 // POST link document to dossier
 router.post('/link-dossier', verifyAvocatToken, documentController.linkDocumentToDossier);
 
+router.get('/byDossier/:dossierID', verifyAvocatToken, documentController.loadAssociatedDocuments);
+
+
 module.exports = router;

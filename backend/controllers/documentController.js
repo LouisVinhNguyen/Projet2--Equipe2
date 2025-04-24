@@ -200,6 +200,42 @@ const linkDocumentToDossier = async (req, res) => {
     });
   }
 };
+const loadAssociatedDocuments = async () => {
+  try {
+    const response = await fetch(`/document/byDossier/${entryId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erreur HTTP ${response.status} : ${errorText}`);
+    }
+
+    const documents = await response.json();
+    const documentsTableBody = document.getElementById('documentsTableBody');
+
+    documentsTableBody.innerHTML = documents.map(doc => `
+      <tr>
+        <td>${doc.documentID}</td>
+        <td>${doc.userID}</td>
+        <td>${doc.documentNom}</td>
+        <td>
+          <button class="button is-small is-info" onclick="renderDetails('document', '${doc.documentID}')">Voir</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (error) {
+    console.error("Erreur dans loadAssociatedDocuments:", error);
+    alert('Erreur lors de l\'affichage des documents associés : ' + error.message);
+  }
+};
+
+
+
 
 module.exports = {
   getAllDocuments,
@@ -207,5 +243,6 @@ module.exports = {
   createDocument,
   updateDocument,
   deleteDocument,
-  linkDocumentToDossier
+  linkDocumentToDossier,
+  loadAssociatedDocuments
 };
