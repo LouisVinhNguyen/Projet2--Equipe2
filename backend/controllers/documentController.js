@@ -200,42 +200,30 @@ const linkDocumentToDossier = async (req, res) => {
     });
   }
 };
-const loadAssociatedDocuments = async () => {
-  try {
-    const response = await fetch(`/document/byDossier/${entryId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Erreur HTTP ${response.status} : ${errorText}`);
+// Load associated documents for a dossier
+const getDocumentByDossierID = async (req, res) => {
+  const { dossierID } = req.params;
+
+  try {
+    const documents = await db("document")
+      .join("dossier_document", "document.documentID", "=", "dossier_document.documentID")
+      .where("dossier_document.dossierID", dossierID)
+      .select("document.*");
+
+    if (documents.length === 0) {
+      return res.status(404).json({ message: "Aucun document trouvé pour ce dossier." });
     }
 
-    const documents = await response.json();
-    const documentsTableBody = document.getElementById('documentsTableBody');
-
-    documentsTableBody.innerHTML = documents.map(doc => `
-      <tr>
-        <td>${doc.documentID}</td>
-        <td>${doc.userID}</td>
-        <td>${doc.documentNom}</td>
-        <td>
-          <button class="button is-small is-info" onclick="renderDetails('document', '${doc.documentID}')">Voir</button>
-        </td>
-      </tr>
-    `).join('');
+    res.status(200).json(documents);
   } catch (error) {
-    console.error("Erreur dans loadAssociatedDocuments:", error);
-    alert('Erreur lors de l\'affichage des documents associés : ' + error.message);
+    console.error(error);
+    res.status(500).json({
+      message: "Erreur lors de la récupération des documents associés.",
+      error: error.message,
+    });
   }
-};
-
-
-
+}
 
 module.exports = {
   getAllDocuments,
@@ -244,5 +232,5 @@ module.exports = {
   updateDocument,
   deleteDocument,
   linkDocumentToDossier,
-  loadAssociatedDocuments
+  getDocumentByDossierID
 };
