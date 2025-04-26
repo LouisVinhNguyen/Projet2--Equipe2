@@ -6,6 +6,7 @@ import { renderEventSection } from './eventManager.js'
 import { renderBillingSection } from './billing.js'
 import { renderReceivedDocuments } from './documents.js'
 import { renderDetails } from './details.js';
+import { renderCommunicationForm } from './communication.js';
 
 if (!sessionStorage.getItem('token')) {
   alert("Vous devez être connecté pour accéder à cette page.");
@@ -27,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (['agenda', 'rappels', 'planification'].includes(key)) renderEventSection(key)
       if (key === 'facturation') renderBillingSection()
       if (key === 'documents') renderReceivedDocuments()
+      if (key === 'communication') renderCommunicationForm()
     }
   })
 })

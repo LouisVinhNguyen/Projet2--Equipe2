@@ -255,6 +255,18 @@ const getUsersByRole = async (req, res) => {
   }
 };
 
+// GET all users (only id, prenom, nom, role) -- Public
+const getAllUsersPublic = async (req, res) => {
+  try {
+    const users = await db("users").select("userID", "prenom", "nom", "role");
+    res.status(200).json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erreur lors de la récupération des utilisateurs publics." });
+  }
+};
+
+
 module.exports = {
   checkEmailExists,
   getAllUsers,
@@ -263,5 +275,6 @@ module.exports = {
   updateUser,
   deleteUser,
   changePassword,
-  getUsersByRole
+  getUsersByRole,
+  getAllUsersPublic,
 };

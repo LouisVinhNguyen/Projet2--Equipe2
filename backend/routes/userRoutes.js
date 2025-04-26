@@ -6,6 +6,10 @@ const { verifyAvocatToken, verifyClientToken, verifyAvocatOrClientToken, verifyA
 // GET check if email exists
 router.get('/check-email', userController.checkEmailExists);
 
+// GET all users public (without sensitive information)
+router.get('/all-public', userController.getAllUsersPublic); // <<<<< MONTE-LA ICI
+
+
 // GET all users
 router.get('/', verifyAdminToken, userController.getAllUsers);
 
@@ -26,5 +30,7 @@ router.put('/password/:id', verifyAvocatOrClientToken, userController.changePass
 
 // GET users by role
 router.get('/role/:role', verifyAdminToken, userController.getUsersByRole);
+
+
 
 module.exports = router;

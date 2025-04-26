@@ -11,6 +11,7 @@ DROP TABLE IF EXISTS dossier;
 DROP TABLE IF EXISTS client;
 DROP TABLE IF EXISTS avocat;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS message;
 
 -- Create unified users table
 CREATE TABLE users (
@@ -123,4 +124,15 @@ CREATE TABLE dossier_document (
     PRIMARY KEY (dossierID, documentID),
     FOREIGN KEY (dossierID) REFERENCES dossier(dossierID),
     FOREIGN KEY (documentID) REFERENCES document(documentID)
+);
+
+-- Create the message table
+CREATE TABLE message (
+    messageID INTEGER PRIMARY KEY AUTOINCREMENT,
+    senderID INTEGER NOT NULL,
+    receiverID INTEGER NOT NULL,
+    contenu TEXT NOT NULL,
+    dateSent TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (senderID) REFERENCES users(userID),
+    FOREIGN KEY (receiverID) REFERENCES users(userID)
 );

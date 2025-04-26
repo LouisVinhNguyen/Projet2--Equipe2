@@ -13,6 +13,9 @@ const tacheRoutes = require('./routes/tacheRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
 const factureRoutes = require('./routes/factureRoutes');
 const userRoutes = require('./routes/userRoutes');
+const messageRoutes = require('./routes/messageRoutes');
+ 
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -37,6 +40,7 @@ app.use('/tache', tacheRoutes);
 app.use('/session', sessionRoutes);
 app.use('/facture', factureRoutes);
 app.use('/user', userRoutes);
+app.use('/message', messageRoutes);
 
 // Start server
 app.listen(PORT, () => {

@@ -4,6 +4,7 @@ import { renderRappels } from './rappels.js'
 import { renderDossiers } from './dossiers.js'
 import { renderPaiements } from './paiements.js'
 import { renderDocumentUploader } from './documents.js'
+import { renderCommunicationForm } from './communication.js';
 
 if (!sessionStorage.getItem('token')) {
   alert("Vous devez être connecté pour accéder à cette page.");
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (key === 'dossiers') renderDossiers()
       if (key === 'paiements') renderPaiements()
       if (key === 'documents') renderDocumentUploader()
+      if (key === 'communication') renderCommunicationForm()
     }
   })
 })

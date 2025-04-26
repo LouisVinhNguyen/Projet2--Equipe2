@@ -6,8 +6,8 @@ const contentMap = {
   dossiers: { title: 'Gestion des Dossiers', description: '' },
   clients: { title: 'Gestion des Clients', description: '' },
   facturation: { title: 'Facturation & Paiements', description: '' }, // ✅ MANQUAIT
-  documents: { title: 'Documents Reçus', description: '' }
-
+  documents: { title: 'Documents Reçus', description: '' },
+  communication: { title: 'Communication', description: '' } 
 }
 
 export const initSidebar = ({ onSectionChange }) => {
