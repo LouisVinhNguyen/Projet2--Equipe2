@@ -1,8 +1,9 @@
-import { renderDossierForm } from './dossierForm.js';
-import { renderReceivedDocuments } from './documents.js';
+import { renderDossierForm } from "./dossierForm.js";
+import { renderReceivedDocuments } from "./documents.js";
+import { initTimeTracker } from "./timeTracker.js";
 
 export const renderDetails = async (tableType, entryId) => {
-  const container = document.getElementById('dashboard-sections');
+  const container = document.getElementById("dashboard-sections");
 
   container.innerHTML = `
     <div class="box">
@@ -12,6 +13,20 @@ export const renderDetails = async (tableType, entryId) => {
       </table>
       <button class="button is-link" id="backButton">Retour</button>
       <button class="button is-info" id="addDocumentButton">Ajouter un Document</button>
+      <span style="display: inline-block; margin-left: 15px; font-size: 1rem; vertical-align: middle;">
+      Suivi du Temps
+      </span>
+      <span id="timeDisplay" style="display: inline-block; margin-left: 10px; font-weight: bold; font-size: 1rem; vertical-align: middle;">
+      00:00:00
+      </span>
+      <button class="button is-success" id="startTimer" style="min-width: 150px; margin-left: 15px; vertical-align: middle;">
+      <i class="fas fa-play"></i>&nbsp;Démarrer
+      </button>
+      <button class="button is-danger" id="stopTimer" style="min-width: 150px; margin-left: 5px; vertical-align: middle;">
+      <i class="fas fa-stop"></i>&nbsp;Arrêter
+      </button>
+
+      </div>
     </div>
     <div>
       <h3 class="title is-5">Documents Associés</h3>
@@ -28,10 +43,10 @@ export const renderDetails = async (tableType, entryId) => {
       </table>
     </div>
   `;
-
-  const token = sessionStorage.getItem('token');
+  initTimeTracker();
+  const token = sessionStorage.getItem("token");
   if (!token) {
-    alert('Vous devez être connecté.');
+    alert("Vous devez être connecté.");
     window.location.href = "../index.html";
     return;
   }
@@ -39,30 +54,34 @@ export const renderDetails = async (tableType, entryId) => {
   // Charger les détails
   try {
     const response = await fetch(`/${tableType}/${entryId}`, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
 
     if (response.ok) {
       const data = await response.json();
-      const tableBody = document.getElementById('detailsTableBody');
-      tableBody.innerHTML = Object.entries(data).map(([key, value]) => `
+      const tableBody = document.getElementById("detailsTableBody");
+      tableBody.innerHTML = Object.entries(data)
+        .map(
+          ([key, value]) => `
         <tr><th>${key}</th><td>${value}</td></tr>
-      `).join('');
+      `
+        )
+        .join("");
     } else {
-      alert('Erreur lors de la récupération des détails.');
+      alert("Erreur lors de la récupération des détails.");
     }
   } catch (error) {
-    console.error('Erreur réseau:', error);
-    alert('Une erreur réseau s\'est produite.');
+    console.error("Erreur réseau:", error);
+    alert("Une erreur réseau s'est produite.");
   }
 
   // Retour
-  document.getElementById('backButton').addEventListener('click', () => {
-    if (tableType === 'document') {
+  document.getElementById("backButton").addEventListener("click", () => {
+    if (tableType === "document") {
       renderReceivedDocuments();
     } else {
       renderDossierForm();
@@ -70,9 +89,11 @@ export const renderDetails = async (tableType, entryId) => {
   });
 
   // Ajouter un document
-  document.getElementById('addDocumentButton').addEventListener('click', async () => {
-    const form = document.createElement('form');
-    form.innerHTML = `
+  document
+    .getElementById("addDocumentButton")
+    .addEventListener("click", async () => {
+      const form = document.createElement("form");
+      form.innerHTML = `
       <div class="field">
         <label class="label">Sélectionner un Document</label>
         <div class="control">
@@ -85,92 +106,94 @@ export const renderDetails = async (tableType, entryId) => {
       </div>
       <button class="button is-link" type="submit">Associer</button>
     `;
-    container.appendChild(form);
+      container.appendChild(form);
 
-    const documentSelect = form.querySelector('#documentSelect');
+      const documentSelect = form.querySelector("#documentSelect");
 
-    // Récupérer la liste des documents disponibles
-    try {
-      const response = await fetch('/document', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const documents = await response.json();
-
-      if (documents.length === 0) {
-        const emptyOption = document.createElement('option');
-        emptyOption.textContent = 'Aucun document disponible';
-        emptyOption.disabled = true;
-        documentSelect.appendChild(emptyOption);
-      } else {
-        documents.forEach((doc) => {
-          const option = document.createElement('option');
-          option.value = doc.documentID;
-          option.textContent = doc.documentNom || 'Sans nom';
-          documentSelect.appendChild(option);
-        });
-      }
-    } catch (error) {
-      alert('Erreur lors de la récupération des documents.');
-    }
-
-    // Envoi du formulaire pour associer le document
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-      const selectedDocumentId = documentSelect.value;
-
-      if (!selectedDocumentId) {
-        alert('Veuillez sélectionner un document.');
-        return;
-      }
-
+      // Récupérer la liste des documents disponibles
       try {
-        const response = await fetch('/document/link-dossier', {
-          method: 'POST',
+        const response = await fetch("/document", {
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            documentID: selectedDocumentId.toString(),
-            dossierID: entryId.toString()
-          })
         });
 
-        if (response.ok) {
-          alert('Document associé avec succès!');
-          form.remove();
-          loadAssociatedDocuments(); // Refresh la liste
+        const documents = await response.json();
+
+        if (documents.length === 0) {
+          const emptyOption = document.createElement("option");
+          emptyOption.textContent = "Aucun document disponible";
+          emptyOption.disabled = true;
+          documentSelect.appendChild(emptyOption);
         } else {
-          const errorText = await response.text();
-          throw new Error(errorText);
+          documents.forEach((doc) => {
+            const option = document.createElement("option");
+            option.value = doc.documentID;
+            option.textContent = doc.documentNom || "Sans nom";
+            documentSelect.appendChild(option);
+          });
         }
       } catch (error) {
-        alert('Erreur: ' + error.message);
+        alert("Erreur lors de la récupération des documents.");
       }
-    };
-  });
+
+      // Envoi du formulaire pour associer le document
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const selectedDocumentId = documentSelect.value;
+
+        if (!selectedDocumentId) {
+          alert("Veuillez sélectionner un document.");
+          return;
+        }
+
+        try {
+          const response = await fetch("/document/link-dossier", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              documentID: selectedDocumentId.toString(),
+              dossierID: entryId.toString(),
+            }),
+          });
+
+          if (response.ok) {
+            alert("Document associé avec succès!");
+            form.remove();
+            loadAssociatedDocuments(); // Refresh la liste
+          } else {
+            const errorText = await response.text();
+            throw new Error(errorText);
+          }
+        } catch (error) {
+          alert("Erreur: " + error.message);
+        }
+      };
+    });
 
   // Charger les documents liés au dossier
   const loadAssociatedDocuments = async () => {
     try {
       const response = await fetch(`/document/byDossier/${entryId}`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) throw new Error();
 
       const documents = await response.json();
-      const documentsTableBody = document.getElementById('documentsTableBody');
-      documentsTableBody.innerHTML = documents.map(doc => `
+      const documentsTableBody = document.getElementById("documentsTableBody");
+      documentsTableBody.innerHTML = documents
+        .map(
+          (doc) => `
         <tr>
           <td>${doc.documentID}</td>
           <td>${doc.userID}</td>
@@ -179,15 +202,17 @@ export const renderDetails = async (tableType, entryId) => {
             <button class="button is-small is-info" onclick="renderDetails('document', '${doc.documentID}')">Voir</button>
           </td>
         </tr>
-      `).join('');
+      `
+        )
+        .join("");
     } catch (error) {
       console.error(error);
-      alert('Erreur lors de l\'affichage des documents associés.');
+      alert("Erreur lors de l'affichage des documents associés.");
     }
   };
 
   // Si c’est un dossier, charger les documents associés
-  if (tableType === 'dossier') {
+  if (tableType === "dossier") {
     loadAssociatedDocuments();
   }
 };
