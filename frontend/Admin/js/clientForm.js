@@ -32,6 +32,7 @@ export const renderClientForm = () => {
             <th>Nom</th>
             <th>Email</th>
             <th>Téléphone</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="clientTableBody">
@@ -67,6 +68,7 @@ export const renderClientForm = () => {
             <td>${client.nom}</td>
             <td>${client.email}</td>
             <td>${client.telephone}</td>
+            <td><button class="button is-small is-info" onclick="window.renderDetailsClient && window.renderDetailsClient('${client.userID}')">Voir</button></td>
           </tr>
         `).join('')
       } else {

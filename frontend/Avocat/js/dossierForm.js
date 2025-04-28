@@ -21,10 +21,6 @@ export const renderDossierForm = async () => {
           </select>
         </div>
         <div class="field">
-          <label class="label">Statut</label>
-          <input class="input" name="status" value="En cours" required />
-        </div>
-        <div class="field">
           <label class="label">Description</label>
           <textarea class="textarea" name="description" required></textarea>
         </div>
@@ -98,14 +94,12 @@ export const renderDossierForm = async () => {
         tableBody.innerHTML = dossiers.map(dossier => `
           <tr>
             <td>${dossier.dossierID}</td>
-            <td class="editable" data-id="${dossier.dossierID}" data-field="dossierNom">${dossier.dossierNom}</td>
-            <td class="editable" data-id="${dossier.dossierID}" data-field="dossierType">${dossier.dossierType}</td>
-            <td class="editable" data-id="${dossier.dossierID}" data-field="status">${dossier.status}</td>
-            <td class="editable" data-id="${dossier.dossierID}" data-field="description">${dossier.description}</td>
+            <td>${dossier.dossierNom}</td>
+            <td>${dossier.dossierType}</td>
+            <td>${dossier.status}</td>
+            <td>${dossier.description}</td>
             <td>
               <button class="button is-small is-info view-dossier" onclick="window.renderDetailsDossier && window.renderDetailsDossier('${dossier.dossierID}')">Voir</button>
-              <button class="button is-small is-warning edit-dossier" data-id="${dossier.dossierID}">Edit</button>
-              <button class="button is-small is-danger delete-dossier" data-id="${dossier.dossierID}">Supprimer</button>
             </td>
           </tr>
         `).join('');
@@ -199,11 +193,11 @@ export const renderDossierForm = async () => {
 
     const dossierNom = document.querySelector('input[name="dossierNom"]').value.trim();
     const dossierType = document.querySelector('input[name="dossierType"]').value.trim();
-    const status = document.querySelector('input[name="status"]').value.trim();
     const description = document.querySelector('textarea[name="description"]').value.trim();
     const clientID = document.getElementById('clientSelect').value;
+    const status = "En cours";
 
-    if (!dossierNom || !dossierType || !description || !status) {
+    if (!dossierNom || !dossierType || !description) {
       alert("Veuillez remplir tous les champs.");
       return;
     }

@@ -106,8 +106,6 @@ export const renderDossierForm = async () => {
             <td>${dossier.dateClosed ? new Date(dossier.dateClosed).toLocaleDateString() : ''}</td>
             <td>
               <button class="button is-small is-info view-dossier" onclick="window.renderDetailsDossier && window.renderDetailsDossier('${dossier.dossierID}')">Voir</button>
-              <button class="button is-small is-warning edit-dossier" data-id="${dossier.dossierID}">Edit</button>
-              <button class="button is-small is-danger delete-dossier" data-id="${dossier.dossierID}">Supprimer</button>
             </td>
           </tr>
         `).join('');
@@ -178,38 +176,33 @@ export const renderDossierForm = async () => {
   // Handle form submission for creating a new dossier
   document.getElementById('dossierForm').onsubmit = async (e) => {
     e.preventDefault();
-    
     // Get token
     const token = sessionStorage.getItem('token');
     if (!token) {
       alert('Vous devez être connecté pour créer un dossier.');
       return;
     }
-    
     // Get values from form
     const dossierNom = document.querySelector('input[name="dossierNom"]').value.trim();
     const dossierType = document.querySelector('input[name="dossierType"]').value.trim();
     const clientID = document.getElementById('clientSelect').value; // This is clientUserID
     const description = document.querySelector('textarea[name="description"]').value.trim();
-    
     // Validate required fields
     if (!dossierNom || !dossierType || !description) {
       alert("Veuillez remplir tous les champs obligatoires.");
       return;
     }
-    
     // Get userID from JWT token payload
     const tokenPayload = JSON.parse(atob(token.split('.')[1]));
     const userID = tokenPayload.userID;
-    
     // Create the dossier data object with correct property names
     const dossierData = {
       avocatUserID: userID,
       dossierNom: dossierNom,
       dossierType: dossierType,
+      status: "En cours",
       description: description
     };
-    
     // Add clientUserID if selected
     if (clientID) {
       dossierData.clientUserID = clientID;

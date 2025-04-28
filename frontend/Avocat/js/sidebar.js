@@ -1,13 +1,10 @@
 const contentMap = {
   agenda: { title: 'Agenda', description: 'Planifiez vos rendez-vous.' },
   rappels: { title: 'Rappels', description: 'Tâches et rappels importants.' },
-  temps: { title: 'Suivi du Temps', description: '' }, // handled in module
-  depenses: { title: 'Dépenses', description: 'Suivi des dépenses par affaire.' },
   dossiers: { title: 'Gestion des Dossiers', description: '' },
   clients: { title: 'Gestion des Clients', description: '' },
-  facturation: { title: 'Facturation & Paiements', description: '' }, // ✅ MANQUAIT
+  facturation: { title: 'Facturation & Paiements', description: '' },
   documents: { title: 'Documents Reçus', description: '' }
-
 }
 
 export const initSidebar = ({ onSectionChange }) => {
@@ -15,6 +12,7 @@ export const initSidebar = ({ onSectionChange }) => {
   const container = document.getElementById('dashboard-sections')
 
   const renderSection = (key) => {
+    if (!contentMap[key]) return; // Ignore unknown keys
     const { title, description } = contentMap[key]
     container.innerHTML = description ? `
       <div class="box">

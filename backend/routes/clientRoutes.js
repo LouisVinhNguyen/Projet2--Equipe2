@@ -15,16 +15,16 @@ const {
 router.get('/', verifyAvocatOrAdminToken, clientController.getAllClients);
 
 // GET clients by avocat ID
-router.get('/avocat/:avocatUserID', verifyAvocatToken, clientController.getClientsByAvocatId);
+router.get('/avocat/:avocatUserID', verifyAvocatOrAdminToken, clientController.getClientsByAvocatId);
 
 // GET client by ID
-router.get('/:id', verifyAvocatOrClientToken, clientController.getClientById);
+router.get('/:id', verifyAnyUserToken, clientController.getClientById);
 
 // PUT update a client
-router.put('/:id', verifyAvocatOrClientToken, clientController.updateClient);
+router.put('/:id', verifyAnyUserToken, clientController.updateClient);
 
 // DELETE a client
-router.delete('/:id', verifyAvocatToken, clientController.deleteClient);
+router.delete('/:id', verifyAnyUserToken, clientController.deleteClient);
 
 // PUT change client password
 router.put('/password/:id', verifyClientToken, clientController.changePassword);

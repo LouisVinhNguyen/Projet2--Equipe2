@@ -1,47 +1,7 @@
 import { renderDossierForm } from "./dossierForm.js";
-import { renderReceivedDocuments } from "./documents.js";
-import { initTimeTracker } from "./timeTracker.js";
 
 export const renderDetailsDossier = async (dossierID) => {
   const container = document.getElementById("dashboard-sections");
-
-  container.innerHTML = `
-    <div class="box">
-      <h2 class="title is-4">Détails de dossier</h2>
-      <table class="table is-fullwidth is-striped">
-        <tbody id="detailsTableBody"></tbody>
-      </table>
-      <button class="button is-link" id="backButton">Retour</button>
-      <button class="button is-info" id="addDocumentButton">Ajouter un Document</button>
-      <span style="display: inline-block; margin-left: 15px; font-size: 1rem; vertical-align: middle;">
-      Suivi du Temps
-      </span>
-      <span id="timeDisplay" style="display: inline-block; margin-left: 10px; font-weight: bold; font-size: 1rem; vertical-align: middle;">
-      00:00:00
-      </span>
-      <button class="button is-success" id="startTimer" style="min-width: 150px; margin-left: 15px; vertical-align: middle;">
-      <i class="fas fa-play"></i>&nbsp;Démarrer
-      </button>
-      <button class="button is-danger" id="stopTimer" style="min-width: 150px; margin-left: 5px; vertical-align: middle;">
-      <i class="fas fa-stop"></i>&nbsp;Arrêter
-      </button>
-    </div>
-    <div>
-      <h3 class="title is-5">Documents Associés</h3>
-      <table class="table is-fullwidth is-striped">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Avocat ID</th>
-            <th>Nom</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="documentsTableBody"></tbody>
-      </table>
-    </div>
-  `;
-  initTimeTracker();
   const token = sessionStorage.getItem("token");
   if (!token) {
     alert("Vous devez être connecté.");
@@ -49,7 +9,25 @@ export const renderDetailsDossier = async (dossierID) => {
     return;
   }
 
+  container.innerHTML = `
+    <div class="box">
+      <h2 class="title is-4">Détails du dossier</h2>
+      <table class="table is-fullwidth is-striped">
+        <tbody id="detailsTableBody"></tbody>
+      </table>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
+        <button class="button is-link" id="backButton">Retour</button>
+        <div id="actionButtons">
+          <button class="button is-warning" id="editButton">Modifier</button>
+          <button class="button is-danger" id="deleteButton">Supprimer</button>
+          <button class="button is-primary" id="closeDossierButton">Clôturer le dossier</button>
+        </div>
+      </div>
+    </div>
+  `;
+
   // Charger les détails du dossier
+  let dossierData = null;
   try {
     const response = await fetch(`/dossier/${dossierID}`, {
       method: "GET",
@@ -58,11 +36,10 @@ export const renderDetailsDossier = async (dossierID) => {
         Authorization: `Bearer ${token}`,
       },
     });
-
     if (response.ok) {
-      const data = await response.json();
+      dossierData = await response.json();
       const tableBody = document.getElementById("detailsTableBody");
-      tableBody.innerHTML = Object.entries(data)
+      tableBody.innerHTML = Object.entries(dossierData)
         .map(
           ([key, value]) => `
         <tr><th>${key}</th><td>${value}</td></tr>
@@ -70,11 +47,10 @@ export const renderDetailsDossier = async (dossierID) => {
         )
         .join("");
     } else {
-      alert("Erreur lors de la récupération des détails.");
+      alert("Erreur lors de la récupération des détails du dossier.");
     }
   } catch (error) {
-    console.error("Erreur réseau:", error);
-    alert("Une erreur réseau s'est produite.");
+    alert("Erreur réseau.");
   }
 
   // Retour
@@ -82,128 +58,100 @@ export const renderDetailsDossier = async (dossierID) => {
     renderDossierForm();
   });
 
-  // Ajouter un document
-  document
-    .getElementById("addDocumentButton")
-    .addEventListener("click", async () => {
-      const form = document.createElement("form");
-      form.innerHTML = `
-      <div class="field">
-        <label class="label">Sélectionner un Document</label>
-        <div class="control">
-          <div class="select">
-            <select id="documentSelect" required>
-              <option value="" disabled selected>Choisir un document</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <button class="button is-link" type="submit">Associer</button>
-    `;
-      container.appendChild(form);
+  // Supprimer le dossier
+  document.getElementById("deleteButton").addEventListener("click", async () => {
+    if (!confirm("Voulez-vous vraiment supprimer ce dossier ?")) return;
+    try {
+      const response = await fetch(`/dossier/${dossierID}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        alert("Dossier supprimé avec succès.");
+        renderDossierForm();
+      } else {
+        alert("Erreur lors de la suppression du dossier.");
+      }
+    } catch (error) {
+      alert("Erreur réseau lors de la suppression.");
+    }
+  });
 
-      const documentSelect = form.querySelector("#documentSelect");
-
-      // Récupérer la liste des documents disponibles
+  // Modifier le dossier
+  document.getElementById("editButton").addEventListener("click", () => {
+    const tableBody = document.getElementById("detailsTableBody");
+    tableBody.innerHTML = Object.entries(dossierData)
+      .map(([key, value]) => {
+        if (["dossierID", "avocatUserID", "dateCreated", "dateClosed"].includes(key)) {
+          return `<tr><th>${key}</th><td>${value}</td></tr>`;
+        } else if (key === "status") {
+          return `<tr><th>${key}</th><td><select class='input' name='status'>
+            <option value="En cours"${value === "En cours" ? " selected" : ""}>En cours</option>
+            <option value="En attente"${value === "En attente" ? " selected" : ""}>En attente</option>
+            <option value="Annulé"${value === "Annulé" ? " selected" : ""}>Annulé</option>
+            <option value="En attente d'approbation"${value === "En attente d'approbation" ? " selected" : ""}>En attente d'approbation</option>
+          </select></td></tr>`;
+        } else {
+          return `<tr><th>${key}</th><td><input class='input' name='${key}' value='${value ?? ''}' /></td></tr>`;
+        }
+      })
+      .join("");
+    // Remplace le bouton Modifier par Enregistrer au même endroit
+    const actionButtons = document.getElementById("actionButtons");
+    const editBtn = document.getElementById("editButton");
+    const saveBtn = document.createElement("button");
+    saveBtn.className = "button is-success";
+    saveBtn.id = "saveButton";
+    saveBtn.textContent = "Enregistrer";
+    actionButtons.replaceChild(saveBtn, editBtn);
+    saveBtn.addEventListener("click", async () => {
+      const newData = { ...dossierData };
+      tableBody.querySelectorAll("input").forEach((input) => {
+        newData[input.name] = input.value;
+      });
       try {
-        const response = await fetch("/document", {
-          method: "GET",
+        const response = await fetch(`/dossier/${dossierID}`, {
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          body: JSON.stringify(newData),
         });
-
-        const documents = await response.json();
-
-        if (documents.length === 0) {
-          const emptyOption = document.createElement("option");
-          emptyOption.textContent = "Aucun document disponible";
-          emptyOption.disabled = true;
-          documentSelect.appendChild(emptyOption);
+        if (response.ok) {
+          alert("Dossier modifié avec succès.");
+          renderDetailsDossier(dossierID);
         } else {
-          documents.forEach((doc) => {
-            const option = document.createElement("option");
-            option.value = doc.documentID;
-            option.textContent = doc.documentNom || "Sans nom";
-            documentSelect.appendChild(option);
-          });
+          alert("Erreur lors de la modification du dossier.");
         }
       } catch (error) {
-        alert("Erreur lors de la récupération des documents.");
+        alert("Erreur réseau lors de la modification.");
       }
-
-      // Envoi du formulaire pour associer le document
-      form.onsubmit = async (e) => {
-        e.preventDefault();
-        const selectedDocumentId = documentSelect.value;
-
-        if (!selectedDocumentId) {
-          alert("Veuillez sélectionner un document.");
-          return;
-        }
-
-        try {
-          const response = await fetch("/document/link-dossier", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              documentID: selectedDocumentId.toString(),
-              dossierID: dossierID.toString(),
-            }),
-          });
-
-          if (response.ok) {
-            alert("Document associé avec succès!");
-            form.remove();
-            loadAssociatedDocuments(); // Refresh la liste
-          } else {
-            const errorText = await response.text();
-            throw new Error(errorText);
-          }
-        } catch (error) {
-          alert("Erreur: " + error.message);
-        }
-      };
     });
+  });
 
-  // Charger les documents liés au dossier
-  const loadAssociatedDocuments = async () => {
+  // Clôturer le dossier
+  document.getElementById("closeDossierButton").addEventListener("click", async () => {
+    if (!confirm("Voulez-vous vraiment clôturer ce dossier ?")) return;
     try {
-      const response = await fetch(`/document/byDossier/${dossierID}`, {
-        method: "GET",
+      const response = await fetch(`/dossier/close/${dossierID}`, {
+        method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
       });
-
-      if (!response.ok) throw new Error();
-
-      const documents = await response.json();
-      const documentsTableBody = document.getElementById("documentsTableBody");
-      documentsTableBody.innerHTML = documents
-        .map(
-          (doc) => `
-        <tr>
-          <td>${doc.documentID}</td>
-          <td>${doc.userID}</td>
-          <td>${doc.documentNom}</td>
-          <td>
-            <button class="button is-small is-info" onclick="window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
-          </td>
-        </tr>
-      `
-        )
-        .join("");
+      const data = await response.json();
+      if (response.ok) {
+        alert(`Dossier fermé avec succès.\nTotal d'heures: ${data.totalHours ?? '-'}\nFacture générée: ${data.factureID ?? '-'}`);
+        renderDetailsDossier(dossierID);
+      } else {
+        alert(data.message || "Erreur lors de la fermeture du dossier.");
+      }
     } catch (error) {
-      console.error(error);
-      alert("Erreur lors de l'affichage des documents associés.");
+      alert("Erreur réseau lors de la fermeture du dossier.");
     }
-  };
-
-  loadAssociatedDocuments();
+  });
 };

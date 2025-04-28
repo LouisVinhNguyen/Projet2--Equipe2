@@ -128,7 +128,7 @@ const deleteClient = async (req, res) => {
 
   try {
     // Use the deleteClient function from procedures.js
-    const result = await procedures.deleteClient(id);
+    const result = await procedures.deleteUser(id);
     
     res.status(200).json({ message: result.message });
   } catch (error) {

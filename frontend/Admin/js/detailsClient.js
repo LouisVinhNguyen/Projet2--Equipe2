@@ -1,7 +1,7 @@
-// Vue détaillée d'un document pour la section Admin
-import { renderReceivedDocuments } from './documents.js';
+// Vue détaillée d'un client pour la section Admin
+import { renderClientForm } from './clientForm.js';
 
-export async function renderDetailsDocument(documentID) {
+export async function renderDetailsClient(clientID) {
   const container = document.getElementById('dashboard-sections');
   const token = sessionStorage.getItem('token');
   if (!token) {
@@ -10,9 +10,10 @@ export async function renderDetailsDocument(documentID) {
     return;
   }
 
+  // Affichage initial
   container.innerHTML = `
     <div class="box">
-      <h2 class="title is-4">Détails du document</h2>
+      <h2 class="title is-4">Détails du client</h2>
       <table class="table is-fullwidth is-striped">
         <tbody id="detailsTableBody"></tbody>
       </table>
@@ -26,10 +27,10 @@ export async function renderDetailsDocument(documentID) {
     </div>
   `;
 
-  // Charger les détails du document
-  let documentData = null;
+  // Charger les détails du client
+  let clientData = null;
   try {
-    const response = await fetch(`/document/${documentID}`, {
+    const response = await fetch(`/client/${clientID}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -37,17 +38,13 @@ export async function renderDetailsDocument(documentID) {
       },
     });
     if (response.ok) {
-      documentData = await response.json();
+      clientData = await response.json();
       const tableBody = document.getElementById('detailsTableBody');
-      tableBody.innerHTML = Object.entries(documentData)
-        .map(
-          ([key, value]) => `
-        <tr><th>${key}</th><td>${value}</td></tr>
-      `
-        )
+      tableBody.innerHTML = Object.entries(clientData)
+        .map(([key, value]) => `<tr><th>${key}</th><td>${value}</td></tr>`)
         .join('');
     } else {
-      alert('Erreur lors de la récupération des détails du document.');
+      alert('Erreur lors de la récupération des détails du client.');
     }
   } catch (error) {
     alert('Erreur réseau.');
@@ -55,43 +52,43 @@ export async function renderDetailsDocument(documentID) {
 
   // Retour
   document.getElementById('backButton').addEventListener('click', () => {
-    renderReceivedDocuments();
+    renderClientForm();
   });
 
-  // Supprimer le document
+  // Supprimer le client
   document.getElementById('deleteButton').addEventListener('click', async () => {
-    if (!confirm('Voulez-vous vraiment supprimer ce document ?')) return;
+    if (!confirm('Voulez-vous vraiment supprimer ce client ?')) return;
     try {
-      const response = await fetch(`/document/${documentID}`, {
+      const response = await fetch(`/client/${clientID}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (response.ok) {
-        alert('Document supprimé avec succès.');
-        renderReceivedDocuments();
+        alert('Client supprimé avec succès.');
+        renderClientForm();
       } else {
-        alert('Erreur lors de la suppression du document.');
+        alert('Erreur lors de la suppression du client.');
       }
     } catch (error) {
       alert('Erreur réseau lors de la suppression.');
     }
   });
 
-  // Modifier le document
+  // Modifier le client
   document.getElementById('editButton').addEventListener('click', () => {
     const tableBody = document.getElementById('detailsTableBody');
-    tableBody.innerHTML = Object.entries(documentData)
+    tableBody.innerHTML = Object.entries(clientData)
       .map(([key, value]) => {
-        if (["documentID", "userID", "dateCreated"].includes(key)) {
+        if (["userID", "role", "dateCreated"].includes(key)) {
           return `<tr><th>${key}</th><td>${value}</td></tr>`;
         } else {
           return `<tr><th>${key}</th><td><input class='input' name='${key}' value='${value ?? ''}' /></td></tr>`;
         }
       })
       .join('');
-    // Remplace le bouton Modifier par Enregistrer au même endroit
+    // Remplace le bouton Modifier par Enregistrer
     const actionButtons = document.getElementById('actionButtons');
     const editBtn = document.getElementById('editButton');
     const saveBtn = document.createElement('button');
@@ -100,33 +97,30 @@ export async function renderDetailsDocument(documentID) {
     saveBtn.textContent = 'Enregistrer';
     actionButtons.replaceChild(saveBtn, editBtn);
     saveBtn.addEventListener('click', async () => {
-      const newData = { ...documentData };
+      const newData = { ...clientData };
       tableBody.querySelectorAll('input').forEach(input => {
         newData[input.name] = input.value;
       });
-      // S'assurer que userID est bien inclus (lecture seule)
-      newData.userID = documentData.userID;
-      console.log('DEBUG PUT document newData:', newData); // Ajout log debug
+      newData.userID = clientData.userID;
+      newData.role = clientData.role;
       try {
-        const response = await fetch(`/document/${documentID}`, {
+        const response = await fetch(`/client/${clientID}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(newData)
+          body: JSON.stringify(newData),
         });
         if (response.ok) {
-          alert('Document modifié avec succès.');
-          renderDetailsDocument(documentID);
+          alert('Client modifié avec succès.');
+          renderDetailsClient(clientID);
         } else {
-          const errText = await response.text();
-          alert('Erreur lors de la modification du document.\n' + errText);
+          alert('Erreur lors de la modification du client.');
         }
       } catch (error) {
         alert('Erreur réseau lors de la modification.');
-        console.error('Erreur réseau lors du PUT document:', error);
       }
     });
   });
-};
+}

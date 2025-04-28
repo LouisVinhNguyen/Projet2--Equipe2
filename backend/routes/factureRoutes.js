@@ -12,18 +12,18 @@ const {
 } = require('../middleware/authMiddleware');
 
 // GET all invoices
-router.get('/', verifyAvocatOrClientToken, factureController.getAllFactures);
+router.get('/', verifyAvocatOrAdminToken, factureController.getAllFactures);
 
 // GET invoice by ID
-router.get('/:id', verifyAvocatOrClientToken, factureController.getFactureById);
+router.get('/:id', verifyAvocatOrAdminToken, factureController.getFactureById);
 
 // POST create a new invoice
-router.post('/', verifyAvocatToken, factureController.createFacture);
+router.post('/', verifyAvocatOrAdminToken, factureController.createFacture);
 
 // PUT update an invoice status
-router.put('/status/:id', verifyAvocatToken, factureController.updateFactureStatus);
+router.put('/status/:id', verifyAvocatOrAdminToken, factureController.updateFactureStatus);
 
 // DELETE an invoice
-router.delete('/:id', verifyAvocatToken, factureController.deleteFacture);
+router.delete('/:id', verifyAvocatOrAdminToken, factureController.deleteFacture);
 
 module.exports = router;

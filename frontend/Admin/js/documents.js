@@ -71,7 +71,7 @@ export const renderReceivedDocuments = () => {
             <td>${doc.userID}</td>
             <td>${doc.documentNom}</td>
             <td>
-              <button class="button is-small is-info view-document" onclick="window.renderDocumentDetails && window.renderDocumentDetails('${doc.documentID}')">Voir</button>
+              <button class="button is-small is-info view-document" onclick="window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
             </td>
           </tr>
         `).join('')
