@@ -2,12 +2,12 @@ import { renderDossierForm } from "./dossierForm.js";
 import { renderReceivedDocuments } from "./documents.js";
 import { initTimeTracker } from "./timeTracker.js";
 
-export const renderDetails = async (tableType, entryId) => {
+export const renderDetailsDossier = async (dossierID) => {
   const container = document.getElementById("dashboard-sections");
 
   container.innerHTML = `
     <div class="box">
-      <h2 class="title is-4">Détails de ${tableType}</h2>
+      <h2 class="title is-4">Détails de dossier</h2>
       <table class="table is-fullwidth is-striped">
         <tbody id="detailsTableBody"></tbody>
       </table>
@@ -25,8 +25,6 @@ export const renderDetails = async (tableType, entryId) => {
       <button class="button is-danger" id="stopTimer" style="min-width: 150px; margin-left: 5px; vertical-align: middle;">
       <i class="fas fa-stop"></i>&nbsp;Arrêter
       </button>
-
-      </div>
     </div>
     <div>
       <h3 class="title is-5">Documents Associés</h3>
@@ -51,9 +49,9 @@ export const renderDetails = async (tableType, entryId) => {
     return;
   }
 
-  // Charger les détails
+  // Charger les détails du dossier
   try {
-    const response = await fetch(`/${tableType}/${entryId}`, {
+    const response = await fetch(`/dossier/${dossierID}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -81,11 +79,7 @@ export const renderDetails = async (tableType, entryId) => {
 
   // Retour
   document.getElementById("backButton").addEventListener("click", () => {
-    if (tableType === "document") {
-      renderReceivedDocuments();
-    } else {
-      renderDossierForm();
-    }
+    renderDossierForm();
   });
 
   // Ajouter un document
@@ -158,7 +152,7 @@ export const renderDetails = async (tableType, entryId) => {
             },
             body: JSON.stringify({
               documentID: selectedDocumentId.toString(),
-              dossierID: entryId.toString(),
+              dossierID: dossierID.toString(),
             }),
           });
 
@@ -179,7 +173,7 @@ export const renderDetails = async (tableType, entryId) => {
   // Charger les documents liés au dossier
   const loadAssociatedDocuments = async () => {
     try {
-      const response = await fetch(`/document/byDossier/${entryId}`, {
+      const response = await fetch(`/document/byDossier/${dossierID}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -199,7 +193,7 @@ export const renderDetails = async (tableType, entryId) => {
           <td>${doc.userID}</td>
           <td>${doc.documentNom}</td>
           <td>
-            <button class="button is-small is-info" onclick="renderDetails('document', '${doc.documentID}')">Voir</button>
+            <button class="button is-small is-info" onclick="window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
           </td>
         </tr>
       `
@@ -211,8 +205,5 @@ export const renderDetails = async (tableType, entryId) => {
     }
   };
 
-  // Si c’est un dossier, charger les documents associés
-  if (tableType === "dossier") {
-    loadAssociatedDocuments();
-  }
+  loadAssociatedDocuments();
 };

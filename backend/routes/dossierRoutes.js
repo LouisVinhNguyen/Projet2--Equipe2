@@ -15,7 +15,7 @@ const {
 router.get('/', verifyAvocatOrAdminToken, dossierController.getAllDossiers);
 
 // GET dossier by ID
-router.get('/:id', verifyAvocatOrClientToken, dossierController.getDossierById);
+router.get('/:id', verifyAnyUserToken, dossierController.getDossierById);
 
 // GET dossiers by avocat ID
 router.get('/avocat/:avocatUserID', verifyAvocatToken, dossierController.getDossierByAvocatId);

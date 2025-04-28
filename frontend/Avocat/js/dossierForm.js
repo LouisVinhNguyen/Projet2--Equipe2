@@ -103,7 +103,7 @@ export const renderDossierForm = async () => {
             <td class="editable" data-id="${dossier.dossierID}" data-field="status">${dossier.status}</td>
             <td class="editable" data-id="${dossier.dossierID}" data-field="description">${dossier.description}</td>
             <td>
-              <button class="button is-small is-info view-dossier" onclick="renderDetails('dossier', '${dossier.dossierID}')">Voir</button>
+              <button class="button is-small is-info view-dossier" onclick="window.renderDetailsDossier && window.renderDetailsDossier('${dossier.dossierID}')">Voir</button>
               <button class="button is-small is-warning edit-dossier" data-id="${dossier.dossierID}">Edit</button>
               <button class="button is-small is-danger delete-dossier" data-id="${dossier.dossierID}">Supprimer</button>
             </td>

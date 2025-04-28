@@ -18,8 +18,14 @@ export const renderReceivedDocuments = () => {
           <input class="input" name="fichier" required placeholder="Lien du fichier" />
         </div>
         <div class="field">
-          <label class="label">Dossier ID (optionnel)</label>
-          <input class="input" name="dossierID" placeholder="Dossier ID" />
+          <label class="label">Dossier associé (optionnel)</label>
+          <div class="control">
+            <div class="select">
+              <select class="input" id="dossierSelect" name="dossierID">
+                <option value="">Sélectionnez un dossier</option>
+              </select>
+            </div>
+          </div>
         </div>
         <button class="button is-success" type="submit">Ajouter</button>
       </form>
@@ -93,7 +99,7 @@ export const renderReceivedDocuments = () => {
     const documentNom = document.querySelector('input[name="documentNom"]').value.trim();
     const description = document.querySelector('textarea[name="description"]').value.trim();
     const fichier = document.querySelector('input[name="fichier"]').value.trim();
-    const dossierID = document.querySelector('input[name="dossierID"]').value.trim();
+    const dossierID = document.querySelector('select[name="dossierID"]').value.trim();
     
     // Validate required fields
     if (!documentNom || !description || !fichier) {
@@ -153,6 +159,32 @@ export const renderReceivedDocuments = () => {
       alert("Erreur lors de l'ajout du document: " + error.message);
     });
   }
+  
+  // Remplit le dropdown des dossiers accessibles à l'admin (tous dossiers)
+  const fillDossierDropdown = async () => {
+    const token = sessionStorage.getItem('token');
+    if (!token) return;
+    try {
+      const response = await fetch('/dossier', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const dossiers = await response.json();
+        const dossierSelect = document.getElementById('dossierSelect');
+        dossierSelect.innerHTML = '<option value="">Sélectionnez un dossier</option>' +
+          dossiers.map(dossier => `<option value="${dossier.dossierID}">${dossier.dossierNom} (${dossier.dossierID})</option>`).join('');
+      }
+    } catch (error) {
+      // Silencieux
+    }
+  };
+
+  // Appel du remplissage du dropdown au chargement
+  fillDossierDropdown();
   
   fetchDocumentsList()
 }

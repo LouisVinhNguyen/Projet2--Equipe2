@@ -12,7 +12,7 @@ const {
  } = require('../middleware/authMiddleware');
 
 // GET all clients
-router.get('/', verifyAdminToken, clientController.getAllClients);
+router.get('/', verifyAvocatOrAdminToken, clientController.getAllClients);
 
 // GET clients by avocat ID
 router.get('/avocat/:avocatUserID', verifyAvocatToken, clientController.getClientsByAvocatId);

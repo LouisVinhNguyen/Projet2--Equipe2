@@ -5,7 +5,8 @@ import { initTimeTracker } from "./timeTracker.js";
 import { renderEventSection } from "./eventManager.js";
 import { renderBillingSection } from "./billing.js";
 import { renderReceivedDocuments } from "./documents.js";
-import { renderDetails } from "./details.js";
+import { renderDetailsDossier } from './detailsDossier.js';
+import { renderDetailsDocument } from './detailsDocument.js';
 
 if (!sessionStorage.getItem("token")) {
   alert("Vous devez être connecté pour accéder à cette page.");
@@ -32,4 +33,5 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-window.renderDetails = renderDetails;
+window.renderDetailsDossier = renderDetailsDossier;
+window.renderDetailsDocument = renderDetailsDocument;

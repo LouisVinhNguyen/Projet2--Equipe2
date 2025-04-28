@@ -105,7 +105,7 @@ export const renderDossierForm = async () => {
             <td>${dossier.dateCreated ? new Date(dossier.dateCreated).toLocaleDateString() : ''}</td>
             <td>${dossier.dateClosed ? new Date(dossier.dateClosed).toLocaleDateString() : ''}</td>
             <td>
-              <button class="button is-small is-info view-dossier" onclick="window.renderDetails && window.renderDetails('dossier', '${dossier.dossierID}')">Voir</button>
+              <button class="button is-small is-info view-dossier" onclick="window.renderDetailsDossier && window.renderDetailsDossier('${dossier.dossierID}')">Voir</button>
               <button class="button is-small is-warning edit-dossier" data-id="${dossier.dossierID}">Edit</button>
               <button class="button is-small is-danger delete-dossier" data-id="${dossier.dossierID}">Supprimer</button>
             </td>

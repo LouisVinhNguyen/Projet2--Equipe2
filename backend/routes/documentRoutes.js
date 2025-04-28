@@ -18,18 +18,18 @@ router.get('/', verifyAnyUserToken, documentController.getAllDocuments);
 router.get('/:id', verifyAnyUserToken, documentController.getDocumentById);
 
 // POST create a new document
-router.post('/', verifyAvocatToken, documentController.createDocument);
+router.post('/', verifyAvocatOrAdminToken, documentController.createDocument);
 
 // PUT update a document
-router.put('/:id', verifyAvocatToken, documentController.updateDocument);
+router.put('/:id', verifyAvocatOrAdminToken, documentController.updateDocument);
 
 // DELETE a document
-router.delete('/:id', verifyAvocatToken, documentController.deleteDocument);
+router.delete('/:id', verifyAvocatOrAdminToken, documentController.deleteDocument);
 
 // POST link document to dossier
 router.post('/link-dossier', verifyAvocatToken, documentController.linkDocumentToDossier);
 
-router.get('/byDossier/:dossierID', verifyAvocatToken, documentController.getDocumentByDossierID);
+router.get('/byDossier/:dossierID', verifyAvocatOrAdminToken, documentController.getDocumentByDossierID);
 
 
 module.exports = router;

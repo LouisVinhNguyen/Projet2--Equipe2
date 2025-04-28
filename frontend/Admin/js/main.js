@@ -5,8 +5,10 @@ import { initTimeTracker } from './timeTracker.js'
 import { renderEventSection } from './eventManager.js'
 import { renderBillingSection } from './billing.js'
 import { renderReceivedDocuments } from './documents.js'
-import { renderDocumentDetails } from './details.js';
+import { renderDetailsDossier } from './detailsDossier.js';
+import { renderDocumentDetails } from './detailsDocument.js';
 window.renderDocumentDetails = renderDocumentDetails;
+window.renderDetailsDossier = renderDetailsDossier;
 
 if (!sessionStorage.getItem('token')) {
   alert("Vous devez être connecté pour accéder à cette page.");
