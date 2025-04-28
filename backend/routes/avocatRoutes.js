@@ -1,7 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const avocatController = require('../controllers/avocatController');
-const { verifyAvocatToken, verifyAdminToken } = require('../middleware/authMiddleware');
+const { 
+    verifyToken,
+    verifyAvocatToken, 
+    verifyClientToken, 
+    verifyAvocatOrClientToken, 
+    verifyAdminToken, 
+    verifyAvocatOrAdminToken, 
+    verifyAnyUserToken
+} = require('../middleware/authMiddleware');
 
 // GET all avocats
 router.get('/', verifyAdminToken, avocatController.getAllAvocats);

@@ -1,10 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const clientController = require('../controllers/clientController');
-const { verifyAvocatToken, verifyClientToken, verifyAvocatOrClientToken } = require('../middleware/authMiddleware');
+const { 
+    verifyToken,
+  verifyAvocatToken,
+  verifyClientToken,
+  verifyAdminToken,
+  verifyAvocatOrClientToken,
+  verifyAvocatOrAdminToken,
+  verifyAnyUserToken
+ } = require('../middleware/authMiddleware');
 
 // GET all clients
-router.get('/', verifyAvocatToken, clientController.getAllClients);
+router.get('/', verifyAdminToken, clientController.getAllClients);
 
 // GET clients by avocat ID
 router.get('/avocat/:avocatUserID', verifyAvocatToken, clientController.getClientsByAvocatId);

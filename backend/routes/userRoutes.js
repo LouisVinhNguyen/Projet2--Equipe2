@@ -1,7 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const { verifyAvocatToken, verifyClientToken, verifyAvocatOrClientToken, verifyAdminToken } = require('../middleware/authMiddleware');
+const { 
+    verifyToken,
+    verifyAvocatToken, 
+    verifyClientToken, 
+    verifyAvocatOrClientToken, 
+    verifyAdminToken, 
+    verifyAvocatOrAdminToken, 
+    verifyAnyUserToken
+} = require('../middleware/authMiddleware');
 
 // GET check if email exists
 router.get('/check-email', userController.checkEmailExists);

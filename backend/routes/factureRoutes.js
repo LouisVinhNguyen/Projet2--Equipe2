@@ -1,7 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const factureController = require('../controllers/factureController');
-const { verifyAvocatToken, verifyAvocatOrClientToken } = require('../middleware/authMiddleware');
+const { 
+    verifyToken,
+    verifyAvocatToken, 
+    verifyClientToken, 
+    verifyAvocatOrClientToken, 
+    verifyAdminToken, 
+    verifyAvocatOrAdminToken, 
+    verifyAnyUserToken
+} = require('../middleware/authMiddleware');
 
 // GET all invoices
 router.get('/', verifyAvocatOrClientToken, factureController.getAllFactures);

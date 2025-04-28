@@ -1,7 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const dossierController = require('../controllers/dossierController');
-const { verifyAvocatToken, verifyAvocatOrClientToken, verifyAvocatOrAdminToken } = require('../middleware/authMiddleware');
+const { 
+    verifyToken,
+    verifyAvocatToken, 
+    verifyClientToken, 
+    verifyAvocatOrClientToken, 
+    verifyAdminToken, 
+    verifyAvocatOrAdminToken, 
+    verifyAnyUserToken
+} = require('../middleware/authMiddleware');
 
 // GET all dossiers
 router.get('/', verifyAvocatOrAdminToken, dossierController.getAllDossiers);
@@ -16,13 +24,13 @@ router.get('/avocat/:avocatUserID', verifyAvocatToken, dossierController.getDoss
 router.post('/', verifyAvocatOrAdminToken, dossierController.createDossier);
 
 // PUT update a dossier
-router.put('/:id', verifyAvocatToken, dossierController.updateDossier);
+router.put('/:id', verifyAvocatOrAdminToken, dossierController.updateDossier);
 
 // DELETE a dossier
-router.delete('/:id', verifyAvocatToken, dossierController.deleteDossier);
+router.delete('/:id', verifyAvocatOrAdminToken, dossierController.deleteDossier);
 
 // POST close a dossier
-router.post('/close/:id', verifyAvocatToken, dossierController.closeDossier);
+router.post('/close/:id', verifyAvocatOrAdminToken, dossierController.closeDossier);
 
 // POST link client to dossier
 router.post('/link-client', verifyAvocatToken, dossierController.linkClientToDossier);

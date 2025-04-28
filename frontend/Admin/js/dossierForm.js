@@ -73,7 +73,7 @@ export const renderDossierForm = async () => {
     }
   };
 
-  // Fetch and display dossiers
+  // Fetch and display dossiers (inspiré de la version Avocat)
   const fetchDossiers = async () => {
     try {
       const storedToken = sessionStorage.getItem('token');
@@ -82,6 +82,9 @@ export const renderDossierForm = async () => {
         window.location.href = "../index.html";
         return;
       }
+      const tokenPayload = JSON.parse(atob(storedToken.split('.')[1]));
+      const avocatUserID = tokenPayload.userID;
+      // Pour admin, on garde /dossier (tous dossiers)
       const response = await fetch('/dossier', {
         method: 'GET',
         headers: {
@@ -97,41 +100,78 @@ export const renderDossierForm = async () => {
             <td>${dossier.dossierID}</td>
             <td>${dossier.dossierNom}</td>
             <td>${dossier.dossierType}</td>
-            <td>${dossier.status}</td>
-            <td>${dossier.description}</td>
-            <td>${new Date(dossier.dateCreated).toLocaleDateString()}</td>
-            <td>${dossier.dateClosed ? new Date(dossier.dateClosed).toLocaleDateString() : 'N/A'}</td>
+            <td>${dossier.status || ''}</td>
+            <td>${dossier.description || ''}</td>
+            <td>${dossier.dateCreated ? new Date(dossier.dateCreated).toLocaleDateString() : ''}</td>
+            <td>${dossier.dateClosed ? new Date(dossier.dateClosed).toLocaleDateString() : ''}</td>
             <td>
-              <button class="button is-small is-warning edit-dossier" data-id="${dossier.id}">Edit</button>
-              <button class="button is-small is-danger delete-dossier" data-id="${dossier.id}">Supprimer</button>
+              <button class="button is-small is-info view-dossier" onclick="window.renderDetails && window.renderDetails('dossier', '${dossier.dossierID}')">Voir</button>
+              <button class="button is-small is-warning edit-dossier" data-id="${dossier.dossierID}">Edit</button>
+              <button class="button is-small is-danger delete-dossier" data-id="${dossier.dossierID}">Supprimer</button>
             </td>
           </tr>
         `).join('');
 
-        // Add event listeners for Edit and Delete buttons
-        const editButtons = document.querySelectorAll('.edit-dossier');
-        const deleteButtons = document.querySelectorAll('.delete-dossier');
-
-        editButtons.forEach(button => {
+        // Inline edit (comme Avocat)
+        document.querySelectorAll('.edit-dossier').forEach(button => {
           button.addEventListener('click', (e) => {
-            const dossierId = e.target.getAttribute('data-id');
-            editDossier(dossierId);
+            const row = e.target.closest('tr');
+            row.querySelectorAll('td').forEach((cell, idx) => {
+              if ([1,2,3,4].includes(idx)) cell.setAttribute('contenteditable', 'true');
+            });
+            e.target.textContent = "Save";
+            e.target.classList.remove('edit-dossier');
+            e.target.classList.add('save-dossier');
+            e.target.addEventListener('click', async () => {
+              const dossierId = e.target.getAttribute('data-id');
+              const cells = row.querySelectorAll('td');
+              const dossierNom = cells[1].textContent.trim();
+              const dossierType = cells[2].textContent.trim();
+              const status = cells[3].textContent.trim();
+              const description = cells[4].textContent.trim();
+              try {
+                const response = await fetch(`/dossier/${dossierId}`, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${storedToken}`
+                  },
+                  body: JSON.stringify({ dossierNom, dossierType, status, description })
+                });
+                if (!response.ok) {
+                  const err = await response.json();
+                  throw new Error(err.message || 'Erreur de mise à jour');
+                }
+                row.querySelectorAll('td').forEach((cell, idx) => {
+                  if ([1,2,3,4].includes(idx)) cell.removeAttribute('contenteditable');
+                });
+                e.target.textContent = "Edit";
+                e.target.classList.remove('save-dossier');
+                e.target.classList.add('edit-dossier');
+                fetchDossiers();
+              } catch (error) {
+                alert("Erreur lors de la mise à jour.");
+              }
+            }, { once: true });
           });
         });
-
-        deleteButtons.forEach(button => {
-          button.addEventListener('click', (e) => {
+        document.querySelectorAll('.delete-dossier').forEach(button => {
+          button.addEventListener('click', async (e) => {
             const dossierId = e.target.getAttribute('data-id');
-            deleteDossier(dossierId);
+            if (confirm('Voulez-vous vraiment supprimer ce dossier ?')) {
+              await fetch(`/dossier/${dossierId}`, {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': `Bearer ${storedToken}`
+                }
+              });
+              fetchDossiers();
+            }
           });
         });
-      } else {
-        console.error('Erreur lors de la récupération des dossiers:', response.statusText);
-        alert('Erreur lors de la récupération des dossiers. Veuillez réessayer.');
       }
     } catch (error) {
-      console.error('Erreur réseau:', error);
-      alert('Une erreur réseau s\'est produite. Veuillez réessayer.');
+      alert('Erreur réseau.');
     }
   };
 

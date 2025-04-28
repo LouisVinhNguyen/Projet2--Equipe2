@@ -1,13 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const documentController = require('../controllers/documentController');
-const { verifyAvocatToken, verifyAvocatOrClientToken } = require('../middleware/authMiddleware');
+const { 
+    verifyToken,
+    verifyAvocatToken, 
+    verifyClientToken, 
+    verifyAvocatOrClientToken, 
+    verifyAdminToken, 
+    verifyAvocatOrAdminToken, 
+    verifyAnyUserToken
+} = require('../middleware/authMiddleware');
 
 // GET all documents
-router.get('/', verifyAvocatOrClientToken, documentController.getAllDocuments);
+router.get('/', verifyAnyUserToken, documentController.getAllDocuments);
 
 // GET document by ID
-router.get('/:id', verifyAvocatOrClientToken, documentController.getDocumentById);
+router.get('/:id', verifyAnyUserToken, documentController.getDocumentById);
 
 // POST create a new document
 router.post('/', verifyAvocatToken, documentController.createDocument);

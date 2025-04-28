@@ -1,7 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const tacheController = require('../controllers/tacheController');
-const { verifyAvocatToken, verifyAvocatOrClientToken } = require('../middleware/authMiddleware');
+const { 
+    verifyToken,
+    verifyAvocatToken, 
+    verifyClientToken, 
+    verifyAvocatOrClientToken, 
+    verifyAdminToken, 
+    verifyAvocatOrAdminToken, 
+    verifyAnyUserToken
+} = require('../middleware/authMiddleware');
 
 // GET all tasks
 router.get('/', verifyAvocatOrClientToken, tacheController.getAllTaches);
