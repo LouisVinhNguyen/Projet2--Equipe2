@@ -16,7 +16,10 @@ export const renderDetailsDossier = async (dossierID) => {
         <tbody id="detailsTableBody"></tbody>
       </table>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
-        <button class="button is-link" id="backButton">Retour</button>
+        <div id="leftSideButtons">
+          <button class="button is-link" id="backButton">Retour</button>
+          <button class="button is-info" id="addDocumentButton">Ajouter un document</button>
+        </div>
         <div id="actionButtons">
           <button class="button is-warning" id="editButton">Modifier</button>
           <button class="button is-danger" id="deleteButton">Supprimer</button>
@@ -99,6 +102,118 @@ export const renderDetailsDossier = async (dossierID) => {
   // Retour
   document.getElementById("backButton").addEventListener("click", () => {
     renderDossierForm();
+  });
+
+  document.getElementById("addDocumentButton").addEventListener("click", async () => {
+    const form = document.createElement("form");
+    form.innerHTML = `
+      <div class="field">
+        <label class="label">Sélectionner un Document</label>
+        <div class="control">
+          <div class="select">
+            <select id="documentSelect" required>
+              <option value="" disabled selected>Choisir un document</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button class="button is-link" type="submit">Associer</button>
+    `;
+    // Place le formulaire juste après la box principale
+    document.querySelector('.box').appendChild(form);
+
+    const documentSelect = form.querySelector("#documentSelect");
+
+    // Charger la liste des documents disponibles
+    try {
+      const response = await fetch("/document", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const documents = await response.json();
+      // Exclure ceux déjà liés à ce dossier
+      const linkedDocs = Array.from(document.getElementById('documentsTableBody').querySelectorAll('tr')).map(tr => tr.children[0].textContent);
+      const availableDocs = documents.filter(doc => !linkedDocs.includes(doc.documentID.toString()));
+      if (availableDocs.length === 0) {
+        const emptyOption = document.createElement("option");
+        emptyOption.textContent = "Aucun document disponible";
+        emptyOption.disabled = true;
+        documentSelect.appendChild(emptyOption);
+      } else {
+        availableDocs.forEach((doc) => {
+          const option = document.createElement("option");
+          option.value = doc.documentID;
+          option.textContent = doc.documentNom || "Sans nom";
+          documentSelect.appendChild(option);
+        });
+      }
+    } catch (error) {
+      alert("Erreur lors de la récupération des documents.");
+    }
+
+    // Soumission du formulaire pour associer le document
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const selectedDocumentId = documentSelect.value;
+      if (!selectedDocumentId) {
+        alert("Veuillez sélectionner un document.");
+        return;
+      }
+      try {
+        const response = await fetch("/document/link-dossier", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            documentID: selectedDocumentId.toString(),
+            dossierID: dossierID.toString(),
+          }),
+        });
+        if (response.ok) {
+          alert("Document associé avec succès!");
+          form.remove();
+          // Recharge la liste des documents associés
+          try {
+            const response = await fetch(`/document/byDossier/${dossierID}`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+            });
+            if (!response.ok) return;
+            const documents = await response.json();
+            const documentsTableBody = document.getElementById('documentsTableBody');
+            documentsTableBody.innerHTML = documents
+              .map(
+                (doc) => `
+                <tr>
+                  <td>${doc.documentID}</td>
+                  <td>${doc.userID}</td>
+                  <td>${doc.documentNom}</td>
+                  <td>
+                    <button class="button is-small is-info" onclick="window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
+                  </td>
+                </tr>
+              `
+              )
+              .join('');
+          } catch (error) {
+            // Pas bloquant
+          }
+        } else {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+      } catch (error) {
+        alert("Erreur: " + error.message);
+      }
+    };
   });
 
   // Supprimer le dossier

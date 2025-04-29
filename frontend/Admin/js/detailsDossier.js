@@ -168,33 +168,129 @@ export async function renderDetailsDossier(dossierID) {
     }
   });
 
-  // Charger les documents liés au dossier
-  try {
-    const response = await fetch(`/document/byDossier/${dossierID}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) return;
-    const documents = await response.json();
-    const documentsTableBody = document.getElementById('documentsTableBody');
-    documentsTableBody.innerHTML = documents
-      .map(
-        (doc) => `
-        <tr>
-          <td>${doc.documentID}</td>
-          <td>${doc.userID}</td>
-          <td>${doc.documentNom}</td>
-          <td>
-            <button class="button is-small is-info" onclick="window.renderDocumentDetails && window.renderDocumentDetails('${doc.documentID}')">Voir</button>
-          </td>
-        </tr>
-      `
-      )
-      .join('');
-  } catch (error) {
-    // Pas bloquant
+  // Formulaire d'association de document au dossier
+  const addDocDiv = document.createElement('div');
+  addDocDiv.innerHTML = `
+    <button class="button is-link" id="addDocumentButton">Associer un document existant</button>
+  `;
+  container.insertBefore(addDocDiv, document.getElementById('backButton').parentElement.parentElement); // Avant le bloc boutons retour/actions
+
+  // Fonction pour recharger la liste des documents liés
+  async function loadAssociatedDocuments() {
+    try {
+      const response = await fetch(`/document/byDossier/${dossierID}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) return;
+      const documents = await response.json();
+      const documentsTableBody = document.getElementById('documentsTableBody');
+      documentsTableBody.innerHTML = documents
+        .map(
+          (doc) => `
+          <tr>
+            <td>${doc.documentID}</td>
+            <td>${doc.userID}</td>
+            <td>${doc.documentNom}</td>
+            <td>
+              <button class="button is-small is-info" onclick="window.renderDocumentDetails && window.renderDocumentDetails('${doc.documentID}')">Voir</button>
+            </td>
+          </tr>
+        `
+        )
+        .join('');
+    } catch (error) {
+      // Pas bloquant
+    }
   }
+
+  // Ajout d'un document existant au dossier
+  document.getElementById("addDocumentButton").addEventListener("click", async () => {
+    const form = document.createElement("form");
+    form.innerHTML = `
+      <div class="field">
+        <label class="label">Sélectionner un Document</label>
+        <div class="control">
+          <div class="select">
+            <select id="documentSelect" required>
+              <option value="" disabled selected>Choisir un document</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button class="button is-link" type="submit">Associer</button>
+    `;
+    addDocDiv.appendChild(form);
+
+    const documentSelect = form.querySelector("#documentSelect");
+
+    // Charger la liste des documents disponibles
+    try {
+      const response = await fetch("/document", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const documents = await response.json();
+      // Exclure ceux déjà liés à ce dossier
+      const linkedDocs = Array.from(document.getElementById('documentsTableBody').querySelectorAll('tr')).map(tr => tr.children[0].textContent);
+      const availableDocs = documents.filter(doc => !linkedDocs.includes(doc.documentID.toString()));
+      if (availableDocs.length === 0) {
+        const emptyOption = document.createElement("option");
+        emptyOption.textContent = "Aucun document disponible";
+        emptyOption.disabled = true;
+        documentSelect.appendChild(emptyOption);
+      } else {
+        availableDocs.forEach((doc) => {
+          const option = document.createElement("option");
+          option.value = doc.documentID;
+          option.textContent = doc.documentNom || "Sans nom";
+          documentSelect.appendChild(option);
+        });
+      }
+    } catch (error) {
+      alert("Erreur lors de la récupération des documents.");
+    }
+
+    // Soumission du formulaire pour associer le document
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const selectedDocumentId = documentSelect.value;
+      if (!selectedDocumentId) {
+        alert("Veuillez sélectionner un document.");
+        return;
+      }
+      try {
+        const response = await fetch("/document/link-dossier", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            documentID: selectedDocumentId.toString(),
+            dossierID: dossierID.toString(),
+          }),
+        });
+        if (response.ok) {
+          alert("Document associé avec succès!");
+          form.remove();
+          loadAssociatedDocuments(); // Refresh la liste
+        } else {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+      } catch (error) {
+        alert("Erreur: " + error.message);
+      }
+    };
+  });
+
+  // Remplace l'appel direct à la génération de la liste par la fonction
+  await loadAssociatedDocuments();
 };
