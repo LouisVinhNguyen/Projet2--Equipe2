@@ -17,6 +17,9 @@ router.get('/', verifyAvocatToken, sessionController.getAllSessions);
 // GET session by ID
 router.get('/:id', verifyAvocatToken, sessionController.getSessionById);
 
+// GET sessions by Avocat ID
+router.get('/avocat/:avocatUserID', verifyAvocatToken, sessionController.getSessionByAvocatId);
+
 // POST create a new session
 router.post('/', verifyAvocatToken, sessionController.createSession);
 

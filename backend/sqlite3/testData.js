@@ -1,304 +1,223 @@
-const procedures = require('./procedures');
-const db = require('../knex');
+const procedures = require('../models/procedures');
+const db = require('../config/db');
 const bcrypt = require('bcrypt');
+
+async function clearAllTables() {
+    try {
+        // Désactiver temporairement les contraintes de clé étrangère (pour SQLite)
+        await db.raw('PRAGMA foreign_keys = OFF');
+        // Vider les tables dans l'ordre inverse des dépendances
+        await db('client_dossier').del();
+        await db('dossier_document').del();
+        await db('tache').del();
+        await db('session').del();
+        await db('rappel').del();
+        await db('paiement').del();
+        await db('facture').del();
+        await db('document').del();
+        await db('dossier').del();
+        await db('users').del();
+        // Réactiver les contraintes de clé étrangère
+        await db.raw('PRAGMA foreign_keys = ON');
+        console.log('Toutes les tables ont été vidées.');
+    } catch (error) {
+        console.error('Erreur lors du vidage des tables:', error);
+        throw error;
+    }
+}
 
 async function generateTestData() {
     try {
-        console.log('Commençant la génération des données de test...');
+        await clearAllTables();
+        console.log('--- DÉBUT : Génération de données de test ---');
         
-        // -------- CRÉATION DES AVOCATS --------
-        console.log('Création des avocats...');
-        const avocats = [];
-        
-        // Hash all passwords before creating users
         const saltRounds = 10;
-        
-        const hashedPassword1 = await bcrypt.hash('MotDePasse123', saltRounds);
-        const avocat1 = await procedures.createUser(
-            'Sophie', 'Tremblay', 'sophie.tremblay@cabinet-juridique.ca', 
-            '514-555-1234', hashedPassword1, 'avocat'
-        );
-        avocats.push(avocat1.userID);
-        
-        const hashedPassword2 = await bcrypt.hash('AvoMB2023', saltRounds);
-        const avocat2 = await procedures.createUser(
-            'Marc', 'Bélanger', 'marc.belanger@cabinet-juridique.ca', 
-            '514-555-2345', hashedPassword2, 'avocat'
-        );
-        avocats.push(avocat2.userID);
-        
-        const hashedPassword3 = await bcrypt.hash('DroitQc2023', saltRounds);
-        const avocat3 = await procedures.createUser(
-            'Isabelle', 'Gagnon', 'isabelle.gagnon@cabinet-juridique.ca', 
-            '514-555-3456', hashedPassword3, 'avocat'
-        );
-        avocats.push(avocat3.userID);
-        
-        // -------- CRÉATION DES CLIENTS --------
-        console.log('Création des clients...');
+        const avocats = [];
         const clients = [];
+        const defaultUsers = [];
+
+        // -------- CRÉATION DES UTILISATEURS --------
+        console.log('Création des utilisateurs...');
+
+        // Avocats
+        const avocatData = [
+            {prenom: 'Sophie', nom: 'Tremblay', email: 'sophie.tremblay@cabinet.ca', tel: '514-555-1234', password: 'MotDePasse123'},
+            {prenom: 'Marc', nom: 'Bélanger', email: 'marc.belanger@cabinet.ca', tel: '514-555-2345', password: 'AvoMB2023'},
+            {prenom: 'Isabelle', nom: 'Gagnon', email: 'isabelle.gagnon@cabinet.ca', tel: '514-555-3456', password: 'DroitQc2023'},
+            {prenom: 'Olivier', nom: 'Roy', email: 'olivier.roy@cabinet.ca', tel: '514-555-4567', password: 'OlivierR2023'}
+        ];
         
-        const hashedClientPassword1 = await bcrypt.hash('Client123', saltRounds);
-        const client1 = await procedures.createUser(
-            'Jean', 'Dupont', 'jean.dupont@gmail.com',
-            '514-555-6789', hashedClientPassword1, 'client'
-        );
-        clients.push(client1.userID);
-        
-        const hashedClientPassword2 = await bcrypt.hash('ML2023!', saltRounds);
-        const client2 = await procedures.createUser(
-            'Marie', 'Lavoie', 'marie.lavoie@hotmail.com',
-            '514-555-7890', hashedClientPassword2, 'client'
-        );
-        clients.push(client2.userID);
-        
-        const hashedClientPassword3 = await bcrypt.hash('PLeclerc2023', saltRounds);
-        const client3 = await procedures.createUser(
-            'Pierre', 'Leclerc', 'pierre.leclerc@yahoo.ca',
-            '514-555-8901', hashedClientPassword3, 'client'
-        );
-        clients.push(client3.userID);
-        
-        const hashedClientPassword4 = await bcrypt.hash('ECote123!', saltRounds);
-        const client4 = await procedures.createUser(
-            'Émilie', 'Côté', 'emilie.cote@gmail.com',
-            '514-555-9012', hashedClientPassword4, 'client'
-        );
-        clients.push(client4.userID);
-        
+        for (const avocat of avocatData) {
+            const hashed = await bcrypt.hash(avocat.password, saltRounds);
+            const created = await procedures.createUser(avocat.prenom, avocat.nom, avocat.email, avocat.tel, hashed, 'avocat');
+            avocats.push(created.userID);
+        }
+
+        // Admin & autres utilisateurs
+        const usersData = [
+            {prenom: 'admin', nom: 'admin', email: 'admin@gmail.com', tel: '514-111-1111', password: 'admin', role: 'admin'},
+            {prenom: 'avocat', nom: 'avocat', email: 'avocat@gmail.com', tel: '514-222-2222', password: 'avocat', role: 'avocat'},
+            {prenom: 'client', nom: 'client', email: 'client@gmail.com', tel: '514-333-3333', password: 'client', role: 'client'}
+        ];
+
+        for (const user of usersData) {
+            const hashed = await bcrypt.hash(user.password, saltRounds);
+            const created = await procedures.createUser(user.prenom, user.nom, user.email, user.tel, hashed, user.role);
+            defaultUsers.push(created.userID);
+        }
+
+        // Clients
+        const clientsData = [
+            {prenom: 'Jean', nom: 'Dupont', email: 'jean.dupont@gmail.com', tel: '514-555-6789', password: 'Client123'},
+            {prenom: 'Marie', nom: 'Lavoie', email: 'marie.lavoie@hotmail.com', tel: '514-555-7890', password: 'ML2023!'},
+            {prenom: 'Pierre', nom: 'Leclerc', email: 'pierre.leclerc@yahoo.ca', tel: '514-555-8901', password: 'PLeclerc2023'},
+            {prenom: 'Émilie', nom: 'Côté', email: 'emilie.cote@gmail.com', tel: '514-555-9012', password: 'ECote123!'},
+            {prenom: 'Simon', nom: 'Marchand', email: 'simon.marchand@outlook.com', tel: '514-555-9123', password: 'Sim0nM!'},
+            {prenom: 'Alice', nom: 'Martin', email: 'alice.martin@gmail.com', tel: '514-555-1235', password: 'AliceM2023'},
+            {prenom: 'Luc', nom: 'Bergeron', email: 'luc.bergeron@hotmail.com', tel: '514-555-2346', password: 'LucB123!'},
+            {prenom: 'Chantal', nom: 'Dubois', email: 'chantal.dubois@yahoo.ca', tel: '514-555-3457', password: 'ChantalD2023'},
+            {prenom: 'François', nom: 'Girard', email: 'francois.girard@gmail.com', tel: '514-555-4568', password: 'FGirard123!'},
+            {prenom: 'Julie', nom: 'Lemieux', email: 'julie.lemieux@outlook.com', tel: '514-555-5679', password: 'JulieL!'},
+            {prenom: 'Antoine', nom: 'Moreau', email: 'antoine.moreau@gmail.com', tel: '514-555-6780', password: 'AntoineM2023'},
+            {prenom: 'Caroline', nom: 'Fortin', email: 'caroline.fortin@hotmail.com', tel: '514-555-7891', password: 'CFortin123!'},
+            {prenom: 'David', nom: 'Pelletier', email: 'david.pelletier@yahoo.ca', tel: '514-555-8902', password: 'DPelletier2023'},
+            {prenom: 'Sophie', nom: 'Bouchard', email: 'sophie.bouchard@gmail.com', tel: '514-555-9013', password: 'SBouchard123!'},
+            {prenom: 'Maxime', nom: 'Tremblay', email: 'maxime.tremblay@outlook.com', tel: '514-555-9124', password: 'MaximeT!'},
+            {prenom: 'Isabelle', nom: 'Deschamps', email: 'isabelle.deschamps@gmail.com', tel: '514-555-1236', password: 'IsabelleD2023'},
+            {prenom: 'Philippe', nom: 'Laroche', email: 'philippe.laroche@hotmail.com', tel: '514-555-2347', password: 'PLaroche123!'},
+            {prenom: 'Nathalie', nom: 'Simard', email: 'nathalie.simard@yahoo.ca', tel: '514-555-3458', password: 'NSimard2023'},
+            {prenom: 'Vincent', nom: 'Beaulieu', email: 'vincent.beaulieu@gmail.com', tel: '514-555-4569', password: 'VBeaulieu123!'},
+            {prenom: 'Catherine', nom: 'Roy', email: 'catherine.roy@outlook.com', tel: '514-555-5670', password: 'CatherineR!'}
+        ];
+
+        for (const client of clientsData) {
+            const hashed = await bcrypt.hash(client.password, saltRounds);
+            const created = await procedures.createUser(client.prenom, client.nom, client.email, client.tel, hashed, 'client');
+            clients.push(created.userID);
+        }
+
         // -------- CRÉATION DES DOSSIERS --------
         console.log('Création des dossiers...');
+
         const dossiers = [];
+        dossiers.push((await procedures.createDossier(avocats[0], 'Divorce Jean Dupont', 'Familial', 'Procédure de divorce en cours', clients[0])).dossierID);
+        dossiers.push((await procedures.createDossier(avocats[1], 'Contrat pour Lavoie Inc.', 'Commercial', 'Élaboration d\'un nouveau contrat commercial', clients[1])).dossierID);
+        dossiers.push((await procedures.createDossier(avocats[2], 'Litige immobilier Leclerc', 'Immobilier', 'Litige sur la démarcation des terrains', clients[2])).dossierID);
+        dossiers.push((await procedures.createDossier(avocats[0], 'Testament Émilie Côté', 'Succession', 'Rédaction de testament personnalisé')).dossierID);
+        dossiers.push((await procedures.createDossier(avocats[3], 'Création d\'entreprise Simon Marchand', 'Commercial', 'Accompagnement juridique pour la création d\'entreprise', clients[4])).dossierID);
         
-        const dossier1 = await procedures.createDossier(
-            avocats[0], 'Divorce Dupont', 'Familial',
-            'Procédure de divorce à l\'amiable entre Jean Dupont et son épouse',
-            clients[0]
-        );
-        dossiers.push(dossier1.dossierID);
-        
-        const dossier2 = await procedures.createDossier(
-            avocats[1], 'Contrat Lavoie Inc.', 'Commercial',
-            'Révision du contrat commercial pour l\'entreprise de Marie Lavoie',
-            clients[1]
-        );
-        dossiers.push(dossier2.dossierID);
-        
-        const dossier3 = await procedures.createDossier(
-            avocats[2], 'Litige Propriété Leclerc', 'Immobilier',
-            'Litige concernant les limites de propriété de M. Leclerc avec son voisin',
-            clients[2]
-        );
-        dossiers.push(dossier3.dossierID);
-        
-        const dossier4 = await procedures.createDossier(
-            avocats[0], 'Testament Côté', 'Succession',
-            'Préparation du testament et planification successorale pour Mme Côté'
-        );
-        dossiers.push(dossier4.dossierID);
-        
-        // -------- LIAISON CLIENTS-DOSSIERS --------
-        console.log('Liaison des clients aux dossiers...');
-        
-        // Nous avons déjà lié les clients lors de la création des dossiers 1-3
-        // Ajoutons seulement la liaison supplémentaire pour le dossier 4
+        // Pour l'avocat défault
+        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Contrat de travail Alice Martin', 'Travail', 'Rédaction d\'un contrat de travail pour poste de direction.', clients[5])).dossierID);
+        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Litige construction Benoît Caron', 'Immobilier', 'Conflit concernant la construction d\'un immeuble résidentiel.', clients[6])).dossierID);
+        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Divorce Julie Perron', 'Familial', 'Procédure de divorce amiable.', clients[7])).dossierID);
+        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Création entreprise Luc Tremblay', 'Commercial', 'Accompagnement juridique pour création d\'une société par actions.', clients[8])).dossierID);
+        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Testament Monique Gagné', 'Succession', 'Rédaction et dépôt d\'un testament notarié.', clients[9])).dossierID);
+        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Réclamation assurance François Lefebvre', 'Assurance', 'Assistance juridique pour litige d\'assurance habitation.', clients[5])).dossierID);
+        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Médiation familiale André Bergeron', 'Familial', 'Médiation pour garde partagée après séparation.', clients[6])).dossierID);
+        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Vente d\'immeuble Claire Moreau', 'Immobilier', 'Vérification légale avant la vente d\'un duplex.', clients[7])).dossierID);
+        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Partage d\'héritage Jean Fortin', 'Succession', 'Négociation d\'un partage d\'héritage complexe.', clients[8])).dossierID);
+        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Bail commercial Stéphanie Robert', 'Commercial', 'Négociation d\'un bail commercial pour ouverture de boutique.', clients[9])).dossierID);
+
         await procedures.linkClientToDossier(clients[3], dossiers[3]);
-        
-        // Liaison supplémentaire pour montrer un client avec plusieurs dossiers
-        await procedures.linkClientToDossier(clients[0], dossiers[3]);
-        
+        await procedures.linkClientToDossier(clients[0], dossiers[3]); // Jean aussi lié au testament pour exemple
+
         // -------- CRÉATION DES DOCUMENTS --------
         console.log('Création des documents...');
-        const documents = [];
-        
-        const document1 = await procedures.createDocument(
-            avocats[0], 'Requête en divorce', 
-            'Document officiel pour la demande de divorce de M. Dupont',
-            'https://placeholder.com/documents/divorce_request.pdf',
-            dossiers[0]
-        );
-        documents.push(document1.documentID);
-        
-        const document2 = await procedures.createDocument(
-            avocats[0], 'État financier Dupont',
-            'Rapport détaillé de la situation financière pour procédure de divorce',
-            'https://placeholder.com/documents/financial_report.pdf',
-            dossiers[0]
-        );
-        documents.push(document2.documentID);
-        
-        const document3 = await procedures.createDocument(
-            avocats[1], 'Contrat commercial v1',
-            'Première version du contrat commercial pour Lavoie Inc.',
-            'https://placeholder.com/documents/commercial_contract_v1.pdf',
-            dossiers[1]
-        );
-        documents.push(document3.documentID);
-        
-        const document4 = await procedures.createDocument(
-            avocats[2], 'Photos terrain Leclerc',
-            'Photos montrant les limites contestées de la propriété',
-            'https://placeholder.com/documents/property_photos.jpg',
-            dossiers[2]
-        );
-        documents.push(document4.documentID);
-        
-        const document5 = await procedures.createDocument(
-            avocats[0], 'Testament brouillon',
-            'Première ébauche du testament de Mme Côté',
-            'https://placeholder.com/documents/draft_will.pdf',
-            dossiers[3]
-        );
-        documents.push(document5.documentID);
-        
+
+        const documents = [
+            {avocat: avocats[0], nom: 'Requête Divorce', desc: 'Demande officielle de divorce.', url: 'https://placeholder.com/docs/divorce_request.pdf', dossier: dossiers[0]},
+            {avocat: avocats[1], nom: 'Contrat V2', desc: 'Deuxième version du contrat commercial.', url: 'https://placeholder.com/docs/contract_v2.pdf', dossier: dossiers[1]},
+            {avocat: avocats[2], nom: 'Photos terrain', desc: 'Photos de propriété litigieuse.', url: 'https://placeholder.com/docs/terrain_photos.jpg', dossier: dossiers[2]},
+            {avocat: avocats[0], nom: 'Testament Côté', desc: 'Ébauche du testament.', url: 'https://placeholder.com/docs/draft_will_cote.pdf', dossier: dossiers[3]},
+            {avocat: avocats[3], nom: 'Statuts Entreprise', desc: 'Rédaction des statuts de société.', url: 'https://placeholder.com/docs/statuts_marchand.pdf', dossier: dossiers[4]},
+            {avocat: defaultUsers[1], nom: 'Contrat de travail Martin', desc: 'Contrat de travail pour Alice Martin.', url: 'https://placeholder.com/docs/contrat_travail_martin.pdf', dossier: dossiers[5]},
+            {avocat: defaultUsers[1], nom: 'Litige construction Caron', desc: 'Documents relatifs au litige de construction.', url: 'https://placeholder.com/docs/litige_construction_caron.pdf', dossier: dossiers[6]},
+            {avocat: defaultUsers[1], nom: 'Requête Divorce Perron', desc: 'Demande de divorce pour Julie Perron.', url: 'https://placeholder.com/docs/divorce_perron.pdf', dossier: dossiers[7]},
+            {avocat: defaultUsers[1], nom: 'Statuts Entreprise Tremblay', desc: 'Documents de création d\'entreprise pour Luc Tremblay.', url: 'https://placeholder.com/docs/statuts_tremblay.pdf', dossier: dossiers[8]},
+        ];
+
+        for (const doc of documents) {
+            await procedures.createDocument(doc.avocat, doc.nom, doc.desc, doc.url, doc.dossier);
+        }
+
         // -------- CRÉATION DES TÂCHES --------
         console.log('Création des tâches...');
-        
-        await procedures.createTache(
-            avocats[0], dossiers[0], 'Demande de documents',
-            'Envoyer une lettre demandant les documents financiers manquants',
-            'Non commencée'
-        );
-        
-        await procedures.createTache(
-            avocats[1], dossiers[1], 'Révision clause 5',
-            'Revoir la clause 5 du contrat concernant les pénalités',
-            'En cours'
-        );
-        
-        await procedures.createTache(
-            avocats[2], dossiers[2], 'Contact géomètre',
-            'Contacter un géomètre pour obtenir un rapport officiel sur les limites',
-            'Non commencée'
-        );
-        
-        await procedures.createTache(
-            avocats[0], dossiers[3], 'Liste actifs',
-            'Préparer une liste détaillée des actifs pour le testament',
-            'Non commencée'
-        );
-        
-        await procedures.createTache(
-            avocats[2], dossiers[2], 'Rédiger mise en demeure',
-            'Préparer une mise en demeure pour le voisin',
-            'Terminée'
-        );
-        
+
+        const taches = [
+            {avocat: avocats[0], dossier: dossiers[0], titre: 'Rassembler documents', desc: 'Collecte des documents financiers.', statut: 'En cours'},
+            {avocat: avocats[1], dossier: dossiers[1], titre: 'Révision juridique', desc: 'Réviser clauses spécifiques.', statut: 'Non commencée'},
+            {avocat: avocats[2], dossier: dossiers[2], titre: 'Analyse dossier', desc: 'Analyser preuves pour litige.', statut: 'Terminée'},
+            {avocat: avocats[0], dossier: dossiers[3], titre: 'Planification successorale', desc: 'Organiser actifs et dettes.', statut: 'En cours'},
+            {avocat: avocats[3], dossier: dossiers[4], titre: 'Constitution entreprise', desc: 'Préparation des documents officiels.', statut: 'En cours'},
+
+            {avocat: defaultUsers[1], dossier: dossiers[5], titre: 'Révision contrat', desc: 'Vérifier les clauses de non-concurrence.', statut: 'En cours'},
+            {avocat: defaultUsers[1], dossier: dossiers[6], titre: 'Visite chantier', desc: 'Inspection du chantier pour évaluation.', statut: 'Non commencée'},
+            {avocat: defaultUsers[1], dossier: dossiers[7], titre: 'Préparation documents', desc: 'Préparer les documents pour le tribunal.', statut: 'Terminée'},
+        ];
+
+        for (const tache of taches) {
+            await procedures.createTache(tache.avocat, tache.dossier, tache.titre, tache.desc, tache.statut);
+        }
+
         // -------- CRÉATION DES SESSIONS --------
         console.log('Création des sessions...');
+        
         const sessions = [];
-        
-        // Session 1 - complétée il y a 5 jours
-        const session1 = await procedures.createSession(
-            avocats[0], dossiers[0], 'Entretien initial avec client'
-        );
-        sessions.push(session1.sessionID);
-        
-        // Session 2 - complétée il y a 3 jours
-        const session2 = await procedures.createSession(
-            avocats[1], dossiers[1], 'Analyse du contrat actuel'
-        );
-        sessions.push(session2.sessionID);
-        
-        // Session 3 - complétée hier
-        const session3 = await procedures.createSession(
-            avocats[2], dossiers[2], 'Examen des photos et documents'
-        );
-        sessions.push(session3.sessionID);
-        
-        // Session 4 - en cours
-        const session4 = await procedures.createSession(
-            avocats[0], dossiers[3], 'Rédaction du testament'
-        );
-        sessions.push(session4.sessionID);
-        
-        // Session 5 - complétée aujourd'hui
-        const session5 = await procedures.createSession(
-            avocats[0], dossiers[0], 'Préparation des documents'
-        );
-        sessions.push(session5.sessionID);
-        
-        // -------- TERMINER DES SESSIONS --------
-        console.log('Terminer des sessions et ajuster les dates...');
-        
-        // Compléter les sessions
-        await procedures.endSession(sessions[0], 'Entretien initial complété, notes prises');
-        await procedures.endSession(sessions[1], 'Analyse complétée, points à modifier identifiés');
-        await procedures.endSession(sessions[2], 'Examen complété, besoin d\'expertise supplémentaire');
-        // La session 4 reste active
-        await procedures.endSession(sessions[4], 'Préparation complétée');
-        
-        // Ajuster les dates des sessions artificiellement
+        sessions.push((await procedures.createSession(avocats[0], dossiers[0], 'Entrevue initiale')).sessionID);
+        sessions.push((await procedures.createSession(avocats[1], dossiers[1], 'Négociation contrat')).sessionID);
+        sessions.push((await procedures.createSession(avocats[2], dossiers[2], 'Inspection terrain')).sessionID);
+        sessions.push((await procedures.createSession(avocats[0], dossiers[3], 'Consultation testament')).sessionID);
+        sessions.push((await procedures.createSession(avocats[3], dossiers[4], 'Formation société')).sessionID);
+
+        sessions.push((await procedures.createSession(defaultUsers[1], dossiers[5], 'Réunion contrat')).sessionID);
+        sessions.push((await procedures.createSession(defaultUsers[1], dossiers[6], 'Visite chantier')).sessionID);
+        sessions.push((await procedures.createSession(defaultUsers[1], dossiers[7], 'Consultation divorce')).sessionID);
+
+        await procedures.endSession(sessions[0], 'Entrevue terminée avec recommandations.');
+        await procedures.endSession(sessions[1], 'Négociations achevées.');
+        await procedures.endSession(sessions[2], 'Analyse terrain complète.');
+        await procedures.endSession(sessions[4], 'Documents de formation déposés.');
+
+        await procedures.endSession(sessions[5], 'Réunion terminée avec le client.');
+        await procedures.endSession(sessions[6], 'Visite du chantier effectuée.');
+        await procedures.endSession(sessions[7], 'Consultation terminée avec le client.');
+
         await manipulateSessionDates();
         
-        // -------- CRÉATION DES RAPPELS --------
+        // -------- RAPPELS --------
         console.log('Création des rappels...');
         
-        // Date d'annonce: demain
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        
-        // Date d'annonce: dans une semaine
-        const nextWeek = new Date();
-        nextWeek.setDate(nextWeek.getDate() + 7);
-        
-        // Date d'annonce: dans deux semaines
-        const twoWeeks = new Date();
-        twoWeeks.setDate(twoWeeks.getDate() + 14);
-        
-        await procedures.createRappel(
-            avocats[0], 'Audience Dupont',
-            'Comparution au tribunal pour le divorce Dupont',
-            nextWeek.toISOString()
-        );
-        
-        await procedures.createRappel(
-            avocats[1], 'Réunion Lavoie Inc.',
-            'Présentation du contrat révisé',
-            tomorrow.toISOString()
-        );
-        
-        await procedures.createRappel(
-            avocats[2], 'Date limite expertise',
-            'Dernière date pour soumettre l\'expertise du géomètre',
-            twoWeeks.toISOString()
-        );
-        
-        // -------- CRÉATION DES FACTURES --------
+        const today = new Date();
+        const futureDates = [
+            {daysAhead: 5, label: 'Rendez-vous divorce'},
+            {daysAhead: 15, label: 'Révision contrat'},
+            {daysAhead: 25, label: 'Inspection propriété'}
+        ];
+
+        for (const reminder of futureDates) {
+            const date = new Date();
+            date.setDate(today.getDate() + reminder.daysAhead);
+            await procedures.createRappel(avocats[Math.floor(Math.random() * avocats.length)], reminder.label, 'Ne pas oublier.', date.toISOString());
+        }
+
+        // -------- FACTURES --------
         console.log('Création des factures...');
-        const factures = [];
+
+        const factureInfos = [
+            {dossier: dossiers[0], heures: 10, taux: 200},
+            {dossier: dossiers[1], heures: 6.5, taux: 180},
+            {dossier: dossiers[2], heures: 8, taux: 160}
+        ];
         
-        // Créer des factures pour différents dossiers
-        const facture1 = await procedures.createFacture(
-            dossiers[0], 12.5, 200 // 12.5h à 200$/h pour le dossier de divorce
-        );
-        factures.push(facture1.factureID);
-        
-        const facture2 = await procedures.createFacture(
-            dossiers[1], 6, 175 // 6h à 175$/h pour le contrat commercial
-        );
-        factures.push(facture2.factureID);
-        
-        const facture3 = await procedures.createFacture(
-            dossiers[2], 8.25, 150 // 8.25h à 150$/h pour le litige immobilier
-        );
-        factures.push(facture3.factureID);
-        
-        // Manipuler les dates des factures pour avoir des exemples variés
+        for (const info of factureInfos) {
+            await procedures.createFacture(info.dossier, info.heures, info.taux);
+        }
         await manipulateFactureDates();
-        
-        // -------- FERMETURE DE DOSSIER --------
-        console.log('Fermeture d\'un dossier...');
-        
-        // Fermer le dossier de testament
-        const closureResult = await procedures.closeDossier(dossiers[3]);
-        console.log(`Dossier ${dossiers[3]} fermé avec ${closureResult.totalHours}h travaillées.`);
-        console.log(`Facture finale créée: ID ${closureResult.factureID}`);
-        
-        console.log('Génération des données de test terminée avec succès!');
+
+        console.log('--- FIN : Données de test générées avec succès! ---');
         
     } catch (error) {
-        console.error('Erreur lors de la génération des données de test:', error);
+        console.error('Erreur lors de la génération:', error);
     }
 }
 

@@ -38,6 +38,25 @@ const getSessionById = async (req, res) => {
   }
 };
 
+const getSessionByAvocatId = async (req, res) => {
+  const { avocatUserID } = req.params;
+
+  try {
+    const sessions = await db("session")
+      .join("dossier", "session.dossierID", "dossier.dossierID")
+      .where("dossier.avocatUserID", avocatUserID)
+      .select("session.*");
+
+    res.status(200).json(sessions);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Erreur lors de la récupération des sessions.",
+      error: error.message,
+    });
+  }
+};
+
 // Create a new session
 const createSession = async (req, res) => {
   const { userID, dossierID, description } = req.body;
@@ -175,6 +194,7 @@ const endSession = async (req, res) => {
 module.exports = {
   getAllSessions,
   getSessionById,
+  getSessionByAvocatId,
   createSession,
   updateSession,
   deleteSession,

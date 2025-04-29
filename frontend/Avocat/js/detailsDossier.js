@@ -23,6 +23,19 @@ export const renderDetailsDossier = async (dossierID) => {
           <button class="button is-primary" id="closeDossierButton">Clôturer le dossier</button>
         </div>
       </div>
+      <div style="height: 2rem;"></div>
+      <h3 class="title is-5">Documents Associés</h3>
+      <table class="table is-fullwidth is-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Avocat ID</th>
+            <th>Nom</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="documentsTableBody"></tbody>
+      </table>
     </div>
   `;
 
@@ -51,6 +64,36 @@ export const renderDetailsDossier = async (dossierID) => {
     }
   } catch (error) {
     alert("Erreur réseau.");
+  }
+
+  // Charger les documents liés au dossier
+  try {
+    const response = await fetch(`/document/byDossier/${dossierID}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) return;
+    const documents = await response.json();
+    const documentsTableBody = document.getElementById('documentsTableBody');
+    documentsTableBody.innerHTML = documents
+      .map(
+        (doc) => `
+        <tr>
+          <td>${doc.documentID}</td>
+          <td>${doc.userID}</td>
+          <td>${doc.documentNom}</td>
+          <td>
+            <button class="button is-small is-info" onclick="window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
+          </td>
+        </tr>
+      `
+      )
+      .join('');
+  } catch (error) {
+    // Pas bloquant
   }
 
   // Retour

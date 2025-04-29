@@ -1,4 +1,14 @@
 {
+  "name": "projet2-equipe2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node backend/sqlite3/testData.js && nodemon backend/server.js"
+  },
+  "author": "Your Name",
+  "license": "MIT",
   "dependencies": {
     "bcrypt": "^5.1.1",
     "express": "^5.1.0",
@@ -6,5 +16,8 @@
     "mssql": "^11.0.1",
     "node": "^18.20.8",
     "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }

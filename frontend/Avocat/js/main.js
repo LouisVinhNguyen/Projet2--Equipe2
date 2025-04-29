@@ -6,6 +6,10 @@ import { renderReceivedDocuments } from "./documents.js";
 import { renderBillingSection } from './billing.js'
 import { renderDetailsDossier } from './detailsDossier.js';
 import { renderDetailsDocument } from './detailsDocument.js';
+import { renderTacheForm } from "./tache.js";
+import { renderDetailsTache } from "./detailsTache.js";
+import { renderSessionList } from "./session.js";
+import { renderDetailsSession } from "./detailsSession.js";
 
 if (!sessionStorage.getItem("token")) {
   alert("Vous devez être connecté pour accéder à cette page.");
@@ -27,9 +31,13 @@ document.addEventListener("DOMContentLoaded", () => {
         renderEventSection(key);
       if (key === 'facturation') renderBillingSection()
       if (key === "documents") renderReceivedDocuments();
+      if (key === "taches") renderTacheForm();
+      if (key === "sessions") renderSessionList();
     },
   });
 });
 
 window.renderDetailsDossier = renderDetailsDossier;
 window.renderDetailsDocument = renderDetailsDocument;
+window.renderDetailsTache = renderDetailsTache;
+window.renderDetailsSession = renderDetailsSession;
