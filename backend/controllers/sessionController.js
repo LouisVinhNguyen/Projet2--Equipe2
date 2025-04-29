@@ -57,6 +57,24 @@ const getSessionByAvocatId = async (req, res) => {
   }
 };
 
+const getSessionByDossierId = async (req, res) => {
+  const { dossierID } = req.params;
+
+  try {
+    const sessions = await db("session")
+      .where({ dossierID })
+      .select("*");
+
+    res.status(200).json(sessions);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Erreur lors de la récupération des sessions.",
+      error: error.message,
+    });
+  }
+};
+
 // Create a new session
 const createSession = async (req, res) => {
   const { userID, dossierID, description } = req.body;
@@ -84,6 +102,10 @@ const createSession = async (req, res) => {
     if (error.message.includes("Le dossier spécifié n'existe pas")) {
       return res.status(404).json({ error: "Le dossier spécifié n'existe pas." });
     }
+    if (error.message.includes("Une session active existe déjà")) {
+      return res.status(400).json({ error: "Une session active existe déjà pour cet utilisateur et ce dossier." });
+    }
+    
     
     res.status(500).json({
       message: "Erreur lors de la création de la session.",
@@ -195,6 +217,7 @@ module.exports = {
   getAllSessions,
   getSessionById,
   getSessionByAvocatId,
+  getSessionByDossierId,
   createSession,
   updateSession,
   deleteSession,

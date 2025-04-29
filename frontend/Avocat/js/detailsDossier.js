@@ -18,7 +18,7 @@ export const renderDetailsDossier = async (dossierID) => {
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
         <div id="leftSideButtons">
           <button class="button is-link" id="backButton">Retour</button>
-          <button class="button is-info" id="addDocumentButton">Ajouter un document</button>
+
         </div>
         <div id="actionButtons">
           <button class="button is-warning" id="editButton">Modifier</button>
@@ -26,8 +26,29 @@ export const renderDetailsDossier = async (dossierID) => {
           <button class="button is-primary" id="closeDossierButton">Clôturer le dossier</button>
         </div>
       </div>
-      <div style="height: 2rem;"></div>
-      <h3 class="title is-5">Documents Associés</h3>
+    </div>
+
+    <div class="box">
+      <h2 class="title is-4">Gestionnaire de sessions</h2>
+      <table class="table is-fullwidth is-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Dossier</th>
+            <th>Début</th>
+            <th>Fin</th>
+            <th>Durée (h)</th>
+            <th>Description</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="sessionTableBody"></tbody>
+      </table>
+      <button class="button is-primary" id="startSession">Commencer une session</button>
+    </div>
+
+    <div class="box">
+      <h3 class="title is-4">Documents Associés</h3>
       <table class="table is-fullwidth is-striped">
         <thead>
           <tr>
@@ -39,6 +60,7 @@ export const renderDetailsDossier = async (dossierID) => {
         </thead>
         <tbody id="documentsTableBody"></tbody>
       </table>
+      <button class="button is-info" id="addDocumentButton">Ajouter un document</button>
     </div>
   `;
 
@@ -99,6 +121,105 @@ export const renderDetailsDossier = async (dossierID) => {
     // Pas bloquant
   }
 
+  // Gestionnaire de sessions
+  const fetchSessions = async () => {
+    try {
+      const storedToken = sessionStorage.getItem('token');
+      if (!storedToken) {
+        alert('Vous devez être connecté pour voir les sessions.');
+        return;
+      }
+      // On veut seulement les sessions du dossier courant
+      const response = await fetch(`/session/dossier/${dossierID}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${storedToken}`
+        }
+      });
+      if (response.ok) {
+        const sessions = await response.json();
+        const tableBody = document.getElementById('sessionTableBody');
+        tableBody.innerHTML = sessions.map(session => {
+          let formattedTime = '-';
+          if (session.tempsTotal != null && !isNaN(session.tempsTotal)) {
+            const totalMinutes = Math.round(session.tempsTotal * 60);
+            const hours = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+            const minutes = (totalMinutes % 60).toString().padStart(2, '0');
+            formattedTime = `${hours}:${minutes}`;
+          }
+          return `
+          <tr>
+            <td>${session.sessionID}</td>
+            <td>${session.dossierID}</td>
+            <td>${session.clockInTime ? new Date(session.clockInTime).toLocaleString() : '-'}</td>
+            <td>${session.clockOutTime ? new Date(session.clockOutTime).toLocaleString() : '-'}</td>
+            <td>${formattedTime}</td>
+            <td>${session.description}</td>
+            <td><button class="button is-small is-info view-session" onclick="window.renderDetailsSession && window.renderDetailsSession('${session.sessionID}')">Voir</button></td>
+          </tr>
+          `;
+        }).join('');
+      } else {
+        alert("Erreur lors de la récupération des sessions.");
+      }
+    } catch (error) {
+      alert("Erreur réseau lors de la récupération des sessions.");
+    }
+  };
+  fetchSessions();
+
+  // Commencer une session
+  document.getElementById('startSession').addEventListener('click', async () => {
+    // Affiche un formulaire pour saisir la description de la session
+    const form = document.createElement('form');
+    form.innerHTML = `
+      <div class="field">
+        <label class="label">Description de la session</label>
+        <input class="input" name="description" required placeholder="Description de la session" />
+      </div>
+      <button class="button is-success" type="submit">Créer la session</button>
+    `;
+    document.getElementById('startSession').after(form);
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const description = form.querySelector('input[name="description"]').value.trim();
+      if (!description) {
+        alert('Veuillez entrer une description.');
+        return;
+      }
+      try {
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        const userID = tokenPayload.userID;
+        const response = await fetch('/session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            userID,
+            dossierID,
+            description
+          })
+        });
+        if (response.ok) {
+          alert('Session créée avec succès.');
+          form.remove();
+          fetchSessions();
+        } else {
+          const err = await response.text();
+          alert('Erreur lors de la création de la session : ' + err);
+          form.remove();
+        }
+      } catch (error) {
+        alert('Erreur réseau lors de la création de la session.');
+        form.remove();  
+      }
+    };
+  });
+
   // Retour
   document.getElementById("backButton").addEventListener("click", () => {
     renderDossierForm();
@@ -120,7 +241,7 @@ export const renderDetailsDossier = async (dossierID) => {
       <button class="button is-link" type="submit">Associer</button>
     `;
     // Place le formulaire juste après la box principale
-    document.querySelector('.box').appendChild(form);
+    document.getElementById('addDocumentButton').after(form);
 
     const documentSelect = form.querySelector("#documentSelect");
 

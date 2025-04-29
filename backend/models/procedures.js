@@ -158,6 +158,15 @@ async function createSession(userID, dossierID, description) {
             throw new Error('Le dossier spécifié n\'existe pas.');
         }
 
+        // Check if a session is already active for this user and dossier
+        const existingSession = await db('session')
+            .where({ userID, dossierID })
+            .whereNull('clockOutTime')
+            .first();
+        if (existingSession) {
+            throw new Error('Une session active existe déjà pour cet utilisateur et ce dossier.');
+        }
+
         const [sessionID] = await db('session').insert({
             userID,
             dossierID,

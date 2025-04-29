@@ -12,24 +12,26 @@ const {
 } = require('../middleware/authMiddleware');
 
 // GET all sessions
-router.get('/', verifyAvocatToken, sessionController.getAllSessions);
+router.get('/', verifyAvocatOrAdminToken, sessionController.getAllSessions);
 
 // GET session by ID
-router.get('/:id', verifyAvocatToken, sessionController.getSessionById);
+router.get('/:id', verifyAvocatOrAdminToken, sessionController.getSessionById);
 
 // GET sessions by Avocat ID
-router.get('/avocat/:avocatUserID', verifyAvocatToken, sessionController.getSessionByAvocatId);
+router.get('/avocat/:avocatUserID', verifyAvocatOrAdminToken, sessionController.getSessionByAvocatId);
+
+router.get('/dossier/:dossierID', verifyAvocatOrAdminToken, sessionController.getSessionByDossierId);
 
 // POST create a new session
-router.post('/', verifyAvocatToken, sessionController.createSession);
+router.post('/', verifyAvocatOrAdminToken, sessionController.createSession);
 
 // PUT update a session
-router.put('/:id', verifyAvocatToken, sessionController.updateSession);
+router.put('/:id', verifyAvocatOrAdminToken, sessionController.updateSession);
 
 // DELETE a session
-router.delete('/:id', verifyAvocatToken, sessionController.deleteSession);
+router.delete('/:id', verifyAvocatOrAdminToken, sessionController.deleteSession);
 
 // POST end a session
-router.post('/end/:id', verifyAvocatToken, sessionController.endSession);
+router.post('/end/:id', verifyAvocatOrAdminToken, sessionController.endSession);
 
 module.exports = router;
