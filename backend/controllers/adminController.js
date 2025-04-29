@@ -215,11 +215,80 @@ const getSystemStats = async (req, res) => {
   }
 };
 
+// --- NOUVELLES FONCTIONS REPORTING & ANALYTICS ---
+
+// Obtenir total clients
+const getTotalClients = async (req, res) => {
+  try {
+    const result = await db('users').where('role', 'client').count('userID as totalClients');
+    res.json(result[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur pour récupérer total clients.' });
+  }
+};
+
+// Obtenir total dossiers
+const getTotalDossiers = async (req, res) => {
+  try {
+    const result = await db('dossier').count('dossierID as totalDossiers');
+    res.json(result[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur pour récupérer total dossiers.' });
+  }
+};
+
+// Obtenir total paiements
+const getTotalPaiements = async (req, res) => {
+  try {
+    const result = await db('facture').sum('montant as totalPaiements');
+    res.json(result[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur pour récupérer total paiements.' });
+  }
+};
+
+// Obtenir dossiers par mois
+const getDossiersParMois = async (req, res) => {
+  try {
+    const result = await db('dossier')
+      .select(db.raw("strftime('%m-%Y', dateCreated) as mois"))
+      .count('dossierID as total')
+      .groupBy('mois')
+      .orderBy('mois', 'asc');
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur pour récupérer dossiers par mois.' });
+  }
+};
+
+// Obtenir dossiers ouverts
+const getDossiersOuverts = async (req, res) => {
+  try {
+    const result = await db('dossier')
+      .whereNot('status', 'Terminé')
+      .count('dossierID as dossiersOuverts');
+    res.json(result[0]);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur pour récupérer dossiers ouverts.' });
+  }
+};
+
+
 module.exports = {
   getAllAdmins,
   getAdminById,
   updateAdmin,
   deleteAdmin,
   changePassword,
-  getSystemStats
+  getSystemStats,
+  getTotalClients,
+  getTotalDossiers,
+  getTotalPaiements,
+  getDossiersParMois,
+  getDossiersOuverts
 };
