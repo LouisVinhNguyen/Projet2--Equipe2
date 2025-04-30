@@ -18,8 +18,8 @@ CREATE TABLE users (
     prenom TEXT NOT NULL,
     nom TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
-    telephone TEXT NOT NULL,
-    password TEXT NOT NULL,
+    telephone TEXT,
+    password TEXT,
     role TEXT CHECK(role IN ('client', 'avocat', 'admin')) NOT NULL,
     dateCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
