@@ -68,3 +68,4 @@ fetch('/admin/stats/dossiers-par-mois', {
     });
 })
 .catch(error => console.error('Erreur dossiers-par-mois:', error));
+
