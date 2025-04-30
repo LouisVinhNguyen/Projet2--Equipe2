@@ -211,10 +211,6 @@ const getDocumentByDossierID = async (req, res) => {
       .where("dossier_document.dossierID", dossierID)
       .select("document.*");
 
-    if (documents.length === 0) {
-      return res.status(404).json({ message: "Aucun document trouvé pour ce dossier." });
-    }
-
     res.status(200).json(documents);
   } catch (error) {
     console.error(error);
