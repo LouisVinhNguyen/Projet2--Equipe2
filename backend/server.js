@@ -14,6 +14,7 @@ const sessionRoutes = require('./routes/sessionRoutes');
 const factureRoutes = require('./routes/factureRoutes');
 const userRoutes = require('./routes/userRoutes');
 const eventRoutes = require('./routes/eventRoutes');
+const gitAuthRoutes = require('./routes/gitAuthRoutes'); // Import GitHub authentication routes
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -39,6 +40,9 @@ app.use('/session', sessionRoutes);
 app.use('/facture', factureRoutes);
 app.use('/user', userRoutes);
 app.use('/events', eventRoutes);
+// Use /auth/callback for GitHub OAuth
+app.use('/auth', gitAuthRoutes); // Now handles /auth/callback for GitHub login
+
 
 // Start server
 app.listen(PORT, () => {
