@@ -19,7 +19,7 @@ export const renderAllSessions = () => {
         <thead>
           <tr>
             <th>ID</th>
-            <th>AvocatID</th>
+            <th>Avocat</th>
             <th>Dossier</th>
             <th>Début</th>
             <th>Fin</th>
@@ -28,7 +28,9 @@ export const renderAllSessions = () => {
             <th>Actions</th>
           </tr>
         </thead>
-        <tbody id="sessionTableBody"></tbody>
+        <tbody id="sessionTableBody">
+          <!-- Les sessions seront insérées ici -->
+        </tbody>
       </table>
     </div>
   `;
@@ -40,40 +42,31 @@ export const renderAllSessions = () => {
     tableBody.innerHTML = sessions
       .map(
         (session) => `
-      <tr>
-        <td>${session.sessionID}</td>
-        <td>${session.userID}</td>
-        <td>${session.dossierID}</td>
-        <td>${
-          session.clockInTime
-            ? new Date(session.clockInTime).toLocaleString()
-            : "-"
-        }</td>
-        <td>${
-          session.clockOutTime
-            ? new Date(session.clockOutTime).toLocaleString()
-            : "-"
-        }</td>
-        <td>${session.tempsTotal ?? "-"}</td>
-        <td>${session.description}</td>
-        <td>
-          <button class="button is-small is-danger" data-id="${
-            session.sessionID
-          }">Supprimer</button>
-        </td>
-      </tr>
-    `
+        <tr>
+          <td>${session.sessionID}</td>
+          <td>${session.userID ?? "-"}</td>
+          <td>${session.dossierID}</td>
+          <td>${
+            session.clockInTime
+              ? new Date(session.clockInTime).toLocaleString()
+              : "-"
+          }</td>
+          <td>${
+            session.clockOutTime
+              ? new Date(session.clockOutTime).toLocaleString()
+              : "-"
+          }</td>
+          <td>${session.tempsTotal ?? "-"}</td>
+          <td>${session.description}</td>
+          <td>
+            <button class="button is-small is-info view-session" onclick="window.renderDetailsSession && window.renderDetailsSession('${
+              session.sessionID
+            }')">Voir</button>
+          </td>
+        </tr>
+      `
       )
       .join("");
-
-    document.querySelectorAll(".button.is-danger").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const sessionID = btn.dataset.id;
-        if (confirm(`Confirmer la suppression de la session ${sessionID} ?`)) {
-          await deleteSession(sessionID);
-        }
-      });
-    });
   };
 
   const fetchAllSessions = async () => {
@@ -88,7 +81,7 @@ export const renderAllSessions = () => {
 
       if (response.ok) {
         allSessions = await response.json();
-        console.log(allSessions);
+        console.log("Sessions récupérées :", allSessions);
         renderTable(allSessions);
       } else {
         alert("Erreur lors de la récupération des sessions.");
@@ -98,40 +91,16 @@ export const renderAllSessions = () => {
     }
   };
 
-  const deleteSession = async (sessionID) => {
-    try {
-      const storedToken = sessionStorage.getItem("token");
-      const response = await fetch(`/session/${sessionID}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${storedToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        allSessions = allSessions.filter(
-          (s) => s.sessionID !== parseInt(sessionID)
-        );
-        renderTable(allSessions);
-      } else {
-        alert("Échec de la suppression.");
-      }
-    } catch (error) {
-      alert("Erreur de suppression.");
-    }
-  };
-
-  // Bouton Filtrage
+  // 🎯 Filtrage par avocatID (userID)
   document.addEventListener("click", (e) => {
-    if (e.target && e.target.id === "filterAvocatBtn") {
+    if (e.target?.id === "filterAvocatBtn") {
       const filterID = document
         .getElementById("filterAvocatInput")
         .value.trim();
       const filtered = allSessions.filter((s) => String(s.userID) === filterID);
       renderTable(filtered);
     }
-    if (e.target && e.target.id === "resetFilterBtn") {
+    if (e.target?.id === "resetFilterBtn") {
       renderTable(allSessions);
       document.getElementById("filterAvocatInput").value = "";
     }

@@ -7,6 +7,7 @@ import { renderBillingSection } from "./billing.js";
 import { renderDetailsDossier } from "./detailsDossier.js";
 import { renderDetailsDocument } from "./detailsDocument.js";
 import { renderAllSessions } from "./session.js";
+import { renderDetailsSession } from "./detailsSession.js";
 
 if (!sessionStorage.getItem("token")) {
   alert("Vous devez être connecté pour accéder à cette page.");
@@ -35,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 window.renderDetailsDossier = renderDetailsDossier;
 window.renderDetailsDocument = renderDetailsDocument;
+window.renderDetailsSession = renderDetailsSession;
 window.renderDetailsClient = (
   await import("./detailsClient.js")
 ).renderDetailsClient;

@@ -1,5 +1,5 @@
-const db = require('../config/db');
-const procedures = require('../models/procedures');
+const db = require("../config/db");
+const procedures = require("../models/procedures");
 
 // Get all documents
 const getAllDocuments = async (req, res) => {
@@ -20,9 +20,7 @@ const getDocumentById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const document = await db("document")
-      .where({ documentID: id })
-      .first();
+    const document = await db("document").where({ documentID: id }).first();
 
     if (!document) {
       return res.status(404).json({ message: "Document introuvable." });
@@ -61,15 +59,19 @@ const createDocument = async (req, res) => {
     res.status(201).json({ documentID: result.documentID });
   } catch (error) {
     console.error(error);
-    
+
     // Handle specific error messages with appropriate status codes
     if (error.message.includes("L'utilisateur spécifié n'existe pas")) {
-      return res.status(404).json({ error: "L'utilisateur spécifié n'existe pas." });
+      return res
+        .status(404)
+        .json({ error: "L'utilisateur spécifié n'existe pas." });
     }
     if (error.message.includes("Le dossier spécifié n'existe pas")) {
-      return res.status(404).json({ error: "Le dossier spécifié n'existe pas." });
+      return res
+        .status(404)
+        .json({ error: "Le dossier spécifié n'existe pas." });
     }
-    
+
     res.status(500).json({
       message: "Erreur lors de la création du document.",
       error: error.message,
@@ -98,7 +100,9 @@ const updateDocument = async (req, res) => {
     // Check if the user exists
     const existingUser = await db("users").where({ userID }).first();
     if (!existingUser) {
-      return res.status(404).json({ error: "L'utilisateur spécifié n'existe pas." });
+      return res
+        .status(404)
+        .json({ error: "L'utilisateur spécifié n'existe pas." });
     }
 
     // Check if a document with the same name already exists (excluding the current document)
@@ -113,15 +117,13 @@ const updateDocument = async (req, res) => {
     }
 
     // Update the document
-    await db("document")
-      .where({ documentID: id })
-      .update({ 
-        userID, 
-        documentNom, 
-        description, 
-        fichier 
-      });
-    
+    await db("document").where({ documentID: id }).update({
+      userID,
+      documentNom,
+      description,
+      fichier,
+    });
+
     res.status(200).json({ message: "Document modifié avec succès." });
   } catch (error) {
     console.error(error);
@@ -142,12 +144,12 @@ const deleteDocument = async (req, res) => {
     res.status(200).json({ message: result.message });
   } catch (error) {
     console.error(error);
-    
+
     // Handle specific error messages
-    if (error.message.includes('Document introuvable')) {
+    if (error.message.includes("Document introuvable")) {
       return res.status(404).json({ message: "Document introuvable." });
     }
-    
+
     res.status(500).json({
       message: "Erreur lors de la suppression du document.",
       error: error.message,
@@ -158,42 +160,43 @@ const deleteDocument = async (req, res) => {
 // Link a document to a dossier
 const linkDocumentToDossier = async (req, res) => {
   const { documentID, dossierID } = req.body;
-  
+
   if (!documentID || !dossierID) {
     return res
       .status(400)
       .json({ error: "Les ID de document et dossier sont requis" });
   }
-  
+
   try {
-    const result = await procedures.linkDocumentToDossier(documentID, dossierID);
+    const result = await procedures.linkDocumentToDossier(
+      documentID,
+      dossierID
+    );
     res.status(200).json({
       message: "Liaison établie avec succès",
       data: result,
     });
   } catch (error) {
     console.error(error);
-    
+
     // Handle specific errors with appropriate status codes
-    if (error.message.includes('ID de document inexistant')) {
+    if (error.message.includes("ID de document inexistant")) {
       return res.status(404).json({
         message: "Erreur lors de la liaison",
-        error: "Le document spécifié n'existe pas."
+        error: "Le document spécifié n'existe pas.",
       });
-    } 
-    else if (error.message.includes('ID de dossier inexistant')) {
+    } else if (error.message.includes("ID de dossier inexistant")) {
       return res.status(404).json({
         message: "Erreur lors de la liaison",
-        error: "Le dossier spécifié n'existe pas."
+        error: "Le dossier spécifié n'existe pas.",
       });
-    }
-    else if (error.message.includes('déjà lié')) {
+    } else if (error.message.includes("déjà lié")) {
       return res.status(409).json({
         message: "Erreur lors de la liaison",
-        error: "Le document est déjà lié à ce dossier."
+        error: "Le document est déjà lié à ce dossier.",
       });
     }
-    
+
     res.status(500).json({
       message: "Erreur lors de la liaison",
       error: error.message,
@@ -207,13 +210,14 @@ const getDocumentByDossierID = async (req, res) => {
 
   try {
     const documents = await db("document")
-      .join("dossier_document", "document.documentID", "=", "dossier_document.documentID")
+      .join(
+        "dossier_document",
+        "document.documentID",
+        "=",
+        "dossier_document.documentID"
+      )
       .where("dossier_document.dossierID", dossierID)
       .select("document.*");
-
-    if (documents.length === 0) {
-      return res.status(404).json({ message: "Aucun document trouvé pour ce dossier." });
-    }
 
     res.status(200).json(documents);
   } catch (error) {
@@ -223,7 +227,7 @@ const getDocumentByDossierID = async (req, res) => {
       error: error.message,
     });
   }
-}
+};
 
 module.exports = {
   getAllDocuments,
@@ -232,5 +236,5 @@ module.exports = {
   updateDocument,
   deleteDocument,
   linkDocumentToDossier,
-  getDocumentByDossierID
+  getDocumentByDossierID,
 };

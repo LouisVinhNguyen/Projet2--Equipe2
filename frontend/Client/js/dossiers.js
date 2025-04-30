@@ -1,5 +1,4 @@
-const urlParams = new URLSearchParams(window.location.search);
-const token = urlParams.get("token");
+const token = sessionStorage.getItem("token");
 
 export const renderDossiers = async () => {
   const section = document.getElementById("dashboard-sections");
@@ -7,7 +6,7 @@ export const renderDossiers = async () => {
   const container = document.getElementById("dossierContainer");
 
   try {
-    const response = await fetch("/api/dossier", {
+    const response = await fetch("/dossier", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
