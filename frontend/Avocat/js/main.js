@@ -10,6 +10,7 @@ import { renderTacheForm } from "./tache.js";
 import { renderDetailsTache } from "./detailsTache.js";
 import { renderSessionList } from "./session.js";
 import { renderDetailsSession } from "./detailsSession.js";
+import { renderCommunicationForm } from './communication.js';
 
 if (!sessionStorage.getItem("token")) {
   alert("Vous devez être connecté pour accéder à cette page.");
@@ -33,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (key === "documents") renderReceivedDocuments();
       if (key === "taches") renderTacheForm();
       if (key === "sessions") renderSessionList();
+      if (key === 'communication') renderCommunicationForm()
     },
   });
 });

@@ -6,7 +6,8 @@ const contentMap = {
   facturation: { title: 'Facturation & Paiements', description: '' },
   documents: { title: 'Documents Reçus', description: '' },
   taches: { title: 'Gestion des Tâches', description: '' },
-  sessions: { title: 'Mes Sessions', description: '' }
+  sessions: { title: 'Mes Sessions', description: '' },
+  communication: { title: 'Communication', description: '' } 
 }
 
 export const initSidebar = ({ onSectionChange }) => {

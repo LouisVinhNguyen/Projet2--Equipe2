@@ -14,6 +14,9 @@ const {
 // GET check if email exists
 router.get('/check-email', userController.checkEmailExists);
 
+// GET all users public (without sensitive information)
+router.get('/all-public', userController.getAllUsersPublic); 
+
 // GET all users
 router.get('/', verifyAdminToken, userController.getAllUsers);
 

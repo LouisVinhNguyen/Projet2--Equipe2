@@ -3,7 +3,8 @@ const contentMap = {
   rappels: 'Rappels',
   dossiers: 'Mes Dossiers',
   paiements: 'Paiements',
-  documents: 'Mes Documents'
+  documents: 'Mes Documents',
+  communication: 'Communication'
 }
 
 export const initSidebar = ({ onSectionChange }) => {
