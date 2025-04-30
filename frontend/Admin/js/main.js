@@ -3,9 +3,10 @@ import { renderDossierForm } from "./dossierForm.js";
 import { renderClientForm } from "./clientForm.js";
 import { renderEventSection } from "./eventManager.js";
 import { renderReceivedDocuments } from "./documents.js";
-import { renderBillingSection } from './billing.js'
-import { renderDetailsDossier } from './detailsDossier.js';
-import { renderDetailsDocument } from './detailsDocument.js';
+import { renderBillingSection } from "./billing.js";
+import { renderDetailsDossier } from "./detailsDossier.js";
+import { renderDetailsDocument } from "./detailsDocument.js";
+import { renderAllSessions } from "./session.js";
 
 if (!sessionStorage.getItem("token")) {
   alert("Vous devez être connecté pour accéder à cette page.");
@@ -25,12 +26,15 @@ document.addEventListener("DOMContentLoaded", () => {
       if (key === "clients") renderClientForm();
       if (["agenda", "rappels", "planification"].includes(key))
         renderEventSection(key);
-      if (key === 'facturation') renderBillingSection()
+      if (key === "facturation") renderBillingSection();
       if (key === "documents") renderReceivedDocuments();
+      if (key === "sessions") renderAllSessions();
     },
   });
 });
 
 window.renderDetailsDossier = renderDetailsDossier;
 window.renderDetailsDocument = renderDetailsDocument;
-window.renderDetailsClient = (await import('./detailsClient.js')).renderDetailsClient;
+window.renderDetailsClient = (
+  await import("./detailsClient.js")
+).renderDetailsClient;

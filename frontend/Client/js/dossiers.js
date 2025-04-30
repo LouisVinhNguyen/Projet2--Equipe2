@@ -1,27 +1,28 @@
 const urlParams = new URLSearchParams(window.location.search);
 const token = urlParams.get("token");
 
-
 export const renderDossiers = async () => {
-  const section = document.getElementById('dashboard-sections');
+  const section = document.getElementById("dashboard-sections");
   section.innerHTML = '<div id="dossierContainer" class="mb-5"></div>';
-  const container = document.getElementById('dossierContainer');
+  const container = document.getElementById("dossierContainer");
 
   try {
-    const response = await fetch('/api/dossier', {
-      method: 'GET',
-      headers: { 
-        "Authorization": `Bearer ${token}` 
-    },
-      
+    const response = await fetch("/api/dossier", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     if (response.ok) {
       const dossiers = await response.json();
+      console.log(dossiers);
       console.log("Dossiers récupérés:", dossiers);
 
       container.innerHTML = dossiers.length
-        ? dossiers.map(d => `
+        ? dossiers
+            .map(
+              (d) => `
             <article class="message is-info mb-3">
               <div class="message-header">
                 ${d.nom}
@@ -31,14 +32,21 @@ export const renderDossiers = async () => {
                 ${d.description}
               </div>
             </article>
-          `).join('')
-        : '<p>Aucun dossier enregistré.</p>';
+          `
+            )
+            .join("")
+        : "<p>Aucun dossier enregistré.</p>";
     } else {
-      console.error("Erreur lors de la récupération des dossiers:", response.statusText);
-      container.innerHTML = '<p class="has-text-danger">Erreur lors de la récupération des dossiers.</p>';
+      console.error(
+        "Erreur lors de la récupération des dossiers:",
+        response.statusText
+      );
+      container.innerHTML =
+        '<p class="has-text-danger">Erreur lors de la récupération des dossiers.</p>';
     }
   } catch (error) {
     console.error("Erreur réseau:", error);
-    container.innerHTML = '<p class="has-text-danger">Une erreur réseau s\'est produite.</p>';
+    container.innerHTML =
+      '<p class="has-text-danger">Une erreur réseau s\'est produite.</p>';
   }
 };
