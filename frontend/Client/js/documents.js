@@ -1,5 +1,3 @@
-import { renderDetailsDocument } from './detailsDocument.js';
-
 export const renderClientDocuments = async () => {
   window.lastDocumentSource = 'documents';
   const container = document.getElementById('dashboard-sections');
