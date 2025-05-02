@@ -52,24 +52,8 @@ export const renderDetailsDocument = async (documentID) => {
   }
 
   // Retour
-  document.getElementById("backButton").addEventListener("click", () => {
-    // 1. If we came from a dossier details view, go back to that dossier
-    if (window.lastDocumentSource === 'dossier' && window.lastViewedDossierID) {
-      window.renderDetailsDossier && window.renderDetailsDossier(window.lastViewedDossierID);
-      window.lastViewedDossierID = undefined;
-      window.lastDocumentSource = undefined;
-      return;
-    }
-    // 2. If we came from the documents section, go back to documents
-    if (window.lastDocumentSource === 'documents' && window.renderReceivedDocuments) {
-      window.renderReceivedDocuments();
-      window.lastDocumentSource = undefined;
-      return;
-    }
-    // 3. Fallback: go to dossier list
-    if (window.renderDossiers) {
-      window.renderDossiers();
-    }
+  document.getElementById('backButton').addEventListener('click', () => {
+    renderReceivedDocuments();
   });
 
   // Supprimer le document
