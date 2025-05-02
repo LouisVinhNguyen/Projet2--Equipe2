@@ -111,7 +111,7 @@ export const renderDetailsDossier = async (dossierID) => {
           <td>${doc.userID}</td>
           <td>${doc.documentNom}</td>
           <td>
-            <button class="button is-small is-info" onclick="window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
+            <button class="button is-small is-info" onclick="window.lastViewedDossierID='${dossierID}';window.lastDocumentSource='dossier';window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
           </td>
         </tr>
       `

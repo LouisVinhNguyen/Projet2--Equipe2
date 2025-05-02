@@ -1,141 +1,83 @@
-const urlParams = new URLSearchParams(window.location.search);
-const token = urlParams.get("token");
+import { renderDetailsDocument } from './detailsDocument.js';
 
-
-
-export const renderDocumentUploader = async () => {
+export const renderClientDocuments = async () => {
+  window.lastDocumentSource = 'documents';
   const container = document.getElementById('dashboard-sections');
-  
-  // Récupérer les documents depuis l'API plutôt que localStorage
-  let documents = [];
-  try {
-    documents = await getDocuments();
-  } catch (error) {
-    console.error("Erreur lors du chargement des documents:", error);
-    documents = [];
+  const token = sessionStorage.getItem('token');
+  if (!token) {
+    container.innerHTML = '<p class="has-text-danger">Vous devez être connecté pour voir vos documents.</p>';
+    return;
   }
+  const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+  const clientUserID = tokenPayload.userID;
 
   container.innerHTML = `
     <div class="box">
-      <h2 class="title is-4">Envoyer un Document</h2>
-      <form id="uploadForm">
-        <div class="field">
-          <label class="label">Titre</label>
-          <input class="input" name="titre" required />
-        </div>
-        <div class="field">
-          <label class="label">Fichier (URL)</label>
-          <input class="input" type="file" name="fichier" required />
-        </div>
-        <div class="field">
-          <label class="label">Votre nom (client)</label>
-          <input class="input" name="client" required />
-        </div>
-        <button class="button is-link mt-2">Envoyer</button>
-      </form>
-
-      <hr />
-      <h3 class="subtitle is-5">Documents envoyés</h3>
-      ${documents.length ? documents.map(doc => `
-        <div class="box is-light">
-          <strong>${doc.titre}</strong><br/>
-          <small>Envoyé le ${doc.date}</small><br/>
-          <small>${doc.nomFichier}</small>
-        </div>
-      `).join('') : '<p>Aucun document envoyé.</p>'}
+      <h2 class="title is-4">Mes Documents</h2>
+      <table class="table is-fullwidth is-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nom</th>
+            <th>Description</th>
+            <th>Dossier</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="documentTableBody"></tbody>
+      </table>
     </div>
   `;
 
-  let document = {
-    titre: "Document 1",
-    nomFichier: "doc1.pdf",
-    contenu: "data:application/pdf;base64,abc123",
-    date: "2021-09-15",
-    client: "John Doe"
-  };
-
-  // Gestion du formulaire d'envoi
-  const form = document.getElementById('uploadForm');
-  form.onsubmit = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(form);
-    const file = formData.get('fichier');
-
-    // Vérifier si un fichier a été sélectionné
-    if (file.size > 0) {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const contenu = reader.result;
-        const doc = {
-          titre: formData.get('titre'),
-          nomFichier: file.name,
-          contenu,
-          date: new Date().toISOString().split('T')[0],
-          client: formData.get('client')
-        };
-
-        await envoyerDocument(doc);
-      };
-
-      reader.readAsDataURL(file);
-    } else {
-      alert('Veuillez sélectionner un fichier.');
+  try {
+    // Fetch dossiers for this client
+    const dossiersResponse = await fetch(`/dossier/client/${clientUserID}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    let dossierIDs = [];
+    if (dossiersResponse.ok) {
+      const dossiers = await dossiersResponse.json();
+      dossierIDs = dossiers.map(d => d.dossierID);
     }
-  };
+    // Fetch all documents for these dossiers
+    let allDocuments = [];
+    for (const dossierID of dossierIDs) {
+      const docsResponse = await fetch(`/document/byDossier/${dossierID}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (docsResponse.ok) {
+        const docs = await docsResponse.json();
+        // Add dossierID to each doc for display
+        docs.forEach(doc => doc.dossierID = dossierID);
+        allDocuments = allDocuments.concat(docs);
+      }
+    }
+    const tableBody = document.getElementById('documentTableBody');
+    if (allDocuments.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="5">Aucun document trouvé.</td></tr>';
+    } else {
+      tableBody.innerHTML = allDocuments.map(doc => `
+        <tr>
+          <td>${doc.documentID}</td>
+          <td>${doc.documentNom}</td>
+          <td>${doc.description || ''}</td>
+          <td>${doc.dossierID || ''}</td>
+          <td><button class="button is-small is-info" onclick="window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button></td>
+        </tr>
+      `).join('');
+    }
+  } catch (error) {
+    const tableBody = document.getElementById('documentTableBody');
+    tableBody.innerHTML = '<tr><td colspan="5" class="has-text-danger">Erreur lors de la récupération des documents.</td></tr>';
+  }
 };
 
-// Fonction pour récupérer tous les documents
-export async function getDocuments() {
-  try {
-    const response = await fetch('/api/documents', {
-      method: 'GET',
-      headers: { 
-        "Authorization": `Bearer ${token}` 
-    },
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      console.log("Documents récupérés:", data);
-      return data;
-    } else {
-      console.error("Erreur lors de la récupération des documents:", response.statusText);
-      alert("Erreur lors de la récupération des documents. Veuillez réessayer.");
-      return [];
-    }
-  } catch (error) {
-    console.error("Erreur réseau:", error);
-    alert("Une erreur réseau s'est produite. Veuillez réessayer.");
-    return [];
-  }
-}
-
-
-
-
-
-// Fonction pour envoyer un document
-export async function envoyerDocument(document) {
-  try {
-    const response = await fetch('/api/documents', {
-      method: 'POST',
-      headers: { 
-        "Authorization": `Bearer ${token}` 
-    },
-      body: JSON.stringify(document),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      console.log("Document ajouté:", data);
-      alert("Document ajouté avec succès.");
-      await renderDocumentUploader(); // Rafraîchir l'affichage
-    } else {
-      console.error("Erreur lors de l'ajout du document:", response.statusText);
-      alert("Erreur lors de l'ajout du document. Veuillez réessayer.");
-    }
-  } catch (error) {
-    console.error("Erreur réseau:", error);
-    alert("Une erreur réseau s'est produite. Veuillez réessayer.");
-  }
-}
+window.renderClientDocuments = renderClientDocuments;

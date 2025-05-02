@@ -121,6 +121,43 @@ async function generateTestData() {
         await procedures.linkClientToDossier(clients[3], dossiers[3]);
         await procedures.linkClientToDossier(clients[0], dossiers[3]); // Jean aussi lié au testament pour exemple
 
+        // --- ASSOCIATION DU CLIENT 'client@gmail.com' À DES DOSSIERS ---
+        // Associer le client par défaut à deux dossiers existants
+        await procedures.linkClientToDossier(defaultUsers[2], dossiers[0]); // Divorce Jean Dupont
+        await procedures.linkClientToDossier(defaultUsers[2], dossiers[1]); // Contrat pour Lavoie Inc.
+
+        // Créer un nouveau dossier dont ce client est le client principal
+        const dossierClient = await procedures.createDossier(
+            avocats[0],
+            'Litige personnel Client Test',
+            'Civil',
+            'Litige de test pour client@gmail.com',
+            defaultUsers[2]
+        );
+        dossiers.push(dossierClient.dossierID);
+        // Ajouter un document à ce dossier
+        await procedures.createDocument(
+            avocats[0],
+            'Lettre officielle',
+            'Lettre officielle pour le litige personnel.',
+            'https://placeholder.com/docs/lettre_officielle.pdf',
+            dossierClient.dossierID
+        );
+        // Ajouter une tâche à ce dossier
+        await procedures.createTache(
+            avocats[0],
+            dossierClient.dossierID,
+            'Préparer la défense',
+            'Préparer les arguments pour la défense du client.',
+            'En cours'
+        );
+        // Ajouter une session à ce dossier
+        await procedures.createSession(
+            avocats[0],
+            dossierClient.dossierID,
+            'Consultation initiale avec client@gmail.com'
+        );
+
         // -------- CRÉATION DES DOCUMENTS --------
         console.log('Création des documents...');
 

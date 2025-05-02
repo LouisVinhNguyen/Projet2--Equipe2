@@ -1,4 +1,6 @@
 export const renderReceivedDocuments = () => {
+  window.lastDocumentSource = 'documents';
+
   const container = document.getElementById('dashboard-sections')
 
   container.innerHTML = `

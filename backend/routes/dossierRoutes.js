@@ -24,6 +24,12 @@ router.get(
   dossierController.getDossierByAvocatId
 );
 
+router.get(
+  "/client/:clientUserID",
+  verifyAvocatOrClientToken,
+  dossierController.getDossierByClientId
+);
+
 // POST create a new dossier
 router.post("/", verifyAvocatOrAdminToken, dossierController.createDossier);
 

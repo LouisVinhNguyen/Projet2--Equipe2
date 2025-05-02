@@ -55,6 +55,25 @@ const getDossierByAvocatId = async (req, res) => {
   }
 };
 
+// Get dossier by Client ID
+const getDossierByClientId = async (req, res) => {
+  const { clientUserID } = req.params;
+  try {
+    // Join client_dossier and dossier to get all dossiers for the client
+    const dossiers = await db("client_dossier")
+      .where({ clientUserID })
+      .join("dossier", "client_dossier.dossierID", "dossier.dossierID")
+      .select("dossier.*");
+    res.status(200).json(dossiers);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Erreur lors de la récupération des dossiers du client.",
+      error: error.message,
+    });
+  }
+};
+
 // Create a new dossier
 const createDossier = async (req, res) => {
   const { avocatUserID, dossierNom, dossierType, description, clientUserID } = req.body;
@@ -351,5 +370,6 @@ module.exports = {
   updateDossier,
   deleteDossier,
   closeDossier,
-  linkClientToDossier
+  linkClientToDossier,
+  getDossierByClientId
 };

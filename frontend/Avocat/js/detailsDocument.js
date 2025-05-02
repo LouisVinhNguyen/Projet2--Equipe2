@@ -47,14 +47,29 @@ export const renderDetailsDocument = async (documentID) => {
         .join("");
     } else {
       alert("Erreur lors de la récupération des détails du document.");
-    }
-  } catch (error) {
+    }  } catch (error) {
     alert("Erreur réseau.");
   }
 
   // Retour
   document.getElementById("backButton").addEventListener("click", () => {
-    renderReceivedDocuments();
+    // 1. If we came from a dossier details view, go back to that dossier
+    if (window.lastDocumentSource === 'dossier' && window.lastViewedDossierID) {
+      window.renderDetailsDossier && window.renderDetailsDossier(window.lastViewedDossierID);
+      window.lastViewedDossierID = undefined;
+      window.lastDocumentSource = undefined;
+      return;
+    }
+    // 2. If we came from the documents section, go back to documents
+    if (window.lastDocumentSource === 'documents' && window.renderReceivedDocuments) {
+      window.renderReceivedDocuments();
+      window.lastDocumentSource = undefined;
+      return;
+    }
+    // 3. Fallback: go to dossier list
+    if (window.renderDossiers) {
+      window.renderDossiers();
+    }
   });
 
   // Supprimer le document
