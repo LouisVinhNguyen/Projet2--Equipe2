@@ -1,6 +1,6 @@
 // Détail d'un dossier côté client (lecture seule)
 export const renderDetailsDossier = async (dossierID) => {
-  const container = document.getElementById("dashboard-sections");
+
   const token = sessionStorage.getItem("token");
   if (!token) {
     alert("Vous devez être connecté.");
@@ -8,6 +8,7 @@ export const renderDetailsDossier = async (dossierID) => {
     return;
   }
 
+  const container = document.getElementById("dashboard-sections");
   container.innerHTML = `
     <div class="box">
       <h2 class="title is-4">Détails du dossier</h2>
@@ -79,7 +80,7 @@ export const renderDetailsDossier = async (dossierID) => {
             <td>${doc.userID}</td>
             <td>${doc.documentNom}</td>
             <td>
-              <button class="button is-small is-info" onclick="window.lastViewedDossierID='${dossierID}';window.lastDocumentSource='dossier';window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
+              <button class="button is-small is-info" onclick="window.previousRender = () => renderDetailsDossier(${dossierID});window.lastDocumentSource='dossier';window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
             </td>
           </tr>
         `
@@ -92,6 +93,6 @@ export const renderDetailsDossier = async (dossierID) => {
 
   // Retour
   document.getElementById("backButton").addEventListener("click", () => {
-    window.renderDossiers && window.renderDossiers();
+    window.renderDossier && window.renderDossier();
   });
 };

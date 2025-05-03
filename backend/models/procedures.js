@@ -186,10 +186,9 @@ async function createSession(userID, dossierID, description) {
 /**
  * 6. End a session (stop time tracking)
  * @param {number} sessionID - Session ID
- * @param {string|null} description - Optional updated description
  * @returns {Promise<Object>} The updated session details
  */
-async function endSession(sessionID, description = null) {
+async function endSession(sessionID) {
     try {
         // Check if session exists and is not already ended
         const session = await db('session').where({ sessionID }).first();
@@ -212,11 +211,6 @@ async function endSession(sessionID, description = null) {
             clockOutTime: currentTime.toISOString(),
             tempsTotal: tempsTotalHeures
         };
-        
-        // Add description if provided
-        if (description !== null) {
-            updateData.description = description;
-        }
         
         await db('session')
             .where({ sessionID })
@@ -596,7 +590,7 @@ async function createFacture(dossierID, timeWorked, hourlyRate) {
         }
         
         // Calculate total invoice amount
-        const montant = timeWorked * hourlyRate;
+        const montant = Math.round(timeWorked * hourlyRate * 100) / 100;
         
         // Set creation date and due date (30 days from creation)
         const dateCreated = new Date();
@@ -678,7 +672,7 @@ async function closeDossier(dossierID) {
             
             const [factureID] = await trx('facture').insert({
                 dossierID,
-                montant: totalHours * hourlyRate,
+                montant: Math.round(totalHours * hourlyRate * 100) / 100,
                 status: 'Non payée',
                 dateCreated: new Date().toISOString(),
                 dateLimite: dateLimite.toISOString()

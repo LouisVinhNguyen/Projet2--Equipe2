@@ -1,14 +1,18 @@
 import { renderDossierForm } from "./dossierForm.js";
 
 export const renderDetailsDossier = async (dossierID) => {
-  const container = document.getElementById("dashboard-sections");
-  const token = sessionStorage.getItem("token");
+
+  const token = sessionStorage.getItem('token');
   if (!token) {
-    alert("Vous devez être connecté.");
+    alert('Vous devez être connecté pour accéder à cette page.');
     window.location.href = "../index.html";
     return;
   }
 
+  const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+  const avocatUserID = tokenPayload.userID;
+
+  const container = document.getElementById("dashboard-sections");
   container.innerHTML = `
     <div class="box">
       <h2 class="title is-4">Détails du dossier</h2>
@@ -78,16 +82,20 @@ export const renderDetailsDossier = async (dossierID) => {
       dossierData = await response.json();
       const tableBody = document.getElementById("detailsTableBody");
       tableBody.innerHTML = Object.entries(dossierData)
-        .map(
-          ([key, value]) => `
-        <tr><th>${key}</th><td>${value}</td></tr>
-      `
-        )
-        .join("");
+      .map(([key, value]) => {
+        if (key.includes("date")) {
+          return `<tr><th>${key}</th><td>${value ? new Date(value).toLocaleString() : "-"}</td></tr>`;
+        } else {
+          return `<tr><th>${key}</th><td>${value ?? "-"}</td></tr>`;
+        }
+      })
+      .join("");
     } else {
+      console.error("Erreur lors de la récupération des détails du dossier:", response.statusText);
       alert("Erreur lors de la récupération des détails du dossier.");
     }
   } catch (error) {
+    console.error("Erreur lors de la récupération des détails du dossier:", error);
     alert("Erreur réseau.");
   }
 
@@ -103,20 +111,16 @@ export const renderDetailsDossier = async (dossierID) => {
     if (!response.ok) return;
     const documents = await response.json();
     const documentsTableBody = document.getElementById('documentsTableBody');
-    documentsTableBody.innerHTML = documents
-      .map(
-        (doc) => `
-        <tr>
-          <td>${doc.documentID}</td>
-          <td>${doc.userID}</td>
-          <td>${doc.documentNom}</td>
-          <td>
-            <button class="button is-small is-info" onclick="window.lastViewedDossierID='${dossierID}';window.lastDocumentSource='dossier';window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
-          </td>
-        </tr>
-      `
-      )
-      .join('');
+    documentsTableBody.innerHTML = documents.map(doc => `
+      <tr>
+        <td>${doc.documentID}</td>
+        <td>${doc.userID}</td>
+        <td>${doc.documentNom}</td>
+        <td>
+          <button class="button is-small is-info view-document" onclick="window.previousRender = () => renderDetailsDossier(${dossierID}); window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
+        </td>
+      </tr>
+    `).join('');
   } catch (error) {
     // Pas bloquant
   }
@@ -124,46 +128,33 @@ export const renderDetailsDossier = async (dossierID) => {
   // Gestionnaire de sessions
   const fetchSessions = async () => {
     try {
-      const storedToken = sessionStorage.getItem('token');
-      if (!storedToken) {
-        alert('Vous devez être connecté pour voir les sessions.');
-        return;
-      }
-      // On veut seulement les sessions du dossier courant
       const response = await fetch(`/session/dossier/${dossierID}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${storedToken}`
+          'Authorization': `Bearer ${token}`
         }
       });
       if (response.ok) {
         const sessions = await response.json();
         const tableBody = document.getElementById('sessionTableBody');
-        tableBody.innerHTML = sessions.map(session => {
-          let formattedTime = '-';
-          if (session.tempsTotal != null && !isNaN(session.tempsTotal)) {
-            const totalMinutes = Math.round(session.tempsTotal * 60);
-            const hours = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
-            const minutes = (totalMinutes % 60).toString().padStart(2, '0');
-            formattedTime = `${hours}:${minutes}`;
-          }
-          return `
+        tableBody.innerHTML = sessions.map(session => `
           <tr>
             <td>${session.sessionID}</td>
             <td>${session.dossierID}</td>
             <td>${session.clockInTime ? new Date(session.clockInTime).toLocaleString() : '-'}</td>
             <td>${session.clockOutTime ? new Date(session.clockOutTime).toLocaleString() : '-'}</td>
-            <td>${formattedTime}</td>
+            <td>${session.tempsTotal}</td>
             <td>${session.description}</td>
-            <td><button class="button is-small is-info view-session" onclick="window.renderDetailsSession && window.renderDetailsSession('${session.sessionID}')">Voir</button></td>
+            <td><button class="button is-small is-info view-session" onclick="window.previousRender = () => renderDetailsDossier(${dossierID}); window.renderDetailsSession && window.renderDetailsSession('${session.sessionID}')">Voir</button></td>
           </tr>
-          `;
-        }).join('');
+        `).join('');
       } else {
+        console.error("Erreur lors de la récupération des sessions:", response.statusText);
         alert("Erreur lors de la récupération des sessions.");
       }
     } catch (error) {
+      console.error("Erreur réseau:", error);
       alert("Erreur réseau lors de la récupération des sessions.");
     }
   };

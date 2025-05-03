@@ -1,14 +1,18 @@
 export const renderClientDocuments = async () => {
+
   window.lastDocumentSource = 'documents';
-  const container = document.getElementById('dashboard-sections');
+
   const token = sessionStorage.getItem('token');
   if (!token) {
-    container.innerHTML = '<p class="has-text-danger">Vous devez être connecté pour voir vos documents.</p>';
+    alert('Vous devez être connecté pour voir les dossiers.');
+    window.location.href = "../index.html";
     return;
   }
+  
   const tokenPayload = JSON.parse(atob(token.split('.')[1]));
   const clientUserID = tokenPayload.userID;
 
+  const container = document.getElementById('dashboard-sections');
   container.innerHTML = `
     <div class="box">
       <h2 class="title is-4">Mes Documents</h2>
@@ -41,6 +45,7 @@ export const renderClientDocuments = async () => {
       const dossiers = await dossiersResponse.json();
       dossierIDs = dossiers.map(d => d.dossierID);
     }
+    
     // Fetch all documents for these dossiers
     let allDocuments = [];
     for (const dossierID of dossierIDs) {
@@ -68,7 +73,7 @@ export const renderClientDocuments = async () => {
           <td>${doc.documentNom}</td>
           <td>${doc.description || ''}</td>
           <td>${doc.dossierID || ''}</td>
-          <td><button class="button is-small is-info" onclick="window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button></td>
+          <td><button class="button is-small is-info" onclick="window.previousRender = window.renderReceivedDocuments; window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button></td>
         </tr>
       `).join('');
     }
@@ -77,5 +82,3 @@ export const renderClientDocuments = async () => {
     tableBody.innerHTML = '<tr><td colspan="5" class="has-text-danger">Erreur lors de la récupération des documents.</td></tr>';
   }
 };
-
-window.renderClientDocuments = renderClientDocuments;

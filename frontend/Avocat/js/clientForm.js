@@ -1,4 +1,15 @@
 export const renderClientForm = () => {
+
+  const token = sessionStorage.getItem('token');
+  if (!token) {
+    alert('Vous devez être connecté pour accéder à cette page.');
+    window.location.href = "../index.html";
+    return;
+  }
+
+  const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+  const avocatUserID = tokenPayload.userID;
+
   const container = document.getElementById('dashboard-sections')
   container.innerHTML = `
     <div class="box">
@@ -22,20 +33,12 @@ export const renderClientForm = () => {
   // Function to fetch and display clients associated with the logged-in avocat
   const fetchClientsList = async () => {
     try {
-      const storedToken = sessionStorage.getItem('token')
-      if (!storedToken) {
-        alert('Vous devez être connecté pour voir les clients.')
-        return
-      }
-      // Get avocat ID from the token
-      const tokenPayload = JSON.parse(atob(storedToken.split('.')[1]));
-      const avocatUserID = tokenPayload.userID;
       // Fetch clients for this avocat
       const response = await fetch(`/client/avocat/${avocatUserID}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${storedToken}`
+          'Authorization': `Bearer ${token}`
         }
       })
       if (response.ok) {

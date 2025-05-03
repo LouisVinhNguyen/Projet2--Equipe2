@@ -1,14 +1,18 @@
 import { renderReceivedDocuments } from "./documents.js";
 
 export const renderDetailsDocument = async (documentID) => {
-  const container = document.getElementById("dashboard-sections");
-  const token = sessionStorage.getItem("token");
+  
+  const token = sessionStorage.getItem('token');
   if (!token) {
-    alert("Vous devez être connecté.");
+    alert('Vous devez être connecté pour accéder à cette page.');
     window.location.href = "../index.html";
     return;
   }
 
+  const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+  const avocatUserID = tokenPayload.userID;
+
+  const container = document.getElementById("dashboard-sections");
   container.innerHTML = `
     <div class="box">
       <h2 class="title is-4">Détails du document</h2>
@@ -26,7 +30,6 @@ export const renderDetailsDocument = async (documentID) => {
   `;
 
   // Charger les détails du document
-  let documentData = null;
   try {
     const response = await fetch(`/document/${documentID}`, {
       method: "GET",
@@ -36,24 +39,32 @@ export const renderDetailsDocument = async (documentID) => {
       },
     });
     if (response.ok) {
-      documentData = await response.json();
+      let documentData = await response.json();
       const tableBody = document.getElementById("detailsTableBody");
       tableBody.innerHTML = Object.entries(documentData)
-        .map(
-          ([key, value]) => `
-        <tr><th>${key}</th><td>${value}</td></tr>
-      `
-        )
-        .join("");
+      .map(([key, value]) => {
+        if (key.includes("date")) {
+          return `<tr><th>${key}</th><td>${value ? new Date(value).toLocaleString() : "-"}</td></tr>`;
+        } else {
+          return `<tr><th>${key}</th><td>${value ?? "-"}</td></tr>`;
+        }
+      })
+      .join("");
     } else {
+      console.error("Erreur lors de la récupération des détails du document:", response.statusText);
       alert("Erreur lors de la récupération des détails du document.");
-    }  } catch (error) {
+    }  
+  } catch (error) {
+    console.error("Erreur réseau lors de la récupération des détails du document:", error);
     alert("Erreur réseau.");
   }
 
-  // Retour
   document.getElementById('backButton').addEventListener('click', () => {
-    renderReceivedDocuments();
+    if (typeof window.previousRender === 'function') {
+      window.previousRender();
+    } else {
+      renderReceivedDocuments(); // fallback
+    }
   });
 
   // Supprimer le document
@@ -70,9 +81,11 @@ export const renderDetailsDocument = async (documentID) => {
         alert("Document supprimé avec succès.");
         renderReceivedDocuments();
       } else {
+        console.error("Erreur lors de la suppression du document:", response.statusText);
         alert("Erreur lors de la suppression du document.");
       }
     } catch (error) {
+      console.error("Erreur réseau lors de la suppression du document:", error);
       alert("Erreur réseau lors de la suppression.");
     }
   });
@@ -115,9 +128,11 @@ export const renderDetailsDocument = async (documentID) => {
           alert("Document modifié avec succès.");
           renderDetailsDocument(documentID);
         } else {
+          console.error("Erreur lors de la modification du document:", response.statusText);
           alert("Erreur lors de la modification du document.");
         }
       } catch (error) {
+        console.error("Erreur réseau lors de la modification du document:", error);
         alert("Erreur réseau lors de la modification.");
       }
     });

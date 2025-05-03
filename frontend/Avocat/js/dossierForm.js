@@ -1,6 +1,15 @@
-let dossierEnEditionID = null;
-
 export const renderDossierForm = async () => {
+  
+  const token = sessionStorage.getItem('token');
+  if (!token) {
+    alert('Vous devez être connecté pour accéder à cette page.');
+    window.location.href = "../index.html";
+    return;
+  }
+
+  const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+  const avocatUserID = tokenPayload.userID;
+
   const container = document.getElementById('dashboard-sections');
   container.innerHTML = `
     <div class="box">
@@ -26,7 +35,9 @@ export const renderDossierForm = async () => {
         </div>
         <button class="button is-primary" type="submit">Créer</button>
       </form>
+
       <hr />
+      
       <h3 class="title is-5">Liste des Dossiers</h3>
       <table class="table is-fullwidth is-striped">
         <thead>
@@ -46,13 +57,11 @@ export const renderDossierForm = async () => {
 
   const fetchClients = async () => {
     try {
-      const storedToken = sessionStorage.getItem('token');
-      if (!storedToken) return;
       const response = await fetch('/client', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${storedToken}`
+          'Authorization': `Bearer ${token}`
         }
       });
       if (response.ok) {
@@ -70,21 +79,12 @@ export const renderDossierForm = async () => {
 
   const fetchDossiers = async () => {
     try {
-      const storedToken = sessionStorage.getItem('token');
-      if (!storedToken) {
-        alert('Vous devez être connecté pour voir les dossiers.');
-        window.location.href = "../index.html";
-        return;
-      }
-
-      const tokenPayload = JSON.parse(atob(storedToken.split('.')[1]));
-      const avocatUserID = tokenPayload.userID;
 
       const response = await fetch(`/dossier/avocat/${avocatUserID}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${storedToken}`
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -188,9 +188,6 @@ export const renderDossierForm = async () => {
   document.getElementById('dossierForm').onsubmit = async (e) => {
     e.preventDefault();
 
-    const token = sessionStorage.getItem('token');
-    if (!token) return;
-
     const dossierNom = document.querySelector('input[name="dossierNom"]').value.trim();
     const dossierType = document.querySelector('input[name="dossierType"]').value.trim();
     const description = document.querySelector('textarea[name="description"]').value.trim();
@@ -202,11 +199,8 @@ export const renderDossierForm = async () => {
       return;
     }
 
-    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-    const userID = tokenPayload.userID;
-
     const dossierData = {
-      avocatUserID: userID,
+      avocatUserID: avocatUserID,
       dossierNom,
       dossierType,
       status,

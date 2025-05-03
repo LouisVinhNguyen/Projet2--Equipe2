@@ -1,8 +1,16 @@
 export const renderReceivedDocuments = () => {
-  window.lastDocumentSource = 'documents';
+
+  const token = sessionStorage.getItem('token');
+  if (!token) {
+    alert('Vous devez être connecté pour accéder à cette page.');
+    window.location.href = "../index.html";
+    return;
+  }
+
+  const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+  const avocatUserID = tokenPayload.userID;
 
   const container = document.getElementById('dashboard-sections')
-
   container.innerHTML = `
     <div class="box">
       <h2 class="title is-4">Ajouter un Document</h2>
@@ -51,11 +59,6 @@ export const renderReceivedDocuments = () => {
   
   const fetchDocumentsList = async () => {
     try {
-      const token = sessionStorage.getItem('token')
-      if (!token) {
-        alert('Vous devez être connecté pour voir les documents.')
-        return
-      }
       const response = await fetch('/document', {
         method: 'GET',
         headers: {
@@ -73,7 +76,7 @@ export const renderReceivedDocuments = () => {
             <td>${doc.userID}</td>
             <td>${doc.documentNom}</td>
             <td>
-              <button class="button is-small is-info view-document" onclick="window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
+              <button class="button is-small is-info view-document" onclick="window.previousRender = window.renderReceivedDocuments; window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
             </td>
           </tr>
         `).join('')
@@ -109,13 +112,9 @@ export const renderReceivedDocuments = () => {
       return;
     }
     
-    // Get userID from JWT token payload
-    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-    const userID = tokenPayload.userID;
-    
     // Create the document data object with correct property names
     const documentData = {
-      userID: userID,
+      userID: avocatUserID,
       documentNom: documentNom,
       description: description,
       fichier: fichier
@@ -164,10 +163,6 @@ export const renderReceivedDocuments = () => {
   
   // Remplit le dropdown des dossiers de l'avocat connecté
   const fillDossierDropdown = async () => {
-    const token = sessionStorage.getItem('token');
-    if (!token) return;
-    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-    const avocatUserID = tokenPayload.userID;
     try {
       const response = await fetch(`/dossier/avocat/${avocatUserID}`, {
         method: 'GET',
@@ -183,12 +178,11 @@ export const renderReceivedDocuments = () => {
           dossiers.map(dossier => `<option value="${dossier.dossierID}">${dossier.dossierNom} (${dossier.dossierID})</option>`).join('');
       }
     } catch (error) {
-      // Silencieux
+      console.error("Erreur lors du remplissage du dropdown:", error);
+      alert("Erreur lors du remplissage du dropdown des dossiers.");
     }
   };
 
-  // Appel du remplissage du dropdown au chargement
   fillDossierDropdown();
-  
-  fetchDocumentsList()
+  fetchDocumentsList();
 }

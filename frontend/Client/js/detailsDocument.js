@@ -42,20 +42,11 @@ export const renderDetailsDocument = async (documentID) => {
   }
 
   // Retour
-  document.getElementById("backButton").addEventListener("click", async () => {
-    // 1. If we came from a dossier details view, go back to that dossier
-    if (window.lastDocumentSource === 'dossier' && window.lastViewedDossierID) {
-      window.renderDetailsDossier && window.renderDetailsDossier(window.lastViewedDossierID);
-      return;
-    }
-    // 2. If we came from the documents section, go back to documents
-    if (window.lastDocumentSource === 'documents' && window.renderClientDocuments) {
-      window.renderClientDocuments();
-      return;
-    }
-    // 3. Fallback: go to dossier list
-    if (window.renderDossiers) {
-      window.renderDossiers();
+  document.getElementById('backButton').addEventListener('click', () => {
+    if (typeof window.previousRender === 'function') {
+      window.previousRender();
+    } else {
+      renderClientDocuments();
     }
   });
 };

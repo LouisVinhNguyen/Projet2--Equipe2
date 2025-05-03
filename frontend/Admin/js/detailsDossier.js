@@ -2,7 +2,7 @@
 import { renderDossierForm } from "./dossierForm.js";
 
 export const renderDetailsDossier = async (dossierID) => {
-  const container = document.getElementById("dashboard-sections");
+
   const token = sessionStorage.getItem("token");
   if (!token) {
     alert("Vous devez être connecté.");
@@ -10,6 +10,7 @@ export const renderDetailsDossier = async (dossierID) => {
     return;
   }
 
+  const container = document.getElementById("dashboard-sections");
   container.innerHTML = `
     <div class="box">
       <h2 class="title is-4">Détails du dossier</h2>

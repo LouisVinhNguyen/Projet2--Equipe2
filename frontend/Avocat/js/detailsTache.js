@@ -1,7 +1,7 @@
 import { renderTacheForm } from "./tache.js";
 
 export const renderDetailsTache = async (tacheID) => {
-  const container = document.getElementById("dashboard-sections");
+
   const token = sessionStorage.getItem("token");
   if (!token) {
     alert("Vous devez être connecté.");
@@ -9,6 +9,7 @@ export const renderDetailsTache = async (tacheID) => {
     return;
   }
 
+  const container = document.getElementById("dashboard-sections");
   container.innerHTML = `
     <div class="box">
       <h2 class="title is-4">Détails de la tâche</h2>
@@ -39,16 +40,20 @@ export const renderDetailsTache = async (tacheID) => {
       tacheData = await response.json();
       const tableBody = document.getElementById("detailsTacheTableBody");
       tableBody.innerHTML = Object.entries(tacheData)
-        .map(
-          ([key, value]) => `
-        <tr><th>${key}</th><td>${value}</td></tr>
-      `
-        )
-        .join("");
+      .map(([key, value]) => {
+        if (key.includes("date")) {
+          return `<tr><th>${key}</th><td>${value ? new Date(value).toLocaleString() : "-"}</td></tr>`;
+        } else {
+          return `<tr><th>${key}</th><td>${value ?? "-"}</td></tr>`;
+        }
+      })
+      .join("");
     } else {
+      console.error("Erreur lors de la récupération des détails de la tâche:", response.statusText);
       alert("Erreur lors de la récupération des détails de la tâche.");
     }
   } catch (error) {
+    console.error("Erreur lors de la récupération des détails de la tâche:", error);
     alert("Erreur réseau.");
   }
 
@@ -71,9 +76,11 @@ export const renderDetailsTache = async (tacheID) => {
         alert("Tâche supprimée avec succès.");
         renderTacheForm();
       } else {
+        console.error("Erreur lors de la suppression de la tâche:", response.statusText);
         alert("Erreur lors de la suppression de la tâche.");
       }
     } catch (error) {
+      console.error("Erreur réseau lors de la suppression de la tâche:", error);
       alert("Erreur réseau lors de la suppression.");
     }
   });
@@ -125,9 +132,11 @@ export const renderDetailsTache = async (tacheID) => {
           renderDetailsTache(tacheID);
         } else {
           const err = await response.json();
+          console.error("Erreur lors de la modification de la tâche:", err.error || err.message);
           alert(err.error || err.message || "Erreur lors de la modification de la tâche.");
         }
       } catch (error) {
+        console.error("Erreur réseau lors de la modification de la tâche:", error);
         alert("Erreur réseau lors de la modification.");
       }
     });

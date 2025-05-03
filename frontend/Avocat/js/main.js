@@ -12,9 +12,11 @@ import { renderSessionList } from "./session.js";
 import { renderDetailsSession } from "./detailsSession.js";
 import { renderCommunicationForm } from './communication.js';
 
-if (!sessionStorage.getItem("token")) {
-  alert("Vous devez être connecté pour accéder à cette page.");
+const token = sessionStorage.getItem('token');
+if (!token) {
+  alert('Vous devez être connecté pour accéder à cette page.');
   window.location.href = "../index.html";
+  return;
 }
 
 let dexo = document.getElementById("deconnexion");
@@ -43,3 +45,5 @@ window.renderDetailsDossier = renderDetailsDossier;
 window.renderDetailsDocument = renderDetailsDocument;
 window.renderDetailsTache = renderDetailsTache;
 window.renderDetailsSession = renderDetailsSession;
+window.renderSessionList = renderSessionList;
+window.renderReceivedDocuments = renderReceivedDocuments;

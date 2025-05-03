@@ -1,7 +1,7 @@
 import { initSidebar } from './sidebar.js'
 import { renderAgenda } from './agenda.js'
 import { renderRappels } from './rappels.js'
-import { renderDossiers } from './dossiers.js'
+import { renderDossier } from './dossier.js'
 import { renderPaiements } from './paiements.js'
 import { renderClientDocuments } from './documents.js'
 import { renderCommunicationForm } from './communication.js';
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     onSectionChange: (key) => {
       if (key === 'agenda') renderAgenda()
       if (key === 'rappels') renderRappels()
-      if (key === 'dossiers') renderDossiers()
+      if (key === 'dossiers') renderDossier()
       if (key === 'paiements') renderPaiements()
       if (key === 'documents') renderClientDocuments()
       if (key === 'communication') renderCommunicationForm()
@@ -33,6 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 window.renderDetailsDossier = renderDetailsDossier;
-window.renderDossiers = renderDossiers;
+window.renderDossier = renderDossier;
 window.renderDetailsDocument = renderDetailsDocument;
 window.renderClientDocuments = renderClientDocuments;
