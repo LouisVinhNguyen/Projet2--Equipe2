@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const procedures = require('../models/procedures');
+const procedures = require('../models/procedures/proceduresUser');
 const { validateEmail, validateTelephone } = require('../utils/validators');
 const bcrypt = require('bcrypt');
 

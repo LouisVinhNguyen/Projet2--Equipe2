@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const procedures = require('../models/procedures');
+const procedures = require('../models/procedures/proceduresDossier');
 
 // Get all dossiers
 const getAllDossiers = async (req, res) => {

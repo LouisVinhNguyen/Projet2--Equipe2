@@ -4,7 +4,8 @@ const contentMap = {
   dossiers: 'Mes Dossiers',
   paiements: 'Paiements',
   documents: 'Mes Documents',
-  communication: 'Communication'
+  communication: 'Communication',
+  factures: 'Mes Factures',
 }
 
 export const initSidebar = ({ onSectionChange }) => {

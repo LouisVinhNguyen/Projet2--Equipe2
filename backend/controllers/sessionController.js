@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const procedures = require('../models/procedures');
+const procedures = require('../models/procedures/proceduresSession');
 const { formatTempsTotal } = require('../utils/formatters');
 
 // Get all sessions

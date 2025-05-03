@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const procedures = require('../models/procedures');
+const procedures = require('../models/procedures/proceduresFacture');
 
 // Get all invoices (factures)
 const getAllFactures = async (req, res) => {
@@ -37,6 +37,30 @@ const getFactureById = async (req, res) => {
     });
   }
 };
+
+const getFactureByClientId = async (req, res) => {
+  const { clientUserID } = req.params;
+
+  try {
+    const factures = await db("facture")
+      .join("dossier", "facture.dossierID", "dossier.dossierID")
+      .join("client_dossier", "dossier.dossierID", "client_dossier.dossierID")
+      .where("client_dossier.clientUserID", clientUserID)
+      .select("facture.*");
+
+    if (factures.length === 0) {
+      return res.status(404).json({ message: "Aucune facture trouvée pour ce client." });
+    }
+
+    res.status(200).json(factures);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Erreur lors de la récupération des factures.",
+      error: error.message,
+    });
+  }
+}
 
 // Create a new invoice
 const createFacture = async (req, res) => {
@@ -146,6 +170,7 @@ const deleteFacture = async (req, res) => {
 module.exports = {
   getAllFactures,
   getFactureById,
+  getFactureByClientId,
   createFacture,
   updateFactureStatus,
   deleteFacture

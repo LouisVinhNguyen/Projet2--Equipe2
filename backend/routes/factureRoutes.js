@@ -15,7 +15,10 @@ const {
 router.get('/', verifyAvocatOrAdminToken, factureController.getAllFactures);
 
 // GET invoice by ID
-router.get('/:id', verifyAvocatOrAdminToken, factureController.getFactureById);
+router.get('/:id', verifyAnyUserToken, factureController.getFactureById);
+
+// GET invoices by client ID
+router.get('/client/:clientUserID', verifyAnyUserToken, factureController.getFactureByClientId);
 
 // POST create a new invoice
 router.post('/', verifyAvocatOrAdminToken, factureController.createFacture);

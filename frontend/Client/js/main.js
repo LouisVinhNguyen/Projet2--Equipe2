@@ -7,6 +7,9 @@ import { renderClientDocuments } from './documents.js'
 import { renderCommunicationForm } from './communication.js';
 import { renderDetailsDossier } from './detailsDossier.js';
 import { renderDetailsDocument } from './detailsDocument.js';
+import { renderFactures } from './facture.js'
+import { renderDetailsFacture } from './detailsFacture.js';
+import { renderDetailsPaiement } from './detailsPaiement.js';
 
 if (!sessionStorage.getItem('token')) {
   alert("Vous devez être connecté pour accéder à cette page.");
@@ -28,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (key === 'paiements') renderPaiements()
       if (key === 'documents') renderClientDocuments()
       if (key === 'communication') renderCommunicationForm()
+      if (key === 'factures') renderFactures()
     }
   })
 })
@@ -36,3 +40,6 @@ window.renderDetailsDossier = renderDetailsDossier;
 window.renderDossier = renderDossier;
 window.renderDetailsDocument = renderDetailsDocument;
 window.renderClientDocuments = renderClientDocuments;
+window.renderFactures = renderFactures;
+window.renderDetailsFacture = renderDetailsFacture;
+window.renderDetailsPaiement = renderDetailsPaiement;

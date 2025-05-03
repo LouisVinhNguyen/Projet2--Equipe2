@@ -16,7 +16,6 @@ const token = sessionStorage.getItem('token');
 if (!token) {
   alert('Vous devez être connecté pour accéder à cette page.');
   window.location.href = "../index.html";
-  return;
 }
 
 let dexo = document.getElementById("deconnexion");
@@ -37,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (key === "taches") renderTacheForm();
       if (key === "sessions") renderSessionList();
       if (key === 'communication') renderCommunicationForm()
-    },
+    }
   });
 });
 
