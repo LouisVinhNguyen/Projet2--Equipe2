@@ -9,6 +9,7 @@ import { renderDetailsDocument } from "./detailsDocument.js";
 import { renderSession } from "./session.js";
 import { renderDetailsSession } from "./detailsSession.js";
 import { renderDetailsFacture } from "./detailsFacture.js";
+import { renderReportingDashboard } from "./reporting.js";  
 
 if (!sessionStorage.getItem("token")) {
   alert("Vous devez être connecté pour accéder à cette page.");
@@ -31,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (key === "facturation") renderFacture();
       if (key === "documents") renderDocument();
       if (key === "sessions") renderSession();
+      if (key === "reporting") renderReportingDashboard();
     },
   });
 });

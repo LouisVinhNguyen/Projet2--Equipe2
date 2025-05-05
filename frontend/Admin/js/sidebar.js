@@ -7,6 +7,7 @@ const contentMap = {
   documents: { title: "Documents Reçus", description: "" },
   taches: { title: "Gestion des Tâche", description: "" },
   sessions: { title: "Toutes les Sessions", description: "" }, // Nouveau titre pour admin
+  reporting: { title: "Reporting & Statistiques", description: "" },
 };
 
 export const initSidebar = ({ onSectionChange }) => {
