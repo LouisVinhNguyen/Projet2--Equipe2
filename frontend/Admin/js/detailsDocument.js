@@ -1,7 +1,7 @@
 // Vue détaillée d'un document pour la section Admin
-import { renderReceivedDocuments } from './documents.js';
+import { renderDocument } from './document.js';
 
-export async function renderDetailsDocument(documentID) {
+export const renderDetailsDocument = async (documentID) => {
   const container = document.getElementById('dashboard-sections');
   const token = sessionStorage.getItem('token');
   if (!token) {
@@ -55,7 +55,11 @@ export async function renderDetailsDocument(documentID) {
 
   // Retour
   document.getElementById('backButton').addEventListener('click', () => {
-    renderReceivedDocuments();
+    if (typeof window.previousRender === 'function') {
+      window.previousRender();
+    } else {
+      renderDocument();
+    }
   });
 
   // Supprimer le document
@@ -70,7 +74,7 @@ export async function renderDetailsDocument(documentID) {
       });
       if (response.ok) {
         alert('Document supprimé avec succès.');
-        renderReceivedDocuments();
+        renderDocument();
       } else {
         alert('Erreur lors de la suppression du document.');
       }

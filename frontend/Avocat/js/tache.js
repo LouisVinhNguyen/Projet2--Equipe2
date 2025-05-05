@@ -1,4 +1,4 @@
-export const renderTacheForm = async () => {
+export const renderTache = async () => {
 
   const token = sessionStorage.getItem('token');
   if (!token) {

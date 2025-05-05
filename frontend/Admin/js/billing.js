@@ -102,7 +102,7 @@ const renderFacturesTable = () => {
 };
 
 // Afficher la section Facturation
-export const renderBillingSection = async () => {
+export const renderFactures = async () => {
   const container = document.getElementById('dashboard-sections');
 
   container.innerHTML = `
@@ -150,7 +150,7 @@ export const renderBillingSection = async () => {
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
     await addFacture(data);
-    await renderBillingSection();
+    await renderFactures();
   };
 };
 

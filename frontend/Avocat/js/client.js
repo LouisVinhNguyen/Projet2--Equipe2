@@ -1,4 +1,4 @@
-export const renderClientForm = () => {
+export const renderClient = async () => {
 
   const token = sessionStorage.getItem('token');
   if (!token) {

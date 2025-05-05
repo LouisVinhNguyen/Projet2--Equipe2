@@ -46,7 +46,7 @@ export const renderDetailsDocument = async (documentID) => {
     if (typeof window.previousRender === 'function') {
       window.previousRender();
     } else {
-      renderClientDocuments();
+      renderDocument();
     }
   });
 };

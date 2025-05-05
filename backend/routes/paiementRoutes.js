@@ -17,23 +17,24 @@ router.get("/", verifyAvocatOrAdminToken, paiementController.getAllPaiements);
 // GET payment by ID
 router.get(
   "/:paiementID",
-  verifyAvocatOrClientToken,
+  verifyAnyUserToken,
   paiementController.getPaiementById
 );
 
 // GET all payments for a facture
 router.get(
   "/facture/:factureID",
-  verifyAvocatOrClientToken,
+  verifyAnyUserToken,
   paiementController.getPaiementsByFacture
 );
 
 // GET all payments for a client
 router.get(
   "/client/:clientUserID",
-  verifyAvocatOrClientToken,
+  verifyAnyUserToken,
   paiementController.getPaiementsByClient
 );
+
 router.get(
   "/historique/client/:clientUserID",
   verifyAnyUserToken,

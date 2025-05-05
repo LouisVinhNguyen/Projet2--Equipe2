@@ -1,5 +1,5 @@
 // Vue détaillée d'un dossier pour la section Admin
-import { renderDossierForm } from "./dossierForm.js";
+import { renderDossier } from "./dossier.js";
 
 export const renderDetailsDossier = async (dossierID) => {
 
@@ -113,7 +113,7 @@ export const renderDetailsDossier = async (dossierID) => {
             <td>${doc.userID}</td>
             <td>${doc.documentNom}</td>
             <td>
-              <button class="button is-small is-info" onclick="window.lastViewedDossierID='${dossierID}';window.lastDocumentSource='dossier';window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
+              <button class="button is-small is-info view-document" onclick="window.previousRender = () => window.renderDetailsDossier && window.renderDetailsDossier('${dossierID}'); window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
             </td>
           </tr>
         `
@@ -160,7 +160,7 @@ export const renderDetailsDossier = async (dossierID) => {
             <td>${session.clockOutTime ? new Date(session.clockOutTime).toLocaleString() : '-'}</td>
             <td>${formattedTime}</td>
             <td>${session.description}</td>
-            <td><button class="button is-small is-info view-session" onclick="window.renderDetailsSession && window.renderDetailsSession('${session.sessionID}')">Voir</button></td>
+            <td><button class="button is-small is-info view-session" onclick="window.previousRender = () => window.renderDetailsDossier && window.renderDetailsDossier('${dossierID}'); window.renderDetailsSession && window.renderDetailsSession('${session.sessionID}')">Voir</button></td>
           </tr>
           `;
         }).join('');
@@ -226,7 +226,11 @@ export const renderDetailsDossier = async (dossierID) => {
 
   // Retour
   document.getElementById("backButton").addEventListener("click", () => {
-    renderDossierForm();
+    if (typeof window.previousRender === 'function') {
+      window.previousRender();
+    } else {
+      renderDossier();
+    }
   });
 
   // Ajouter un document existant au dossier
@@ -325,7 +329,7 @@ export const renderDetailsDossier = async (dossierID) => {
       });
       if (response.ok) {
         alert("Dossier supprimé avec succès.");
-        renderDossierForm();
+        renderDossier();
       } else {
         alert("Erreur lors de la suppression du dossier.");
       }

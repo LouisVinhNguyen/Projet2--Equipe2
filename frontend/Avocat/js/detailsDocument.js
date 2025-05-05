@@ -1,4 +1,4 @@
-import { renderReceivedDocuments } from "./documents.js";
+import { renderDocument } from "./document.js";
 
 export const renderDetailsDocument = async (documentID) => {
   
@@ -44,9 +44,9 @@ export const renderDetailsDocument = async (documentID) => {
       tableBody.innerHTML = Object.entries(documentData)
       .map(([key, value]) => {
         if (key.includes("date")) {
-          return `<tr><th>${key}</th><td>${value ? new Date(value).toLocaleString() : "-"}</td></tr>`;
+          return `<tr><th>${key}</th><td>${value ? new Date(value).toLocaleString() : "-"}></td></tr>`;
         } else {
-          return `<tr><th>${key}</th><td>${value ?? "-"}</td></tr>`;
+          return `<tr><th>${key}</th><td>${value ?? "-"}></td></tr>`;
         }
       })
       .join("");
@@ -63,7 +63,7 @@ export const renderDetailsDocument = async (documentID) => {
     if (typeof window.previousRender === 'function') {
       window.previousRender();
     } else {
-      renderReceivedDocuments(); // fallback
+      renderDocument(); // fallback
     }
   });
 
@@ -79,7 +79,7 @@ export const renderDetailsDocument = async (documentID) => {
       });
       if (response.ok) {
         alert("Document supprimé avec succès.");
-        renderReceivedDocuments();
+        renderDocument();
       } else {
         console.error("Erreur lors de la suppression du document:", response.statusText);
         alert("Erreur lors de la suppression du document.");

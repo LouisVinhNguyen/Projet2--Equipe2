@@ -29,6 +29,13 @@ router.get(
   factureController.getFacturesByClient
 );
 
+// GET invoices by avocat ID
+router.get(
+  "/avocat/:avocatUserID",
+  verifyAnyUserToken,
+  factureController.getFactureByAvocatId
+);
+
 // POST create a new invoice
 router.post("/", verifyAvocatOrAdminToken, factureController.createFacture);
 

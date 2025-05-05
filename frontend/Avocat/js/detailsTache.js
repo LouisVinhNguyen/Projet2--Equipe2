@@ -1,4 +1,4 @@
-import { renderTacheForm } from "./tache.js";
+import { renderTache } from "./tache.js";
 
 export const renderDetailsTache = async (tacheID) => {
 
@@ -59,7 +59,7 @@ export const renderDetailsTache = async (tacheID) => {
 
   // Retour
   document.getElementById("backButton").addEventListener("click", () => {
-    renderTacheForm();
+    renderTache();
   });
 
   // Supprimer la tâche
@@ -74,7 +74,7 @@ export const renderDetailsTache = async (tacheID) => {
       });
       if (response.ok) {
         alert("Tâche supprimée avec succès.");
-        renderTacheForm();
+        renderTache();
       } else {
         console.error("Erreur lors de la suppression de la tâche:", response.statusText);
         alert("Erreur lors de la suppression de la tâche.");

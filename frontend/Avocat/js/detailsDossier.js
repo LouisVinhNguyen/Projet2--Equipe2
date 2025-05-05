@@ -1,4 +1,4 @@
-import { renderDossierForm } from "./dossierForm.js";
+import { renderDossier } from "./dossier.js";
 
 export const renderDetailsDossier = async (dossierID) => {
 
@@ -84,9 +84,9 @@ export const renderDetailsDossier = async (dossierID) => {
       tableBody.innerHTML = Object.entries(dossierData)
       .map(([key, value]) => {
         if (key.includes("date")) {
-          return `<tr><th>${key}</th><td>${value ? new Date(value).toLocaleString() : "-"}</td></tr>`;
+          return `<tr><th>${key}</th><td>${value ? new Date(value).toLocaleString() : "-"}></td></tr>`;
         } else {
-          return `<tr><th>${key}</th><td>${value ?? "-"}</td></tr>`;
+          return `<tr><th>${key}</th><td>${value ?? "-"}></td></tr>`;
         }
       })
       .join("");
@@ -213,7 +213,7 @@ export const renderDetailsDossier = async (dossierID) => {
 
   // Retour
   document.getElementById("backButton").addEventListener("click", () => {
-    renderDossierForm();
+    renderDossier();
   });
 
   document.getElementById("addDocumentButton").addEventListener("click", async () => {
@@ -340,7 +340,7 @@ export const renderDetailsDossier = async (dossierID) => {
       });
       if (response.ok) {
         alert("Dossier supprimé avec succès.");
-        renderDossierForm();
+        renderDossier();
       } else {
         alert("Erreur lors de la suppression du dossier.");
       }

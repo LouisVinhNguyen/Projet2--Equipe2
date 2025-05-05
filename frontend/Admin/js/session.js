@@ -1,4 +1,4 @@
-export const renderAllSessions = () => {
+export const renderSession = async () => {
   const container = document.getElementById("dashboard-sections");
   container.innerHTML = `
     <div class="box">
@@ -59,7 +59,7 @@ export const renderAllSessions = () => {
           <td>${session.tempsTotal ?? "-"}</td>
           <td>${session.description}</td>
           <td>
-            <button class="button is-small is-info view-session" onclick="window.renderDetailsSession && window.renderDetailsSession('${
+            <button class="button is-small is-info view-session" onclick="window.previousRender = window.renderSession; window.renderDetailsSession && window.renderDetailsSession('${
               session.sessionID
             }')">Voir</button>
           </td>
@@ -81,7 +81,6 @@ export const renderAllSessions = () => {
 
       if (response.ok) {
         allSessions = await response.json();
-        console.log("Sessions récupérées :", allSessions);
         renderTable(allSessions);
       } else {
         alert("Erreur lors de la récupération des sessions.");

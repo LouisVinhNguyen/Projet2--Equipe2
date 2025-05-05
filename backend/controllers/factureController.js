@@ -36,6 +36,30 @@ const getFactureById = async (req, res) => {
     });
   }
 };
+
+const getFactureByAvocatId = async (req, res) => {
+  const { avocatUserID } = req.params;
+  try {
+    const factures = await db("facture")
+      .join("dossier", "facture.dossierID", "dossier.dossierID")
+      .join("users", "dossier.avocatUserID", "users.userID")
+      .where("dossier.avocatUserID", avocatUserID)
+      .select(
+        "facture.*",
+        "users.nom as avocatNom",
+        "users.prenom as avocatPrenom",
+        "dossier.dossierNom",
+        "dossier.dossierType"
+      );
+    res.status(200).json(factures);
+  } catch (error) {
+    console.error("Erreur lors de la récupération des factures :", error);
+    res
+      .status(500)
+      .json({ message: "Erreur lors de la récupération des factures." });
+  }
+};
+
 const getFacturesByClient = async (req, res) => {
   const { clientUserID } = req.params;
 
@@ -228,6 +252,7 @@ const generatePdfFacture = async (req, res) => {
 module.exports = {
   getAllFactures,
   getFactureById,
+  getFactureByAvocatId,
   getFacturesByClient,
   createFacture,
   updateFactureStatus,

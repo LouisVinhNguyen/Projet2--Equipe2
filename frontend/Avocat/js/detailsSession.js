@@ -1,4 +1,4 @@
-import { renderSessionList } from "./session.js";
+import { renderSession } from "./session.js";
 
 export const renderDetailsSession = async (sessionID) => {
 
@@ -63,7 +63,7 @@ export const renderDetailsSession = async (sessionID) => {
     if (typeof window.previousRender === 'function') {
       window.previousRender();
     } else {
-      renderSessionList();
+      renderSession();
     }
   });
 
@@ -79,7 +79,7 @@ export const renderDetailsSession = async (sessionID) => {
       });
       if (response.ok) {
         alert("Session supprimée avec succès.");
-        renderSessionList();
+        renderSession();
       } else {
         alert("Erreur lors de la suppression de la session.");
       }

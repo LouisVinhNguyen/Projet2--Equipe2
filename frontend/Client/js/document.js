@@ -1,4 +1,4 @@
-export const renderClientDocuments = async () => {
+export const renderDocument = async () => {
 
   window.lastDocumentSource = 'documents';
 

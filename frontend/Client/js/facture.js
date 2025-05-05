@@ -1,4 +1,4 @@
-export const renderFactures = async () => {
+export const renderFacture = async () => {
   const token = sessionStorage.getItem("token");
   if (!token) {
     alert("Vous devez être connecté pour voir les factures.");

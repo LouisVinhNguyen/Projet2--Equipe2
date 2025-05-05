@@ -1,16 +1,5 @@
-export const renderDossierForm = async () => {
-  
-  const token = sessionStorage.getItem('token');
-  if (!token) {
-    alert('Vous devez être connecté pour accéder à cette page.');
-    window.location.href = "../index.html";
-    return;
-  }
-
-  const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-  const avocatUserID = tokenPayload.userID;
-
-  const container = document.getElementById('dashboard-sections');
+export const renderDossier = async () => {
+  const container = document.getElementById('dashboard-sections')
   container.innerHTML = `
     <div class="box">
       <h2 class="title is-4">Créer un Dossier</h2>
@@ -31,13 +20,11 @@ export const renderDossierForm = async () => {
         </div>
         <div class="field">
           <label class="label">Description</label>
-          <textarea class="textarea" name="description" required></textarea>
+          <textarea class="textarea" name="description"></textarea>
         </div>
         <button class="button is-primary" type="submit">Créer</button>
       </form>
-
       <hr />
-      
       <h3 class="title is-5">Liste des Dossiers</h3>
       <table class="table is-fullwidth is-striped">
         <thead>
@@ -47,22 +34,29 @@ export const renderDossierForm = async () => {
             <th>Type</th>
             <th>Status</th>
             <th>Description</th>
+            <th>Date Création</th>
+            <th>Date Fermeture</th>
             <th>Actions</th>
           </tr>
         </thead>
-        <tbody id="dossierTableBody"></tbody>
+        <tbody id="dossierTableBody">
+          <!-- Les dossiers seront insérés ici -->
+        </tbody>
       </table>
     </div>
-  `;
+  `
 
+  // Fetch and populate client dropdown
   const fetchClients = async () => {
     try {
+      const storedToken = sessionStorage.getItem('token');
+      if (!storedToken) return;
       const response = await fetch('/client', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${storedToken}`
+        },
       });
       if (response.ok) {
         const clients = await response.json();
@@ -71,23 +65,33 @@ export const renderDossierForm = async () => {
           clients.map(client => `
             <option value="${client.userID}">${client.userID} - ${client.prenom} ${client.nom}</option>
           `).join('');
+      } else {
+        console.error('Erreur lors de la récupération des clients:', response.statusText);
       }
     } catch (error) {
       console.error('Erreur réseau:', error);
     }
   };
 
+  // Fetch and display dossiers (inspiré de la version Avocat)
   const fetchDossiers = async () => {
     try {
-
-      const response = await fetch(`/dossier/avocat/${avocatUserID}`, {
+      const storedToken = sessionStorage.getItem('token');
+      if (!storedToken) {
+        alert('Vous devez être connecté pour voir les dossiers.');
+        window.location.href = "../index.html";
+        return;
+      }
+      const tokenPayload = JSON.parse(atob(storedToken.split('.')[1]));
+      const avocatUserID = tokenPayload.userID;
+      // Pour admin, on garde /dossier (tous dossiers)
+      const response = await fetch('/dossier', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+          'Authorization': `Bearer ${storedToken}`
+        },
       });
-
       if (response.ok) {
         const dossiers = await response.json();
         const tableBody = document.getElementById('dossierTableBody');
@@ -96,83 +100,67 @@ export const renderDossierForm = async () => {
             <td>${dossier.dossierID}</td>
             <td>${dossier.dossierNom}</td>
             <td>${dossier.dossierType}</td>
-            <td>${dossier.status}</td>
-            <td>${dossier.description}</td>
+            <td>${dossier.status || ''}</td>
+            <td>${dossier.description || ''}</td>
+            <td>${dossier.dateCreated ? new Date(dossier.dateCreated).toLocaleDateString() : ''}</td>
+            <td>${dossier.dateClosed ? new Date(dossier.dateClosed).toLocaleDateString() : ''}</td>
             <td>
-              <button class="button is-small is-info view-dossier" onclick="window.renderDetailsDossier && window.renderDetailsDossier('${dossier.dossierID}')">Voir</button>
+              <button class="button is-small is-info view-dossier" onclick="window.previousRender = window.renderDossier; window.renderDetailsDossier && window.renderDetailsDossier('${dossier.dossierID}')">Voir</button>
             </td>
           </tr>
         `).join('');
 
+        // Inline edit (comme Avocat)
         document.querySelectorAll('.edit-dossier').forEach(button => {
           button.addEventListener('click', (e) => {
             const row = e.target.closest('tr');
-            row.querySelectorAll('.editable').forEach(cell => {
-              cell.setAttribute('contenteditable', 'true');
+            row.querySelectorAll('td').forEach((cell, idx) => {
+              if ([1,2,3,4].includes(idx)) cell.setAttribute('contenteditable', 'true');
             });
             e.target.textContent = "Save";
             e.target.classList.remove('edit-dossier');
             e.target.classList.add('save-dossier');
-
             e.target.addEventListener('click', async () => {
               const dossierId = e.target.getAttribute('data-id');
-              const dossierNom = row.querySelector('[data-field="dossierNom"]').textContent.trim();
-              const dossierType = row.querySelector('[data-field="dossierType"]').textContent.trim();
-              const status = row.querySelector('[data-field="status"]').textContent.trim();
-              const description = row.querySelector('[data-field="description"]').textContent.trim();
-              const dossier = dossiers.find(d => d.dossierID == dossierId);
-              const clientUserID = dossier.clientUserID;
-
-              const token = sessionStorage.getItem('token');
-              const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-              const avocatUserID = tokenPayload.userID;
-
+              const cells = row.querySelectorAll('td');
+              const dossierNom = cells[1].textContent.trim();
+              const dossierType = cells[2].textContent.trim();
+              const status = cells[3].textContent.trim();
+              const description = cells[4].textContent.trim();
               try {
                 const response = await fetch(`/dossier/${dossierId}`, {
                   method: 'PUT',
                   headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${storedToken}`
                   },
-                  body: JSON.stringify({
-                    avocatUserID,
-                    dossierNom,
-                    dossierType,
-                    status,
-                    description,
-                    clientUserID
-                  })
+                  body: JSON.stringify({ dossierNom, dossierType, status, description })
                 });
-
                 if (!response.ok) {
                   const err = await response.json();
                   throw new Error(err.message || 'Erreur de mise à jour');
                 }
-
-                row.querySelectorAll('.editable').forEach(cell => {
-                  cell.removeAttribute('contenteditable');
+                row.querySelectorAll('td').forEach((cell, idx) => {
+                  if ([1,2,3,4].includes(idx)) cell.removeAttribute('contenteditable');
                 });
                 e.target.textContent = "Edit";
                 e.target.classList.remove('save-dossier');
                 e.target.classList.add('edit-dossier');
                 fetchDossiers();
               } catch (error) {
-                console.error('Erreur lors de la mise à jour inline:', error.message);
                 alert("Erreur lors de la mise à jour.");
               }
             }, { once: true });
           });
         });
-
         document.querySelectorAll('.delete-dossier').forEach(button => {
           button.addEventListener('click', async (e) => {
             const dossierId = e.target.getAttribute('data-id');
             if (confirm('Voulez-vous vraiment supprimer ce dossier ?')) {
-              const token = sessionStorage.getItem('token');
               await fetch(`/dossier/${dossierId}`, {
                 method: 'DELETE',
                 headers: {
-                  'Authorization': `Bearer ${token}`
+                  'Authorization': `Bearer ${storedToken}`
                 }
               });
               fetchDossiers();
@@ -181,55 +169,79 @@ export const renderDossierForm = async () => {
         });
       }
     } catch (error) {
-      console.error('Erreur réseau:', error);
+      alert('Erreur réseau.');
     }
   };
 
+  // Handle form submission for creating a new dossier
   document.getElementById('dossierForm').onsubmit = async (e) => {
     e.preventDefault();
-
-    const dossierNom = document.querySelector('input[name="dossierNom"]').value.trim();
-    const dossierType = document.querySelector('input[name="dossierType"]').value.trim();
-    const description = document.querySelector('textarea[name="description"]').value.trim();
-    const clientID = document.getElementById('clientSelect').value;
-    const status = "En cours";
-
-    if (!dossierNom || !dossierType || !description) {
-      alert("Veuillez remplir tous les champs.");
+    // Get token
+    const token = sessionStorage.getItem('token');
+    if (!token) {
+      alert('Vous devez être connecté pour créer un dossier.');
       return;
     }
-
-    const dossierData = {
-      avocatUserID: avocatUserID,
-      dossierNom,
-      dossierType,
-      status,
-      description,
-      clientUserID: clientID
-    };
-
-    try {
-      const response = await fetch('/dossier', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(dossierData)
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.message || "Erreur de création");
-      }
-
-      document.getElementById('dossierForm').reset();
-      alert("Dossier créé avec succès !");
-      fetchDossiers();
-    } catch (error) {
-      console.error("Erreur:", error.message);
-      alert("Erreur: " + error.message);
+    // Get values from form
+    const dossierNom = document.querySelector('input[name="dossierNom"]').value.trim();
+    const dossierType = document.querySelector('input[name="dossierType"]').value.trim();
+    const clientID = document.getElementById('clientSelect').value; // This is clientUserID
+    const description = document.querySelector('textarea[name="description"]').value.trim();
+    // Validate required fields
+    if (!dossierNom || !dossierType || !description) {
+      alert("Veuillez remplir tous les champs obligatoires.");
+      return;
     }
+    // Get userID from JWT token payload
+    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+    const userID = tokenPayload.userID;
+    // Create the dossier data object with correct property names
+    const dossierData = {
+      avocatUserID: userID,
+      dossierNom: dossierNom,
+      dossierType: dossierType,
+      status: "En cours",
+      description: description
+    };
+    // Add clientUserID if selected
+    if (clientID) {
+      dossierData.clientUserID = clientID;
+    }
+    
+    console.log("Sending dossier data:", dossierData);
+    
+    // Send data to server
+    fetch('/dossier', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(dossierData)
+    })
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(err => {
+          throw new Error(err.error || err.message || "Erreur lors de la création du dossier");
+        });
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log("Dossier créé avec succès:", data);
+      
+      // Reset form
+      document.getElementById('dossierForm').reset();
+      
+      // Refresh the dossier list
+      fetchDossiers();
+      
+      alert("Dossier créé avec succès!");
+    })
+    .catch(error => {
+      console.error("Erreur lors de la création du dossier:", error.message);
+      alert("Erreur lors de la création du dossier: " + error.message);
+    });
   };
 
   await fetchClients();

@@ -1,4 +1,4 @@
-export const renderRappels = () => {
+export const renderRappel = () => {
     const container = document.getElementById('dashboard-sections')
     const events = JSON.parse(localStorage.getItem('legalconnect_events') || '[]')
   

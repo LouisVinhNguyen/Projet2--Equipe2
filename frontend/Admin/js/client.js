@@ -1,4 +1,4 @@
-export const renderClientForm = () => {
+export const renderClient = async () => {
   const container = document.getElementById('dashboard-sections')
   container.innerHTML = `
     <div class="box">
@@ -68,7 +68,7 @@ export const renderClientForm = () => {
             <td>${client.nom}</td>
             <td>${client.email}</td>
             <td>${client.telephone}</td>
-            <td><button class="button is-small is-info" onclick="window.renderDetailsClient && window.renderDetailsClient('${client.userID}')">Voir</button></td>
+            <td><button class="button is-small is-info view-client" onclick="window.previousRender = window.renderClient; window.renderDetailsClient && window.renderDetailsClient('${client.userID}')">Voir</button></td>
           </tr>
         `).join('')
       } else {

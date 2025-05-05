@@ -1,4 +1,4 @@
-export const renderSessionList = () => {
+export const renderSession = async () => {
 
   const token = sessionStorage.getItem('token');
   if (!token) {
@@ -53,7 +53,7 @@ export const renderSessionList = () => {
             <td>${session.clockOutTime ? new Date(session.clockOutTime).toLocaleString() : '-'}</td>
             <td>${session.tempsTotal}</td>
             <td>${session.description}</td>
-            <td><button class="button is-small is-info view-session" onclick="window.previousRender = renderSessionList; window.renderDetailsSession && window.renderDetailsSession('${session.sessionID}')">Voir</button></td>
+            <td><button class="button is-small is-info view-session" onclick="window.previousRender = renderSession; window.renderDetailsSession && window.renderDetailsSession('${session.sessionID}')">Voir</button></td>
           </tr>
         `).join('');
       } else {

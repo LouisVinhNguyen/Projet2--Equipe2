@@ -1,5 +1,5 @@
-export const renderFactures = async () => {
-
+// Afficher la section Facturation
+export const renderFacture = async () => {
   const token = sessionStorage.getItem('token');
   if (!token) {
     alert('Vous devez être connecté pour accéder à cette page.');
@@ -7,9 +7,7 @@ export const renderFactures = async () => {
     return;
   }
 
-  const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-  const avocatUserID = tokenPayload.userID;
-
+  // Admin has wider access to data than avocat
   const container = document.getElementById('dashboard-sections');
   container.innerHTML = `
     <div class="box">
@@ -46,7 +44,7 @@ export const renderFactures = async () => {
             <th>Status</th>
             <th>Date Créée</th>
             <th>Date Limite</th>
-            <th>PDF</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="factureTableBody"></tbody>
@@ -75,9 +73,7 @@ export const renderFactures = async () => {
             <td>${f.dateCreated ? new Date(f.dateCreated).toLocaleDateString() : '-'}</td>
             <td>${f.dateLimite ? new Date(f.dateLimite).toLocaleDateString() : '-'}</td>
             <td>
-              <button class="button is-small is-info" onclick="window.generatePDF && window.generatePDF('${f.factureID}')">
-                <i class="fas fa-file-pdf"></i>
-              </button>
+              <button class="button is-small is-info view-facture" onclick="window.previousRender = window.renderFacture; window.renderDetailsFacture && window.renderDetailsFacture('${f.factureID}')">Voir</button>
             </td>
           </tr>
         `).join('') : '<tr><td colspan="7">Aucune facture générée.</td></tr>';
@@ -87,13 +83,13 @@ export const renderFactures = async () => {
     }
   };
 
+  // For Admin, fetch all dossiers
   const fillDossierDropdown = async () => {
     const token = sessionStorage.getItem('token');
     if (!token) return;
-    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-    const avocatUserID = tokenPayload.userID;
     try {
-      const response = await fetch(`/dossier/avocat/${avocatUserID}`, {
+      // Admin can access all dossiers
+      const response = await fetch(`/dossier`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -145,19 +141,6 @@ export const renderFactures = async () => {
       console.error("Erreur:", error.message);
       alert("Erreur: " + error.message);
     }
-  };
-
-  window.generatePDF = (factureId) => {
-    const f = factures.find(f => (f.factureID || factures.indexOf(f)) == factureId);
-    if (!f) return;
-    const element = document.createElement('div');
-    element.innerHTML = `
-      <h1 style="text-align:center;">Facture #${f.factureID || parseInt(factureId) + 1}</h1>
-      <p><strong>Dossier ID :</strong> ${f.dossierID}</p>
-      <p><strong>Temps travaillé :</strong> ${f.timeWorked} heures</p>
-      <p><strong>Taux horaire :</strong> ${f.hourlyRate} $</p>
-    `;
-    html2pdf().from(element).save(`facture-${f.dossierID}.pdf`);
   };
 
   await fillDossierDropdown();

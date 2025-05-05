@@ -1,4 +1,4 @@
-export const renderFactures = async () => {
+export const renderFacture = async () => {
 
   const token = sessionStorage.getItem('token');
   if (!token) {
@@ -46,7 +46,7 @@ export const renderFactures = async () => {
             <th>Status</th>
             <th>Date Créée</th>
             <th>Date Limite</th>
-            <th>PDF</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="factureTableBody"></tbody>
@@ -56,7 +56,12 @@ export const renderFactures = async () => {
 
   const fetchFactures = async () => {
     try {
-      const response = await fetch(`/facture`, {
+      // Get avocatUserID from token
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      const avocatUserID = tokenPayload.userID;
+      
+      // Use the new route for avocat-specific factures
+      const response = await fetch(`/facture/avocat/${avocatUserID}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -75,9 +80,7 @@ export const renderFactures = async () => {
             <td>${f.dateCreated ? new Date(f.dateCreated).toLocaleDateString() : '-'}</td>
             <td>${f.dateLimite ? new Date(f.dateLimite).toLocaleDateString() : '-'}</td>
             <td>
-              <button class="button is-small is-info" onclick="window.generatePDF && window.generatePDF('${f.factureID}')">
-                <i class="fas fa-file-pdf"></i>
-              </button>
+              <button class="button is-small is-info view-facture" onclick="window.previousRender = window.renderFacture; window.renderDetailsFacture && window.renderDetailsFacture('${f.factureID}')">Voir</button>
             </td>
           </tr>
         `).join('') : '<tr><td colspan="7">Aucune facture générée.</td></tr>';
