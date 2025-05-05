@@ -1,10 +1,11 @@
-const jwt = require('jsonwebtoken');
-const SECRET_KEY = require('../config/auth').SECRET_KEY;
+const jwt = require("jsonwebtoken");
+const SECRET_KEY = require("../config/auth").SECRET_KEY;
 
 // Verify token function factory that returns middleware with specific role filtering
 function verifyToken(allowedRoles) {
   return (req, res, next) => {
-    const authHeader = req.headers["authorization"];
+    const authHeader =
+      req.headers["authorization"] || req.headers["Authorization"];
     if (!authHeader) {
       return res.status(401).json({ message: "Token manquant." });
     }
@@ -56,5 +57,5 @@ module.exports = {
   verifyAdminToken,
   verifyAvocatOrClientToken,
   verifyAvocatOrAdminToken,
-  verifyAnyUserToken
+  verifyAnyUserToken,
 };

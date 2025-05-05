@@ -1,4 +1,4 @@
-export const renderDetailsPaiement = async (paiementID) => {
+export const renderDetailsPaiement = async (facture) => {
   const token = sessionStorage.getItem("token");
   if (!token) {
     alert("Vous devez être connecté.");
@@ -7,141 +7,197 @@ export const renderDetailsPaiement = async (paiementID) => {
   }
 
   const container = document.getElementById("dashboard-sections");
+
+  let deadline = "-";
+  let dateAffichee = "-";
+
+  if (facture.dateCreated) {
+    const dateCreation = new Date(facture.dateCreated);
+    if (!isNaN(dateCreation)) {
+      const deadlineDate = new Date(dateCreation);
+      deadlineDate.setDate(deadlineDate.getDate() + 5);
+      deadline = deadlineDate.toISOString().split("T")[0];
+      dateAffichee = dateCreation.toISOString().split("T")[0];
+    }
+  }
+
   container.innerHTML = `
     <div class="box">
-      <h2 class="title is-4">Détails du paiement</h2>
+      <h2 class="title is-4">Détails de la Facture</h2>
       <table class="table is-fullwidth is-striped">
-        <tbody id="detailsPaiementTableBody"></tbody>
+        <tr><th>Client</th><td>${facture.clientPrenom || ""} ${
+    facture.clientNom || ""
+  }</td></tr>
+        <tr><th>Montant</th><td>$${Number(facture.montant).toFixed(2)}</td></tr>
+        <tr><th>Date</th><td>${dateAffichee}</td></tr>
+        <tr><th>Date limite de paiement</th><td>${deadline}</td></tr>
       </table>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
-        <button class="button is-link" id="backButton">Retour</button>
-        <div id="actionButtons">
-          <button class="button is-warning" id="editButton">Modifier</button>
-          <button class="button is-danger" id="deleteButton">Supprimer</button>
-        </div>
-      </div>
+
+      ${
+        facture.status === "Payée"
+          ? `<div class="mt-4">
+               <button class="button is-primary" id="downloadPdfBtn">Télécharger la facture PDF</button>
+               <button class="button is-light" id="btnRetourpayee">Retour</button>
+             </div>`
+          : `<h3 class="title is-5">Paiement</h3>
+             <div class="buttons mb-4">
+               <button class="button is-warning" id="btnPartiel">Paiement partiel</button>
+               <button class="button is-success" id="btnComplet">Paiement complet</button>
+               <button class="button is-light" id="btnRetour">Retour</button>
+             </div>
+             <form id="fauxPaiementForm">
+               <div class="field">
+                 <label class="label">Numéro de carte</label>
+                 <input class="input" name="card" placeholder="1234 5678 9012 3456" required>
+               </div>
+               <div class="field is-grouped">
+                 <div class="control is-expanded">
+                   <label class="label">Date d'expiration</label>
+                   <input class="input" name="expiry" placeholder="MM/AA" required>
+                 </div>
+                 <div class="control">
+                   <label class="label">CVV</label>
+                   <input class="input" name="cvv" placeholder="123" required>
+                 </div>
+               </div>
+               <div class="field">
+                 <label class="label">Nom du titulaire</label>
+                 <input class="input" name="holder" placeholder="Jean Dupont" required>
+               </div>
+               <div class="field" id="fieldMontantPartiel" style="display:none;">
+                 <label class="label">Montant à payer</label>
+                 <input class="input" name="montantPartiel" placeholder="Montant partiel en $" type="number" min="1" max="${facture.montant}">
+               </div>
+               <input type="hidden" name="modePaiement" id="modePaiement" value="">
+               <button class="button is-primary mt-2" type="submit">Confirmer le paiement</button>
+             </form>`
+      }
     </div>
   `;
 
-  // Charger les détails du paiement
-  let paiementData = null;
-  try {
-    const response = await fetch(`/paiement/${paiementID}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+  if (facture.status === "Payée") {
+    // 🎯 Important : d'abord retour, ensuite PDF, avant le return
+    document.getElementById("btnRetourpayee")?.addEventListener("click", () => {
+      window.renderFactures && window.renderFactures();
     });
-    if (response.ok) {
-      paiementData = await response.json();
-      const tableBody = document.getElementById("detailsPaiementTableBody");
-      tableBody.innerHTML = Object.entries(paiementData)
-        .map(([key, value]) => {
-          if (key.includes("date")) {
-            return `<tr><th>${key}</th><td>${value ? new Date(value).toLocaleString() : "-"}</td></tr>`;
-          } else {
-            return `<tr><th>${key}</th><td>${value ?? "-"}</td></tr>`;
-          }
+
+    document.getElementById("downloadPdfBtn")?.addEventListener("click", () => {
+      fetch(`/facture/pdf/${facture.factureID}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Impossible de générer le PDF");
+          return res.blob();
         })
-        .join("");
-    } else {
-      console.error("Erreur lors de la récupération des détails du paiement:", response.statusText);
-      alert("Erreur lors de la récupération des détails du paiement.");
-    }
-  } catch (error) {
-    console.error("Erreur lors de la récupération des détails du paiement:", error);
-    alert("Erreur réseau.");
+        .then((blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `facture-${facture.factureID}.pdf`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        })
+        .catch((err) => alert("Erreur: " + err.message));
+    });
+
+    return; // ✅ sortir seulement après avoir attaché les events
   }
 
-  // Retour
-  document.getElementById("backButton").addEventListener("click", () => {
-    window.renderPaiementList && window.renderPaiementList();
+  const fieldMontant = document.getElementById("fieldMontantPartiel");
+  const montantInput = document.querySelector("[name='montantPartiel']");
+  const modePaiement = document.getElementById("modePaiement");
+
+  document.getElementById("btnPartiel").addEventListener("click", () => {
+    fieldMontant.style.display = "block";
+    montantInput.setAttribute("required", "true");
+    modePaiement.value = "partiel";
   });
 
-  // Supprimer le paiement
-  document.getElementById("deleteButton").addEventListener("click", async () => {
-    if (!confirm("Voulez-vous vraiment supprimer ce paiement ?")) return;
+  document.getElementById("btnComplet").addEventListener("click", () => {
+    fieldMontant.style.display = "none";
+    montantInput.removeAttribute("required");
+    modePaiement.value = "complet";
+  });
+
+  document.getElementById("btnRetour")?.addEventListener("click", () => {
+    window.renderFactures && window.renderFactures();
+  });
+
+  document.getElementById("fauxPaiementForm").onsubmit = async (e) => {
+    e.preventDefault();
+
+    const selectedMode = modePaiement.value;
+    let montantPaye = Number(facture.montant);
+    let statutFacture = "Payée";
+
+    if (selectedMode === "partiel") {
+      const montantPartiel = parseFloat(montantInput.value);
+      if (
+        isNaN(montantPartiel) ||
+        montantPartiel <= 0 ||
+        montantPartiel >= montantPaye
+      ) {
+        return alert("Montant invalide.");
+      }
+      montantPaye = montantPartiel;
+      statutFacture = "Partiellement payée";
+    }
+
     try {
-      const response = await fetch(`/paiement/${paiementID}`, {
-        method: "DELETE",
+      // Créer un paiement
+      const res = await fetch(`/paiement`, {
+        method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({
+          factureID: facture.factureID,
+          montant: montantPaye,
+          paiementDate: new Date().toISOString(),
+          methode: "Carte",
+          status: "Terminé",
+        }),
       });
-      if (response.ok) {
-        alert("Paiement supprimé avec succès.");
-        window.renderPaiementList && window.renderPaiementList();
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Erreur lors du paiement.");
+      }
+
+      // Mettre à jour le statut de la facture
+      await fetch(`/facture/status/${facture.factureID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          status: statutFacture,
+        }),
+      });
+
+      alert(
+        `Paiement enregistré avec succès ! Il reste $${(
+          facture.montant - montantPaye
+        ).toFixed(2)} à payer.`
+      );
+
+      const updatedRes = await fetch(`/facture/${facture.factureID}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (updatedRes.ok) {
+        const updatedFacture = await updatedRes.json();
+        window.renderFactures && window.renderFactures();
+        window.renderDetailsPaiement &&
+          window.renderDetailsPaiement(updatedFacture);
       } else {
-        console.error("Erreur lors de la suppression du paiement:", response.statusText);
-        alert("Erreur lors de la suppression du paiement.");
+        window.renderFactures && window.renderFactures();
       }
     } catch (error) {
-      console.error("Erreur réseau lors de la suppression du paiement:", error);
-      alert("Erreur réseau lors de la suppression.");
+      alert("Erreur: " + error.message);
     }
-  });
-
-  // Modifier le paiement
-  document.getElementById("editButton").addEventListener("click", () => {
-    const tableBody = document.getElementById("detailsPaiementTableBody");
-    tableBody.innerHTML = Object.entries(paiementData)
-      .map(([key, value]) => {
-        if (["paiementID", "factureID"].includes(key)) {
-          return `<tr><th>${key}</th><td>${value}</td></tr>`;
-        } else if (key === "status") {
-          return `<tr><th>${key}</th><td><select class='input' name='status'>
-            <option value="En attente"${value === "En attente" ? " selected" : ""}>En attente</option>
-            <option value="Terminé"${value === "Terminé" ? " selected" : ""}>Terminé</option>
-            <option value="Échoué"${value === "Échoué" ? " selected" : ""}>Échoué</option>
-            <option value="Remboursé"${value === "Remboursé" ? " selected" : ""}>Remboursé</option>
-            <option value="Annulé"${value === "Annulé" ? " selected" : ""}>Annulé</option>
-          </select></td></tr>`;
-        } else if (key === "paiementDate") {
-          // For date, use input type datetime-local
-          const localValue = value ? new Date(value).toISOString().slice(0, 16) : '';
-          return `<tr><th>${key}</th><td><input class='input' name='${key}' type='datetime-local' value='${localValue}' /></td></tr>`;
-        } else if (typeof value === "number") {
-          return `<tr><th>${key}</th><td><input class='input' name='${key}' type='number' value='${value}' /></td></tr>`;
-        } else {
-          return `<tr><th>${key}</th><td><input class='input' name='${key}' value='${value ?? ''}' /></td></tr>`;
-        }
-      })
-      .join("");
-    // Remplace le bouton Modifier par Enregistrer au même endroit
-    const actionButtons = document.getElementById("actionButtons");
-    const editBtn = document.getElementById("editButton");
-    const saveBtn = document.createElement("button");
-    saveBtn.className = "button is-success";
-    saveBtn.id = "saveButton";
-    saveBtn.textContent = "Enregistrer";
-    actionButtons.replaceChild(saveBtn, editBtn);
-    saveBtn.addEventListener("click", async () => {
-      const newData = { ...paiementData };
-      tableBody.querySelectorAll("input,select").forEach((input) => {
-        newData[input.name] = input.value;
-      });
-      try {
-        const response = await fetch(`/paiement/status/${paiementID}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ status: newData.status }),
-        });
-        if (response.ok) {
-          alert("Paiement modifié avec succès.");
-          renderDetailsPaiement(paiementID);
-        } else {
-          const err = await response.json();
-          console.error("Erreur lors de la modification du paiement:", err.error || err.message);
-          alert(err.error || err.message || "Erreur lors de la modification du paiement.");
-        }
-      } catch (error) {
-        console.error("Erreur réseau lors de la modification du paiement:", error);
-        alert("Erreur réseau lors de la modification.");
-      }
-    });
-  });
+  };
 };
