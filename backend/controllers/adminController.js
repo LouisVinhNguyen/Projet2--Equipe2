@@ -1,6 +1,5 @@
 // filepath: c:\Users\Home\Desktop\School\Cegep\Session Hiver 2025\Projet2--Equipe2\backend\controllers\adminController.js
 const db = require('../config/db');
-const procedures = require('../models/procedures');
 const { validateEmail, validateTelephone } = require('../utils/validators');
 const bcrypt = require('bcrypt');
 

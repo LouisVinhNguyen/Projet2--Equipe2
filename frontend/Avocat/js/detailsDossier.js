@@ -22,7 +22,6 @@ export const renderDetailsDossier = async (dossierID) => {
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
         <div id="leftSideButtons">
           <button class="button is-link" id="backButton">Retour</button>
-
         </div>
         <div id="actionButtons">
           <button class="button is-warning" id="editButton">Modifier</button>
@@ -84,9 +83,9 @@ export const renderDetailsDossier = async (dossierID) => {
       tableBody.innerHTML = Object.entries(dossierData)
       .map(([key, value]) => {
         if (key.includes("date")) {
-          return `<tr><th>${key}</th><td>${value ? new Date(value).toLocaleString() : "-"}></td></tr>`;
+          return `<tr><th>${key}</th><td>${value ? new Date(value).toLocaleString() : "-"}</td></tr>`;
         } else {
-          return `<tr><th>${key}</th><td>${value ?? "-"}></td></tr>`;
+          return `<tr><th>${key}</th><td>${value ?? "-"}</td></tr>`;
         }
       })
       .join("");

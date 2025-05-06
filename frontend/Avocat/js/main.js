@@ -12,6 +12,7 @@ import { renderSession } from "./session.js";
 import { renderDetailsSession } from "./detailsSession.js";
 import { renderCommunicationForm } from './communication.js';
 import { renderDetailsFacture } from "./detailsFacture.js";
+import { renderProfile } from "./profile.js";
 
 const token = sessionStorage.getItem('token');
 if (!token) {
@@ -37,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (key === "taches") renderTache();
       if (key === "sessions") renderSession();
       if (key === 'communication') renderCommunicationForm();
+      if (key === 'profil') renderProfile();
     }
   });
 });
@@ -48,3 +50,4 @@ window.renderDetailsSession = renderDetailsSession;
 window.renderDocument = renderDocument;
 window.renderSession = renderSession;
 window.renderDetailsFacture = renderDetailsFacture;
+window.renderProfile = renderProfile;
