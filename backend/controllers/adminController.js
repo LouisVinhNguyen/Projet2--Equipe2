@@ -1,6 +1,5 @@
 // filepath: c:\Users\Home\Desktop\School\Cegep\Session Hiver 2025\Projet2--Equipe2\backend\controllers\adminController.js
 const db = require('../config/db');
-const procedures = require('../models/procedures');
 const { validateEmail, validateTelephone } = require('../utils/validators');
 const bcrypt = require('bcrypt');
 
@@ -217,67 +216,79 @@ const getSystemStats = async (req, res) => {
 
 // --- NOUVELLES FONCTIONS REPORTING & ANALYTICS ---
 
-// Obtenir total clients
-const getTotalClients = async (req, res) => {
+const getPlatformStats = async (req, res) => {
   try {
-    const result = await db('users').where('role', 'client').count('userID as totalClients');
-    res.json(result[0]);
+    // Total utilisateurs
+    const totalUsers = await db('users').count('userID as total').first();
+    const clients = await db('users').where({ role: 'client' }).count('userID as total').first();
+    const avocats = await db('users').where({ role: 'avocat' }).count('userID as total').first();
+
+    // Dossiers par statut
+    const dossiers = await db('dossier')
+      .select('status')
+      .count('dossierID as count')
+      .groupBy('status');
+
+    // Nombre total de messages
+    const messages = await db('message').count('messageID as total').first();
+
+    // Top 5 utilisateurs par nombre de messages envoyés
+    const topMessagers = await db('message')
+      .select('users.userID', 'users.prenom', 'users.nom')
+      .count('messageID as total')
+      .join('users', 'users.userID', '=', 'message.senderID')
+      .groupBy('users.userID')
+      .orderBy('total', 'desc')
+      .limit(5);
+
+    // Paiements
+    const totalFactures = await db('facture').sum('montant as total').first();
+    const totalPayes = await db('paiement')
+      .where({ status: 'Terminé' })
+      .sum('montant as total')
+      .first();
+
+    const factureStats = await db('facture')
+      .select('status')
+      .count('factureID as total')
+      .groupBy('status');
+
+    // Temps de travail total
+    const tempsTravail = await db('session').sum('tempsTotal as total').first();
+
+    // Dossiers créés par mois (12 derniers mois)
+    const now = new Date();
+    const lastYear = new Date(now.getFullYear() - 1, now.getMonth() + 1);
+    const dossiersParAvocat = await db('dossier')
+  .join('users', 'dossier.avocatUserID', '=', 'users.userID')
+  .select('users.userID', 'users.prenom', 'users.nom')
+  .count('dossierID as total')
+  .groupBy('users.userID');
+
+
+    res.json({
+      users: {
+        total: totalUsers?.total || 0,
+        clients: clients?.total || 0,
+        avocats: avocats?.total || 0,
+      },
+      dossiers,
+      messages: messages?.total || 0,
+      paiements: {
+        totalFactures: totalFactures?.total || 0,
+        totalPayes: totalPayes?.total || 0,
+        repartition: factureStats
+      },
+      tempsTravail: tempsTravail?.total || 0,
+      topMessagers,
+      dossiersParAvocat
+    });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Erreur pour récupérer total clients.' });
+    console.error("Erreur dans getPlatformStats:", error);
+    res.status(500).json({ error: "Erreur lors de la récupération des statistiques." });
   }
 };
-
-// Obtenir total dossiers
-const getTotalDossiers = async (req, res) => {
-  try {
-    const result = await db('dossier').count('dossierID as totalDossiers');
-    res.json(result[0]);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Erreur pour récupérer total dossiers.' });
-  }
-};
-
-// Obtenir total paiements
-const getTotalPaiements = async (req, res) => {
-  try {
-    const result = await db('facture').sum('montant as totalPaiements');
-    res.json(result[0]);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Erreur pour récupérer total paiements.' });
-  }
-};
-
-// Obtenir dossiers par mois
-const getDossiersParMois = async (req, res) => {
-  try {
-    const result = await db('dossier')
-      .select(db.raw("strftime('%m-%Y', dateCreated) as mois"))
-      .count('dossierID as total')
-      .groupBy('mois')
-      .orderBy('mois', 'asc');
-    res.json(result);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Erreur pour récupérer dossiers par mois.' });
-  }
-};
-
-// Obtenir dossiers ouverts
-const getDossiersOuverts = async (req, res) => {
-  try {
-    const result = await db('dossier')
-      .whereNot('status', 'Terminé')
-      .count('dossierID as dossiersOuverts');
-    res.json(result[0]);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Erreur pour récupérer dossiers ouverts.' });
-  }
-};
-
 
 module.exports = {
   getAllAdmins,
@@ -286,10 +297,6 @@ module.exports = {
   deleteAdmin,
   changePassword,
   getSystemStats,
-  getTotalClients,
-  getTotalDossiers,
-  getTotalPaiements,
-  getDossiersParMois,
-  getDossiersOuverts
+  getPlatformStats
 };
 

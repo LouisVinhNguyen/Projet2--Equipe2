@@ -30,7 +30,7 @@ router.post('/', verifyAdminToken, userController.createUser);
 router.put('/:id', verifyAvocatOrClientToken, userController.updateUser);
 
 // DELETE a user
-router.delete('/:id', verifyAdminToken, userController.deleteUser);
+router.delete('/:id', verifyAnyUserToken, userController.deleteUser);
 
 // PUT change user password
 router.put('/password/:id', verifyAvocatOrClientToken, userController.changePassword);

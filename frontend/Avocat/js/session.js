@@ -1,4 +1,15 @@
-export const renderSessionList = () => {
+export const renderSession = async () => {
+
+  const token = sessionStorage.getItem('token');
+  if (!token) {
+    alert('Vous devez être connecté pour accéder à cette page.');
+    window.location.href = "../index.html";
+    return;
+  }
+
+  const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+  const avocatUserID = tokenPayload.userID;
+
   const container = document.getElementById('dashboard-sections');
   container.innerHTML = `
     <div class="box">
@@ -24,18 +35,11 @@ export const renderSessionList = () => {
 
   const fetchSessions = async () => {
     try {
-      const storedToken = sessionStorage.getItem('token');
-      if (!storedToken) {
-        alert('Vous devez être connecté pour voir les sessions.');
-        return;
-      }
-      const tokenPayload = JSON.parse(atob(storedToken.split('.')[1]));
-      const avocatUserID = tokenPayload.userID;
       const response = await fetch(`/session/avocat/${avocatUserID}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${storedToken}`
+          'Authorization': `Bearer ${token}`
         }
       });
       if (response.ok) {
@@ -47,15 +51,17 @@ export const renderSessionList = () => {
             <td>${session.dossierID}</td>
             <td>${session.clockInTime ? new Date(session.clockInTime).toLocaleString() : '-'}</td>
             <td>${session.clockOutTime ? new Date(session.clockOutTime).toLocaleString() : '-'}</td>
-            <td>${session.tempsTotal ?? '-'}</td>
+            <td>${session.tempsTotal}</td>
             <td>${session.description}</td>
-            <td><button class="button is-small is-info view-session" onclick="window.renderDetailsSession && window.renderDetailsSession('${session.sessionID}')">Voir</button></td>
+            <td><button class="button is-small is-info view-session" onclick="window.previousRender = renderSession; window.renderDetailsSession && window.renderDetailsSession('${session.sessionID}')">Voir</button></td>
           </tr>
         `).join('');
       } else {
+        console.error("Erreur lors de la récupération des sessions:", response.statusText);
         alert("Erreur lors de la récupération des sessions.");
       }
     } catch (error) {
+      console.error("Erreur réseau:", error);
       alert("Erreur réseau lors de la récupération des sessions.");
     }
   };

@@ -7,7 +7,8 @@ const contentMap = {
   documents: { title: 'Documents Reçus', description: '' },
   taches: { title: 'Gestion des Tâches', description: '' },
   sessions: { title: 'Mes Sessions', description: '' },
-  communication: { title: 'Communication', description: '' } 
+  communication: { title: 'Communication', description: '' },
+  profil: { title: 'Mon Profil', description: 'Gérez vos informations personnelles.' }
 }
 
 export const initSidebar = ({ onSectionChange }) => {

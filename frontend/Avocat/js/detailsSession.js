@@ -1,14 +1,15 @@
-import { renderSessionList } from "./session.js";
+import { renderSession } from "./session.js";
 
 export const renderDetailsSession = async (sessionID) => {
-  const container = document.getElementById("dashboard-sections");
-  const token = sessionStorage.getItem("token");
+
+  const token = sessionStorage.getItem('token');
   if (!token) {
-    alert("Vous devez être connecté.");
+    alert('Vous devez être connecté pour accéder à cette page.');
     window.location.href = "../index.html";
     return;
   }
 
+  const container = document.getElementById("dashboard-sections");
   container.innerHTML = `
     <div class="box">
       <h2 class="title is-4">Détails de la session</h2>
@@ -40,22 +41,30 @@ export const renderDetailsSession = async (sessionID) => {
       sessionData = await response.json();
       const tableBody = document.getElementById("detailsSessionTableBody");
       tableBody.innerHTML = Object.entries(sessionData)
-        .map(
-          ([key, value]) => `
-        <tr><th>${key}</th><td>${value ?? "-"}</td></tr>
-      `
-        )
+        .map(([key, value]) => {
+          if (key === "clockInTime" || key === "clockOutTime") {
+            return `<tr><th>${key}</th><td>${value ? new Date(value).toLocaleString() : "-"}</td></tr>`;
+          } else {
+            return `<tr><th>${key}</th><td>${value ?? "-"}</td></tr>`;
+          }
+        })
         .join("");
     } else {
+      console.error("Erreur lors de la récupération des détails de la session:", response.statusText);
       alert("Erreur lors de la récupération des détails de la session.");
     }
   } catch (error) {
+    console.error("Erreur lors de la récupération des détails de la session:", error);
     alert("Erreur réseau.");
   }
 
   // Retour
-  document.getElementById("backButton").addEventListener("click", () => {
-    renderSessionList();
+  document.getElementById('backButton').addEventListener('click', () => {
+    if (typeof window.previousRender === 'function') {
+      window.previousRender();
+    } else {
+      renderSession();
+    }
   });
 
   // Supprimer la session
@@ -70,7 +79,7 @@ export const renderDetailsSession = async (sessionID) => {
       });
       if (response.ok) {
         alert("Session supprimée avec succès.");
-        renderSessionList();
+        renderSession();
       } else {
         alert("Erreur lors de la suppression de la session.");
       }
@@ -89,11 +98,13 @@ export const renderDetailsSession = async (sessionID) => {
     tableBody.innerHTML = Object.entries(sessionData)
       .map(([key, value]) => {
         if (["sessionID", "userID", "dossierID", "clockInTime", "clockOutTime", "tempsTotal"].includes(key)) {
-          return `<tr><th>${key}</th><td>${value ?? "-"}</td></tr>`;
+          if (key === "clockInTime" || key === "clockOutTime") {
+            return `<tr><th>${key}</th><td>${value ? new Date(value).toLocaleString() : "-"}</td></tr>`;
+          } else {
+            return `<tr><th>${key}</th><td>${value ?? "-"}</td></tr>`;
+          }
         } else if (key === "description") {
           return `<tr><th>${key}</th><td><input class='input' name='${key}' value='${value ?? ""}' /></td></tr>`;
-        } else {
-          return `<tr><th>${key}</th><td>${value ?? "-"}</td></tr>`;
         }
       })
       .join("");
@@ -148,8 +159,7 @@ export const renderDetailsSession = async (sessionID) => {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ description: sessionData.description }),
+        }
       });
       if (response.ok) {
         alert("Session clôturée avec succès.");

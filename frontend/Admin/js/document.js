@@ -1,4 +1,6 @@
-export const renderReceivedDocuments = () => {
+export const renderDocument = async () => {
+  window.lastDocumentSource = 'documents';
+
   const container = document.getElementById('dashboard-sections')
 
   container.innerHTML = `
@@ -71,7 +73,7 @@ export const renderReceivedDocuments = () => {
             <td>${doc.userID}</td>
             <td>${doc.documentNom}</td>
             <td>
-              <button class="button is-small is-info view-document" onclick="window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
+              <button class="button is-small is-info view-document" onclick="window.previousRender = window.renderDocument; window.renderDetailsDocument && window.renderDetailsDocument('${doc.documentID}')">Voir</button>
             </td>
           </tr>
         `).join('')
@@ -160,14 +162,12 @@ export const renderReceivedDocuments = () => {
     });
   }
   
-  // Remplit le dropdown des dossiers de l'avocat connecté
+  // Remplit le dropdown des dossiers accessibles à l'admin (tous dossiers)
   const fillDossierDropdown = async () => {
     const token = sessionStorage.getItem('token');
     if (!token) return;
-    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-    const avocatUserID = tokenPayload.userID;
     try {
-      const response = await fetch(`/dossier/avocat/${avocatUserID}`, {
+      const response = await fetch('/dossier', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

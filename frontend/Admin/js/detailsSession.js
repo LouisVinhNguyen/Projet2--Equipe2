@@ -1,4 +1,4 @@
-import { renderAllSessions } from "./session.js";
+import { renderSession } from "./session.js";
 
 export const renderDetailsSession = async (sessionID) => {
   const container = document.getElementById("dashboard-sections");
@@ -56,7 +56,11 @@ export const renderDetailsSession = async (sessionID) => {
 
   // 🔙 Retour à la liste admin
   document.getElementById("backButton").addEventListener("click", () => {
-    renderAllSessions();
+    if (typeof window.previousRender === 'function') {
+      window.previousRender();
+    } else {
+      renderSession();
+    }
   });
 
   // 🗑 Supprimer
@@ -73,7 +77,7 @@ export const renderDetailsSession = async (sessionID) => {
         });
         if (response.ok) {
           alert("Session supprimée avec succès.");
-          renderAllSessions();
+          renderSession();
         } else {
           alert("Erreur lors de la suppression de la session.");
         }

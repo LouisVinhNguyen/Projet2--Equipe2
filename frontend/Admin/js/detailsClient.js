@@ -1,7 +1,7 @@
 // Vue détaillée d'un client pour la section Admin
-import { renderClientForm } from './clientForm.js';
+import { renderClient } from './client.js';
 
-export async function renderDetailsClient(clientID) {
+export const renderDetailsClient = async (clientID) => {
   const container = document.getElementById('dashboard-sections');
   const token = sessionStorage.getItem('token');
   if (!token) {
@@ -52,7 +52,11 @@ export async function renderDetailsClient(clientID) {
 
   // Retour
   document.getElementById('backButton').addEventListener('click', () => {
-    renderClientForm();
+    if (typeof window.previousRender === 'function') {
+      window.previousRender();
+    } else {
+      renderClient();
+    }
   });
 
   // Supprimer le client
@@ -67,7 +71,7 @@ export async function renderDetailsClient(clientID) {
       });
       if (response.ok) {
         alert('Client supprimé avec succès.');
-        renderClientForm();
+        renderClient();
       } else {
         alert('Erreur lors de la suppression du client.');
       }
@@ -123,4 +127,4 @@ export async function renderDetailsClient(clientID) {
       }
     });
   });
-}
+};

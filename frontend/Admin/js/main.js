@@ -1,13 +1,15 @@
 import { initSidebar } from "./sidebar.js";
-import { renderDossierForm } from "./dossierForm.js";
-import { renderClientForm } from "./clientForm.js";
+import { renderDossier } from "./dossier.js";
+import { renderClient } from "./client.js";
 import { renderEventSection } from "./eventManager.js";
-import { renderReceivedDocuments } from "./documents.js";
-import { renderBillingSection } from "./billing.js";
+import { renderDocument } from "./document.js";
+import { renderFacture } from "./facture.js";
 import { renderDetailsDossier } from "./detailsDossier.js";
 import { renderDetailsDocument } from "./detailsDocument.js";
-import { renderAllSessions } from "./session.js";
+import { renderSession } from "./session.js";
 import { renderDetailsSession } from "./detailsSession.js";
+import { renderDetailsFacture } from "./detailsFacture.js";
+import { renderReportingDashboard } from "./reporting.js";  
 
 if (!sessionStorage.getItem("token")) {
   alert("Vous devez être connecté pour accéder à cette page.");
@@ -23,13 +25,14 @@ dexo.addEventListener("click", function () {
 document.addEventListener("DOMContentLoaded", () => {
   initSidebar({
     onSectionChange: (key) => {
-      if (key === "dossiers") renderDossierForm();
-      if (key === "clients") renderClientForm();
+      if (key === "dossiers") renderDossier();
+      if (key === "clients") renderClient();
       if (["agenda", "rappels", "planification"].includes(key))
         renderEventSection(key);
-      if (key === "facturation") renderBillingSection();
-      if (key === "documents") renderReceivedDocuments();
-      if (key === "sessions") renderAllSessions();
+      if (key === "facturation") renderFacture();
+      if (key === "documents") renderDocument();
+      if (key === "sessions") renderSession();
+      if (key === "reporting") renderReportingDashboard();
     },
   });
 });
@@ -37,6 +40,9 @@ document.addEventListener("DOMContentLoaded", () => {
 window.renderDetailsDossier = renderDetailsDossier;
 window.renderDetailsDocument = renderDetailsDocument;
 window.renderDetailsSession = renderDetailsSession;
+window.renderDocument = renderDocument;
+window.renderSession = renderSession;
 window.renderDetailsClient = (
   await import("./detailsClient.js")
 ).renderDetailsClient;
+window.renderDetailsFacture = renderDetailsFacture;

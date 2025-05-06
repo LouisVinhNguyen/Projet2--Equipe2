@@ -1,7 +1,5 @@
 import { syncCalendar } from './calendarView.js'
 
-let events = []
-
 const formatDateTime = (date, time) => new Date(`${date}T${time}`)
 
 const showNotification = (title, body) => {
@@ -20,7 +18,6 @@ const simulateReminder = (event) => {
   const eventTime = formatDateTime(event.date, event.time)
   const now = new Date()
   const delay = eventTime - now - 5000
-
   if (delay > 0) {
     setTimeout(() => {
       showNotification(`Rappel : ${event.title}`, `Prévu à ${event.time}`)
@@ -50,7 +47,7 @@ const renderForm = () => `
   </form>
 `
 
-const renderEventList = () => {
+const renderEventList = (events) => {
   if (!events.length) return '<p>Aucun événement.</p>'
   return events.map(ev => `
     <div class="box">
@@ -60,34 +57,52 @@ const renderEventList = () => {
   `).join('')
 }
 
-export const renderEventSection = (sectionKey) => {
+export const getEvents = async () => {
+  const response = await fetch('/events')
+  return response.ok ? await response.json() : []
+}
+
+export const renderEventSection = async (sectionKey) => {
   requestNotificationPermission()
 
   const container = document.getElementById('dashboard-sections')
+  const events = await getEvents()
+
+  events.forEach(simulateReminder)
+
   container.innerHTML = `
     <div class="box">
       <h2 class="title is-4">${sectionKey.toUpperCase()}</h2>
       ${renderForm()}
       <h3 class="title is-5 mt-5">Évènements planifiés</h3>
-      <div id="eventList">${renderEventList()}</div>
+      <div id="eventList">${renderEventList(events)}</div>
     </div>
   `
 
-  document.getElementById('eventForm').onsubmit = (e) => {
+  document.getElementById('eventForm').onsubmit = async (e) => {
     e.preventDefault()
     const form = new FormData(e.target)
-    const event = Object.fromEntries(form.entries())
-    events.push(event)
+    const formData = Object.fromEntries(form.entries())
 
-    simulateReminder(event)
-    syncCalendar(events) // met à jour FullCalendar
-    renderEventSection(sectionKey) // re-render
+    const event = {
+      title: formData.title,
+      date: formData.date,
+      time: formData.time,
+      description: formData.description || ''
+    }
+
+    const res = await fetch('/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(event)
+    })
+
+    if (res.ok) {
+      simulateReminder(event)
+      syncCalendar([...events, event])
+      renderEventSection(sectionKey)
+    } else {
+      alert("Erreur lors de l'envoi au serveur.")
+    }
   }
-}
-
-export const getEvents = () => events
-export const addEvent = (event) => {
-  events.push(event)
-  simulateReminder(event)
-  syncCalendar(events)
 }

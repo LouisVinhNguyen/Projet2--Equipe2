@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const procedures = require('../models/procedures');
+const procedures = require('../models/procedures/proceduresDossier');
 
 // Get all dossiers
 const getAllDossiers = async (req, res) => {
@@ -50,6 +50,25 @@ const getDossierByAvocatId = async (req, res) => {
     console.error(error);
     res.status(500).json({
       message: "Erreur lors de la récupération des dossiers.",
+      error: error.message,
+    });
+  }
+};
+
+// Get dossier by Client ID
+const getDossierByClientId = async (req, res) => {
+  const { clientUserID } = req.params;
+  try {
+    // Join client_dossier and dossier to get all dossiers for the client
+    const dossiers = await db("client_dossier")
+      .where({ clientUserID })
+      .join("dossier", "client_dossier.dossierID", "dossier.dossierID")
+      .select("dossier.*");
+    res.status(200).json(dossiers);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Erreur lors de la récupération des dossiers du client.",
       error: error.message,
     });
   }
@@ -351,5 +370,6 @@ module.exports = {
   updateDossier,
   deleteDossier,
   closeDossier,
-  linkClientToDossier
+  linkClientToDossier,
+  getDossierByClientId
 };

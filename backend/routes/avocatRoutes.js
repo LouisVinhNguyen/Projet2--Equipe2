@@ -15,7 +15,7 @@ const {
 router.get('/', verifyAdminToken, avocatController.getAllAvocats);
 
 // GET avocat by ID
-router.get('/:id', verifyAvocatToken, avocatController.getAvocatById);
+router.get('/:id', verifyAvocatOrAdminToken, avocatController.getAvocatById);
 
 // PUT update an avocat
 router.put('/:id', verifyAvocatToken, avocatController.updateAvocat);

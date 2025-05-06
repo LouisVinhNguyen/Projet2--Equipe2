@@ -1,6 +1,15 @@
-let tacheEnEditionID = null;
+export const renderTache = async () => {
 
-export const renderTacheForm = async () => {
+  const token = sessionStorage.getItem('token');
+  if (!token) {
+    alert('Vous devez être connecté pour accéder à cette page.');
+    window.location.href = "../index.html";
+    return;
+  }
+
+  const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+  const avocatUserID = tokenPayload.userID;
+
   const container = document.getElementById('dashboard-sections');
   container.innerHTML = `
     <div class="box">
@@ -53,15 +62,11 @@ export const renderTacheForm = async () => {
 
   const fetchDossiers = async () => {
     try {
-      const storedToken = sessionStorage.getItem('token');
-      if (!storedToken) return;
-      const tokenPayload = JSON.parse(atob(storedToken.split('.')[1]));
-      const avocatUserID = tokenPayload.userID;
       const response = await fetch(`/dossier/avocat/${avocatUserID}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${storedToken}`
+          'Authorization': `Bearer ${token}`
         }
       });
       if (response.ok) {
@@ -79,13 +84,11 @@ export const renderTacheForm = async () => {
 
   const fetchTaches = async () => {
     try {
-      const storedToken = sessionStorage.getItem('token');
-      if (!storedToken) return;
       const response = await fetch('/tache', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${storedToken}`
+          'Authorization': `Bearer ${token}`
         }
       });
       if (response.ok) {
@@ -109,10 +112,8 @@ export const renderTacheForm = async () => {
 
   document.getElementById('tacheForm').onsubmit = async (e) => {
     e.preventDefault();
-    const token = sessionStorage.getItem('token');
-    if (!token) return;
-    const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-    const userID = tokenPayload.userID;
+
+    const userID = avocatUserID
     const documentNom = document.querySelector('input[name="documentNom"]').value.trim();
     const description = document.querySelector('textarea[name="description"]').value.trim();
     const dossierID = document.getElementById('dossierSelect').value;

@@ -1,4 +1,4 @@
-import { addEvent, getEvents } from './eventManager.js'
+import {  getEvents } from './eventManager.js'
 
 let calendar = null
 

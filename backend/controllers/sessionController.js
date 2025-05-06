@@ -1,11 +1,16 @@
 const db = require('../config/db');
-const procedures = require('../models/procedures');
+const procedures = require('../models/procedures/proceduresSession');
+const { formatTempsTotal } = require('../utils/formatters');
 
 // Get all sessions
 const getAllSessions = async (req, res) => {
   try {
     const sessions = await db("session").select("*");
-    res.status(200).json(sessions);
+    const formatted = sessions.map(s => ({
+      ...s,
+      tempsTotal: formatTempsTotal(s.tempsTotal)
+    }));
+    res.status(200).json(formatted);
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -28,7 +33,10 @@ const getSessionById = async (req, res) => {
       return res.status(404).json({ message: "Session introuvable." });
     }
 
-    res.status(200).json(session);
+    res.status(200).json({
+      ...session,
+      tempsTotal: formatTempsTotal(session.tempsTotal)
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -47,7 +55,12 @@ const getSessionByAvocatId = async (req, res) => {
       .where("dossier.avocatUserID", avocatUserID)
       .select("session.*");
 
-    res.status(200).json(sessions);
+    const formatted = sessions.map(s => ({
+      ...s,
+      tempsTotal: formatTempsTotal(s.tempsTotal)
+    }));
+
+    res.status(200).json(formatted);
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -65,7 +78,12 @@ const getSessionByDossierId = async (req, res) => {
       .where({ dossierID })
       .select("*");
 
-    res.status(200).json(sessions);
+    const formatted = sessions.map(s => ({
+      ...s,
+      tempsTotal: formatTempsTotal(s.tempsTotal)
+    }));
+
+    res.status(200).json(formatted);
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -187,11 +205,10 @@ const deleteSession = async (req, res) => {
 // End a session
 const endSession = async (req, res) => {
   const { id } = req.params;
-  const { description } = req.body; // Optional updated description
 
   try {
     // Use the endSession function from procedures.js
-    const updatedSession = await procedures.endSession(id, description);
+    const updatedSession = await procedures.endSession(id);
 
     return res.status(200).json({
       message: "Session clôturée avec succès.",
