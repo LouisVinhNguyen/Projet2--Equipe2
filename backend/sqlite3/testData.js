@@ -1,4 +1,10 @@
-const procedures = require('../models/procedures');
+const userProcedures = require('../models/procedures/proceduresUser');
+const dossierProcedures = require('../models/procedures/proceduresDossier');
+const documentProcedures = require('../models/procedures/proceduresDocument');
+const tacheProcedures = require('../models/procedures/proceduresTache');
+const sessionProcedures = require('../models/procedures/proceduresSession');
+const rappelProcedures = require('../models/procedures/proceduresRappel');
+const factureProcedures = require('../models/procedures/proceduresFacture');
 const db = require('../config/db');
 const bcrypt = require('bcrypt');
 
@@ -49,7 +55,7 @@ async function generateTestData() {
         
         for (const avocat of avocatData) {
             const hashed = await bcrypt.hash(avocat.password, saltRounds);
-            const created = await procedures.createUser(avocat.prenom, avocat.nom, avocat.email, avocat.tel, hashed, 'avocat');
+            const created = await userProcedures.createUser(avocat.prenom, avocat.nom, avocat.email, avocat.tel, hashed, 'avocat');
             avocats.push(created.userID);
         }
 
@@ -62,7 +68,7 @@ async function generateTestData() {
 
         for (const user of usersData) {
             const hashed = await bcrypt.hash(user.password, saltRounds);
-            const created = await procedures.createUser(user.prenom, user.nom, user.email, user.tel, hashed, user.role);
+            const created = await userProcedures.createUser(user.prenom, user.nom, user.email, user.tel, hashed, user.role);
             defaultUsers.push(created.userID);
         }
 
@@ -92,7 +98,7 @@ async function generateTestData() {
 
         for (const client of clientsData) {
             const hashed = await bcrypt.hash(client.password, saltRounds);
-            const created = await procedures.createUser(client.prenom, client.nom, client.email, client.tel, hashed, 'client');
+            const created = await userProcedures.createUser(client.prenom, client.nom, client.email, client.tel, hashed, 'client');
             clients.push(created.userID);
         }
 
@@ -100,34 +106,34 @@ async function generateTestData() {
         console.log('Création des dossiers...');
 
         const dossiers = [];
-        dossiers.push((await procedures.createDossier(avocats[0], 'Divorce Jean Dupont', 'Familial', 'Procédure de divorce en cours', clients[0])).dossierID);
-        dossiers.push((await procedures.createDossier(avocats[1], 'Contrat pour Lavoie Inc.', 'Commercial', 'Élaboration d\'un nouveau contrat commercial', clients[1])).dossierID);
-        dossiers.push((await procedures.createDossier(avocats[2], 'Litige immobilier Leclerc', 'Immobilier', 'Litige sur la démarcation des terrains', clients[2])).dossierID);
-        dossiers.push((await procedures.createDossier(avocats[0], 'Testament Émilie Côté', 'Succession', 'Rédaction de testament personnalisé')).dossierID);
-        dossiers.push((await procedures.createDossier(avocats[3], 'Création d\'entreprise Simon Marchand', 'Commercial', 'Accompagnement juridique pour la création d\'entreprise', clients[4])).dossierID);
+        dossiers.push((await dossierProcedures.createDossier(avocats[0], 'Divorce Jean Dupont', 'Familial', 'Procédure de divorce en cours', clients[0])).dossierID);
+        dossiers.push((await dossierProcedures.createDossier(avocats[1], 'Contrat pour Lavoie Inc.', 'Commercial', 'Élaboration d\'un nouveau contrat commercial', clients[1])).dossierID);
+        dossiers.push((await dossierProcedures.createDossier(avocats[2], 'Litige immobilier Leclerc', 'Immobilier', 'Litige sur la démarcation des terrains', clients[2])).dossierID);
+        dossiers.push((await dossierProcedures.createDossier(avocats[0], 'Testament Émilie Côté', 'Succession', 'Rédaction de testament personnalisé')).dossierID);
+        dossiers.push((await dossierProcedures.createDossier(avocats[3], 'Création d\'entreprise Simon Marchand', 'Commercial', 'Accompagnement juridique pour la création d\'entreprise', clients[4])).dossierID);
         
         // Pour l'avocat défault
-        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Contrat de travail Alice Martin', 'Travail', 'Rédaction d\'un contrat de travail pour poste de direction.', clients[5])).dossierID);
-        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Litige construction Benoît Caron', 'Immobilier', 'Conflit concernant la construction d\'un immeuble résidentiel.', clients[6])).dossierID);
-        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Divorce Julie Perron', 'Familial', 'Procédure de divorce amiable.', clients[7])).dossierID);
-        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Création entreprise Luc Tremblay', 'Commercial', 'Accompagnement juridique pour création d\'une société par actions.', clients[8])).dossierID);
-        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Testament Monique Gagné', 'Succession', 'Rédaction et dépôt d\'un testament notarié.', clients[9])).dossierID);
-        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Réclamation assurance François Lefebvre', 'Assurance', 'Assistance juridique pour litige d\'assurance habitation.', clients[5])).dossierID);
-        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Médiation familiale André Bergeron', 'Familial', 'Médiation pour garde partagée après séparation.', clients[6])).dossierID);
-        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Vente d\'immeuble Claire Moreau', 'Immobilier', 'Vérification légale avant la vente d\'un duplex.', clients[7])).dossierID);
-        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Partage d\'héritage Jean Fortin', 'Succession', 'Négociation d\'un partage d\'héritage complexe.', clients[8])).dossierID);
-        dossiers.push((await procedures.createDossier(defaultUsers[1], 'Bail commercial Stéphanie Robert', 'Commercial', 'Négociation d\'un bail commercial pour ouverture de boutique.', clients[9])).dossierID);
+        dossiers.push((await dossierProcedures.createDossier(defaultUsers[1], 'Contrat de travail Alice Martin', 'Travail', 'Rédaction d\'un contrat de travail pour poste de direction.', clients[5])).dossierID);
+        dossiers.push((await dossierProcedures.createDossier(defaultUsers[1], 'Litige construction Benoît Caron', 'Immobilier', 'Conflit concernant la construction d\'un immeuble résidentiel.', clients[6])).dossierID);
+        dossiers.push((await dossierProcedures.createDossier(defaultUsers[1], 'Divorce Julie Perron', 'Familial', 'Procédure de divorce amiable.', clients[7])).dossierID);
+        dossiers.push((await dossierProcedures.createDossier(defaultUsers[1], 'Création entreprise Luc Tremblay', 'Commercial', 'Accompagnement juridique pour création d\'une société par actions.', clients[8])).dossierID);
+        dossiers.push((await dossierProcedures.createDossier(defaultUsers[1], 'Testament Monique Gagné', 'Succession', 'Rédaction et dépôt d\'un testament notarié.', clients[9])).dossierID);
+        dossiers.push((await dossierProcedures.createDossier(defaultUsers[1], 'Réclamation assurance François Lefebvre', 'Assurance', 'Assistance juridique pour litige d\'assurance habitation.', clients[5])).dossierID);
+        dossiers.push((await dossierProcedures.createDossier(defaultUsers[1], 'Médiation familiale André Bergeron', 'Familial', 'Médiation pour garde partagée après séparation.', clients[6])).dossierID);
+        dossiers.push((await dossierProcedures.createDossier(defaultUsers[1], 'Vente d\'immeuble Claire Moreau', 'Immobilier', 'Vérification légale avant la vente d\'un duplex.', clients[7])).dossierID);
+        dossiers.push((await dossierProcedures.createDossier(defaultUsers[1], 'Partage d\'héritage Jean Fortin', 'Succession', 'Négociation d\'un partage d\'héritage complexe.', clients[8])).dossierID);
+        dossiers.push((await dossierProcedures.createDossier(defaultUsers[1], 'Bail commercial Stéphanie Robert', 'Commercial', 'Négociation d\'un bail commercial pour ouverture de boutique.', clients[9])).dossierID);
 
-        await procedures.linkClientToDossier(clients[3], dossiers[3]);
-        await procedures.linkClientToDossier(clients[0], dossiers[3]); // Jean aussi lié au testament pour exemple
+        await dossierProcedures.linkClientToDossier(clients[3], dossiers[3]);
+        await dossierProcedures.linkClientToDossier(clients[0], dossiers[3]); // Jean aussi lié au testament pour exemple
 
         // --- ASSOCIATION DU CLIENT 'client@gmail.com' À DES DOSSIERS ---
         // Associer le client par défaut à deux dossiers existants
-        await procedures.linkClientToDossier(defaultUsers[2], dossiers[0]); // Divorce Jean Dupont
-        await procedures.linkClientToDossier(defaultUsers[2], dossiers[1]); // Contrat pour Lavoie Inc.
+        await dossierProcedures.linkClientToDossier(defaultUsers[2], dossiers[0]); // Divorce Jean Dupont
+        await dossierProcedures.linkClientToDossier(defaultUsers[2], dossiers[1]); // Contrat pour Lavoie Inc.
 
         // Créer un nouveau dossier dont ce client est le client principal
-        const dossierClient = await procedures.createDossier(
+        const dossierClient = await dossierProcedures.createDossier(
             avocats[0],
             'Litige personnel Client Test',
             'Civil',
@@ -136,7 +142,7 @@ async function generateTestData() {
         );
         dossiers.push(dossierClient.dossierID);
         // Ajouter un document à ce dossier
-        await procedures.createDocument(
+        await documentProcedures.createDocument(
             avocats[0],
             'Lettre officielle',
             'Lettre officielle pour le litige personnel.',
@@ -144,7 +150,7 @@ async function generateTestData() {
             dossierClient.dossierID
         );
         // Ajouter une tâche à ce dossier
-        await procedures.createTache(
+        await tacheProcedures.createTache(
             avocats[0],
             dossierClient.dossierID,
             'Préparer la défense',
@@ -152,7 +158,7 @@ async function generateTestData() {
             'En cours'
         );
         // Ajouter une session à ce dossier
-        await procedures.createSession(
+        await sessionProcedures.createSession(
             avocats[0],
             dossierClient.dossierID,
             'Consultation initiale avec client@gmail.com'
@@ -174,7 +180,7 @@ async function generateTestData() {
         ];
 
         for (const doc of documents) {
-            await procedures.createDocument(doc.avocat, doc.nom, doc.desc, doc.url, doc.dossier);
+            await documentProcedures.createDocument(doc.avocat, doc.nom, doc.desc, doc.url, doc.dossier);
         }
 
         // -------- CRÉATION DES TÂCHES --------
@@ -193,31 +199,31 @@ async function generateTestData() {
         ];
 
         for (const tache of taches) {
-            await procedures.createTache(tache.avocat, tache.dossier, tache.titre, tache.desc, tache.statut);
+            await tacheProcedures.createTache(tache.avocat, tache.dossier, tache.titre, tache.desc, tache.statut);
         }
 
         // -------- CRÉATION DES SESSIONS --------
         console.log('Création des sessions...');
         
         const sessions = [];
-        sessions.push((await procedures.createSession(avocats[0], dossiers[0], 'Entrevue initiale')).sessionID);
-        sessions.push((await procedures.createSession(avocats[1], dossiers[1], 'Négociation contrat')).sessionID);
-        sessions.push((await procedures.createSession(avocats[2], dossiers[2], 'Inspection terrain')).sessionID);
-        sessions.push((await procedures.createSession(avocats[0], dossiers[3], 'Consultation testament')).sessionID);
-        sessions.push((await procedures.createSession(avocats[3], dossiers[4], 'Formation société')).sessionID);
+        sessions.push((await sessionProcedures.createSession(avocats[0], dossiers[0], 'Entrevue initiale')).sessionID);
+        sessions.push((await sessionProcedures.createSession(avocats[1], dossiers[1], 'Négociation contrat')).sessionID);
+        sessions.push((await sessionProcedures.createSession(avocats[2], dossiers[2], 'Inspection terrain')).sessionID);
+        sessions.push((await sessionProcedures.createSession(avocats[0], dossiers[3], 'Consultation testament')).sessionID);
+        sessions.push((await sessionProcedures.createSession(avocats[3], dossiers[4], 'Formation société')).sessionID);
 
-        sessions.push((await procedures.createSession(defaultUsers[1], dossiers[5], 'Réunion contrat')).sessionID);
-        sessions.push((await procedures.createSession(defaultUsers[1], dossiers[6], 'Visite chantier')).sessionID);
-        sessions.push((await procedures.createSession(defaultUsers[1], dossiers[7], 'Consultation divorce')).sessionID);
+        sessions.push((await sessionProcedures.createSession(defaultUsers[1], dossiers[5], 'Réunion contrat')).sessionID);
+        sessions.push((await sessionProcedures.createSession(defaultUsers[1], dossiers[6], 'Visite chantier')).sessionID);
+        sessions.push((await sessionProcedures.createSession(defaultUsers[1], dossiers[7], 'Consultation divorce')).sessionID);
 
-        await procedures.endSession(sessions[0], 'Entrevue terminée avec recommandations.');
-        await procedures.endSession(sessions[1], 'Négociations achevées.');
-        await procedures.endSession(sessions[2], 'Analyse terrain complète.');
-        await procedures.endSession(sessions[4], 'Documents de formation déposés.');
+        await sessionProcedures.endSession(sessions[0], 'Entrevue terminée avec recommandations.');
+        await sessionProcedures.endSession(sessions[1], 'Négociations achevées.');
+        await sessionProcedures.endSession(sessions[2], 'Analyse terrain complète.');
+        await sessionProcedures.endSession(sessions[4], 'Documents de formation déposés.');
 
-        await procedures.endSession(sessions[5], 'Réunion terminée avec le client.');
-        await procedures.endSession(sessions[6], 'Visite du chantier effectuée.');
-        await procedures.endSession(sessions[7], 'Consultation terminée avec le client.');
+        await sessionProcedures.endSession(sessions[5], 'Réunion terminée avec le client.');
+        await sessionProcedures.endSession(sessions[6], 'Visite du chantier effectuée.');
+        await sessionProcedures.endSession(sessions[7], 'Consultation terminée avec le client.');
 
         await manipulateSessionDates();
         
@@ -234,7 +240,7 @@ async function generateTestData() {
         for (const reminder of futureDates) {
             const date = new Date();
             date.setDate(today.getDate() + reminder.daysAhead);
-            await procedures.createRappel(avocats[Math.floor(Math.random() * avocats.length)], reminder.label, 'Ne pas oublier.', date.toISOString());
+            await rappelProcedures.createRappel(avocats[Math.floor(Math.random() * avocats.length)], reminder.label, 'Ne pas oublier.', date.toISOString());
         }
 
         // -------- FACTURES --------
@@ -247,7 +253,7 @@ async function generateTestData() {
         ];
         
         for (const info of factureInfos) {
-            await procedures.createFacture(info.dossier, info.heures, info.taux);
+            await factureProcedures.createFacture(info.dossier, info.heures, info.taux);
         }
         await manipulateFactureDates();
 
