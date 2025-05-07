@@ -17,6 +17,7 @@ export const renderFacture = async () => {
       <form id="factureForm">
         <div class="field">
           <label class="label">Dossier</label>
+          <input class="input" id="dossierSearchInput" placeholder="Rechercher un dossier..." autocomplete="off" style="margin-bottom: 8px;" />
           <div class="control">
             <div class="select">
               <select class="input" id="dossierSelect" name="dossierID" required>
@@ -53,6 +54,8 @@ export const renderFacture = async () => {
       </table>
     </div>
   `;
+
+  let allDossiers = [];
 
   const fetchFactures = async () => {
     try {
@@ -104,15 +107,29 @@ export const renderFacture = async () => {
         }
       });
       if (response.ok) {
-        const dossiers = await response.json();
-        const dossierSelect = document.getElementById('dossierSelect');
-        dossierSelect.innerHTML = '<option value="">Sélectionnez un dossier</option>' +
-          dossiers.map(dossier => `<option value="${dossier.dossierID}">${dossier.dossierNom} (${dossier.dossierID})</option>`).join('');
+        allDossiers = await response.json();
+        renderDossierOptions(allDossiers);
       }
     } catch (error) {
       // Silencieux
     }
   };
+
+  const renderDossierOptions = (dossiers) => {
+    const dossierSelect = document.getElementById('dossierSelect');
+    dossierSelect.innerHTML = '<option value="">Sélectionnez un dossier</option>' +
+      dossiers.map(dossier => `<option value="${dossier.dossierID}">${dossier.dossierNom} (${dossier.dossierID})</option>`).join('');
+  };
+
+  const dossierSearchInput = document.getElementById('dossierSearchInput');
+  dossierSearchInput.addEventListener('input', (e) => {
+    const search = e.target.value.toLowerCase();
+    const filtered = allDossiers.filter(dossier =>
+      (dossier.dossierNom && dossier.dossierNom.toLowerCase().includes(search)) ||
+      dossier.dossierID.toString().includes(search)
+    );
+    renderDossierOptions(filtered);
+  });
 
   document.getElementById('factureForm').onsubmit = async (e) => {
     e.preventDefault();

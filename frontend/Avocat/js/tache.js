@@ -25,7 +25,8 @@ export const renderTache = async () => {
         </div>
         <div class="field">
           <label class="label">Dossier</label>
-          <select class="input" id="dossierSelect" name="dossierID" required>
+          <input class="input" id="dossierSearchInput" placeholder="Rechercher un dossier..." autocomplete="off" style="margin-bottom: 8px; max-width: 250px; display: inline-block;" />
+          <select class="input" id="dossierSelect" name="dossierID" required style="max-width: 250px; display: inline-block;">
             <option value="">Sélectionnez un dossier</option>
           </select>
         </div>
@@ -60,6 +61,8 @@ export const renderTache = async () => {
     </div>
   `;
 
+  let allDossiers = [];
+
   const fetchDossiers = async () => {
     try {
       const response = await fetch(`/dossier/avocat/${avocatUserID}`, {
@@ -70,17 +73,31 @@ export const renderTache = async () => {
         }
       });
       if (response.ok) {
-        const dossiers = await response.json();
-        const dossierSelect = document.getElementById('dossierSelect');
-        dossierSelect.innerHTML = `<option value="">Sélectionnez un dossier</option>` +
-          dossiers.map(dossier => `
-            <option value="${dossier.dossierID}">${dossier.dossierID} - ${dossier.dossierNom}</option>
-          `).join('');
+        allDossiers = await response.json();
+        renderDossierOptions(allDossiers);
       }
     } catch (error) {
       console.error('Erreur réseau:', error);
     }
   };
+
+  const renderDossierOptions = (dossiers) => {
+    const dossierSelect = document.getElementById('dossierSelect');
+    dossierSelect.innerHTML = `<option value="">Sélectionnez un dossier</option>` +
+      dossiers.map(dossier => `
+        <option value="${dossier.dossierID}">${dossier.dossierID} - ${dossier.dossierNom}</option>
+      `).join('');
+  };
+
+  const dossierSearchInput = document.getElementById('dossierSearchInput');
+  dossierSearchInput.addEventListener('input', (e) => {
+    const search = e.target.value.toLowerCase();
+    const filtered = allDossiers.filter(dossier =>
+      (dossier.dossierNom && dossier.dossierNom.toLowerCase().includes(search)) ||
+      dossier.dossierID.toString().includes(search)
+    );
+    renderDossierOptions(filtered);
+  });
 
   const fetchTaches = async () => {
     try {

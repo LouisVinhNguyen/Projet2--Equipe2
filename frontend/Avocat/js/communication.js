@@ -6,7 +6,8 @@ export const renderCommunicationForm = () => {
       <form id="messageForm">
         <div class="field">
           <label class="label">Destinataire</label>
-          <div class="select is-fullwidth">
+          <input class="input" id="receiverSearchInput" placeholder="Rechercher un destinataire..." autocomplete="off" style="margin-bottom: 8px; max-width: 250px; display: inline-block;" />
+          <div class="select is-fullwidth" style="max-width: 250px; display: inline-block;">
             <select id="receiver-select" required>
               <option value="">Sélectionnez un destinataire</option>
             </select>
@@ -24,6 +25,8 @@ export const renderCommunicationForm = () => {
     </div>
   `;
 
+  let allUsers = [];
+
   const fetchUsersList = async () => {
     try {
       const response = await fetch('/user/all-public', {
@@ -32,24 +35,12 @@ export const renderCommunicationForm = () => {
       });
 
       if (response.ok) {
-        const users = await response.json();
-        const select = document.getElementById('receiver-select');
-
+        allUsers = await response.json();
         const storedToken = sessionStorage.getItem('token');
         const tokenPayload = JSON.parse(atob(storedToken.split('.')[1]));
         const myUserID = tokenPayload.userID;
 
-        select.innerHTML = '<option value="">Sélectionnez un destinataire</option>';
-
-        users
-          .filter(user => user.userID !== myUserID)
-          .forEach(user => {
-            const option = document.createElement('option');
-            option.value = user.userID;
-            option.textContent = `${user.prenom} ${user.nom} (${user.role})`;
-            select.appendChild(option);
-          });
-
+        renderUserOptions(allUsers.filter(user => user.userID !== myUserID));
       } else {
         console.error('Erreur lors de la récupération des utilisateurs:', response.statusText);
       }
@@ -57,6 +48,34 @@ export const renderCommunicationForm = () => {
       console.error('Erreur réseau:', error);
     }
   };
+
+  const renderUserOptions = (users) => {
+    const select = document.getElementById('receiver-select');
+    select.innerHTML = '<option value="">Sélectionnez un destinataire</option>';
+    users.forEach(user => {
+      const option = document.createElement('option');
+      option.value = user.userID;
+      option.textContent = `${user.prenom} ${user.nom} (${user.role})`;
+      select.appendChild(option);
+    });
+  };
+
+  const receiverSearchInput = document.getElementById('receiverSearchInput');
+  receiverSearchInput.addEventListener('input', (e) => {
+    const search = e.target.value.toLowerCase();
+    const storedToken = sessionStorage.getItem('token');
+    const tokenPayload = JSON.parse(atob(storedToken.split('.')[1]));
+    const myUserID = tokenPayload.userID;
+    const filtered = allUsers.filter(user =>
+      user.userID !== myUserID && (
+        user.prenom.toLowerCase().includes(search) ||
+        user.nom.toLowerCase().includes(search) ||
+        user.role.toLowerCase().includes(search) ||
+        user.userID.toString().includes(search)
+      )
+    );
+    renderUserOptions(filtered);
+  });
 
   document.getElementById('btn-envoyer-message').addEventListener('click', async () => {
     const storedToken = sessionStorage.getItem('token');

@@ -30,7 +30,8 @@ export const renderDocument = async () => {
         <div class="field">
           <label class="label">Dossier associé (optionnel)</label>
           <div class="control">
-            <div class="select">
+            <input class="input" id="dossierSearchInput" placeholder="Rechercher un dossier..." autocomplete="off" style="margin-bottom: 8px; max-width: 250px; display: inline-block;" />
+            <div class="select" style="max-width: 250px; display: inline-block;">
               <select class="input" id="dossierSelect" name="dossierID">
                 <option value="">Sélectionnez un dossier</option>
               </select>
@@ -161,7 +162,8 @@ export const renderDocument = async () => {
     });
   }
   
-  // Remplit le dropdown des dossiers de l'avocat connecté
+  let allDossiers = [];
+
   const fillDossierDropdown = async () => {
     try {
       const response = await fetch(`/dossier/avocat/${avocatUserID}`, {
@@ -172,16 +174,30 @@ export const renderDocument = async () => {
         }
       });
       if (response.ok) {
-        const dossiers = await response.json();
-        const dossierSelect = document.getElementById('dossierSelect');
-        dossierSelect.innerHTML = '<option value="">Sélectionnez un dossier</option>' +
-          dossiers.map(dossier => `<option value="${dossier.dossierID}">${dossier.dossierNom} (${dossier.dossierID})</option>`).join('');
+        allDossiers = await response.json();
+        renderDossierOptions(allDossiers);
       }
     } catch (error) {
       console.error("Erreur lors du remplissage du dropdown:", error);
       alert("Erreur lors du remplissage du dropdown des dossiers.");
     }
   };
+
+  const renderDossierOptions = (dossiers) => {
+    const dossierSelect = document.getElementById('dossierSelect');
+    dossierSelect.innerHTML = '<option value="">Sélectionnez un dossier</option>' +
+      dossiers.map(dossier => `<option value="${dossier.dossierID}">${dossier.dossierNom} (${dossier.dossierID})</option>`).join('');
+  };
+
+  const dossierSearchInput = document.getElementById('dossierSearchInput');
+  dossierSearchInput.addEventListener('input', (e) => {
+    const search = e.target.value.toLowerCase();
+    const filtered = allDossiers.filter(dossier =>
+      (dossier.dossierNom && dossier.dossierNom.toLowerCase().includes(search)) ||
+      dossier.dossierID.toString().includes(search)
+    );
+    renderDossierOptions(filtered);
+  });
 
   fillDossierDropdown();
   fetchDocumentsList();

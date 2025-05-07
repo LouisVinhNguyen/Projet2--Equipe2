@@ -25,6 +25,7 @@ export const renderDossier = async () => {
         </div>
         <div class="field">
           <label class="label">Client ID</label>
+          <input class="input" id="clientSearchInput" placeholder="Rechercher un client..." autocomplete="off" style="margin-bottom: 8px;" />
           <select class="input" id="clientSelect" name="clientID" required>
             <option value="">Sélectionnez un client</option>
           </select>
@@ -55,6 +56,10 @@ export const renderDossier = async () => {
     </div>
   `;
 
+  const clientSearchInput = document.getElementById('clientSearchInput');
+  const clientSelect = document.getElementById('clientSelect');
+  let allClients = [];
+
   const fetchClients = async () => {
     try {
       const response = await fetch('/client', {
@@ -65,17 +70,30 @@ export const renderDossier = async () => {
         }
       });
       if (response.ok) {
-        const clients = await response.json();
-        const clientSelect = document.getElementById('clientSelect');
-        clientSelect.innerHTML = `<option value="">Sélectionnez un client</option>` +
-          clients.map(client => `
-            <option value="${client.userID}">${client.userID} - ${client.prenom} ${client.nom}</option>
-          `).join('');
+        allClients = await response.json();
+        renderClientOptions(allClients);
       }
     } catch (error) {
       console.error('Erreur réseau:', error);
     }
   };
+
+  const renderClientOptions = (clients) => {
+    clientSelect.innerHTML = `<option value="">Sélectionnez un client</option>` +
+      clients.map(client => `
+        <option value="${client.userID}">${client.userID} - ${client.prenom} ${client.nom}</option>
+      `).join('');
+  };
+
+  clientSearchInput.addEventListener('input', (e) => {
+    const search = e.target.value.toLowerCase();
+    const filtered = allClients.filter(client =>
+      client.prenom.toLowerCase().includes(search) ||
+      client.nom.toLowerCase().includes(search) ||
+      client.userID.toString().includes(search)
+    );
+    renderClientOptions(filtered);
+  });
 
   const fetchDossiers = async () => {
     try {

@@ -18,7 +18,7 @@ router.get('/', verifyAnyUserToken, documentController.getAllDocuments);
 router.get('/:id', verifyAnyUserToken, documentController.getDocumentById);
 
 // POST create a new document
-router.post('/', verifyAvocatOrAdminToken, documentController.createDocument);
+router.post('/', verifyAnyUserToken, documentController.createDocument);
 
 // PUT update a document
 router.put('/:id', verifyAvocatOrAdminToken, documentController.updateDocument);
